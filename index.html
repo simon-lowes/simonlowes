@@ -3,7 +3,7 @@
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Color Cycling Page</title>
+  <title>Simon Lowes</title>
   <style>
     html,
     body {
@@ -33,10 +33,10 @@
         background-color: #ffffff;
       }
 
-      /* Add additional steps for 1000 colors */
-      @for $i from 1 through 999 {
+      /* Generate 1000 color steps */
+      @for $i from 1 through 1000 {
         #{percentage($i / 1000)}% {
-          background-color: hsl(#{random(360)}, 100%, 50%);
+          background-color: hsl(#{random(0, 360)}, #{random(40, 60)}%, #{random(40, 60)}%);
         }
       }
     }
