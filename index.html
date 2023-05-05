@@ -2,159 +2,57 @@
 <html>
 
 <head>
-  <title>Simon Lowes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Cycling Page</title>
   <style>
-    canvas {
-      border: 1px solid black;
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .color {
+      width: 100%;
+      height: 100%;
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      animation: cycle 5s infinite;
+    }
+
+    @keyframes cycle {
+      0% {
+        background-color: red;
+      }
+
+      20% {
+        background-color: orange;
+      }
+
+      40% {
+        background-color: yellow;
+      }
+
+      60% {
+        background-color: green;
+      }
+
+      80% {
+        background-color: blue;
+      }
+
+      100% {
+        background-color: purple;
+      }
     }
   </style>
 </head>
 
 <body>
-  <canvas id="canvas"></canvas>
-  <script>
-    var canvas = document.getElementById("canvas");
-    var ctx = canvas.getContext("2d");
-
-    var SCREEN_WIDTH = document.documentElement.clientWidth;
-    var SCREEN_HEIGHT = document.documentElement.clientHeight;
-
-    var BALL_SIZE = 20;
-    var PADDLE_WIDTH = 10;
-    var PADDLE_HEIGHT = 100;
-    var PADDLE_SPEED = 5;
-    var BALL_SPEED = 5;
-
-    canvas.width = SCREEN_WIDTH;
-    canvas.height = SCREEN_HEIGHT;
-
-    var player1_score = 0;
-    var player2_score = 0;
-
-    var player1 = {
-      x: 0,
-      y: SCREEN_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-      width: PADDLE_WIDTH,
-      height: PADDLE_HEIGHT,
-      score: player1_score,
-      speed: PADDLE_SPEED,
-      upKey: 87,
-      downKey: 83
-    };
-
-    var player2 = {
-      x: SCREEN_WIDTH - PADDLE_WIDTH,
-      y: SCREEN_HEIGHT / 2 - PADDLE_HEIGHT / 2,
-      width: PADDLE_WIDTH,
-      height: PADDLE_HEIGHT,
-      score: player2_score,
-      speed: PADDLE_SPEED,
-      upKey: 38,
-      downKey: 40
-    };
-
-    var ball = {
-      x: SCREEN_WIDTH / 2 - BALL_SIZE / 2,
-      y: SCREEN_HEIGHT / 2 - BALL_SIZE / 2,
-      size: BALL_SIZE,
-      speedX: Math.floor(Math.random() * 2) == 0 ? -BALL_SPEED : BALL_SPEED,
-      speedY: Math.floor(Math.random() * 2) == 0 ? -BALL_SPEED : BALL_SPEED
-    };
-
-    function draw() {
-      // Clear the canvas
-      ctx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-      // Draw the paddles
-      ctx.fillStyle = "white";
-      ctx.fillRect(player1.x, player1.y, player1.width, player1.height);
-      ctx.fillRect(player2.x, player2.y, player2.width, player2.height);
-
-      // Draw the ball
-      ctx.fillRect(ball.x, ball.y, ball.size, ball.size);
-
-      // Draw the scores
-      ctx.font = "20px Arial";
-      ctx.fillText("Player 1: " + player1.score, 10, 30);
-      ctx.fillText("Player 2: " + player2.score, SCREEN_WIDTH - 100, 30);
-    }
-
-    function update() {
-      // Move the paddles
-      if (keys[player1.upKey] && player1.y > 0) {
-        player1.y -= player1.speed;
-      }
-      if (keys[player1.downKey] && player1.y < SCREEN_HEIGHT - player1.height) {
-        player1.y += player1.speed;
-      }
-      if (keys[player2.upKey] && player2.y > 0) {
-        player2.y -= player2.speed;
-      }
-      if (keys[player2.downKey] && player2.y < SCREEN_HEIGHT - player2.height) {
-        player2.y += player2.speed;
-      }
-
-      // Move the ball
-      ball.x += ball.speedX;
-      ball.y += ball.speedY;
-
-      // Bounce the ball off the walls
-      if (ball.y < 0 || ball.y > SCREEN_HEIGHT - ball.size) {
-        ball.speedY = -ball.speedY;
-      }
-
-      // Check if the ball hits a paddle
-      if (ball.x < player1.x + player1.width &&
-        ball.y + ball.size > player1.y &&
-        ball.y < player1.y + player1.height) {
-        ball.speedX = BALL_SPEED;
-      }
-      if (ball.x + ball.size > player2.x &&
-        ball.y + ball.size > player2.y &&
-        ball.y < player2.y + player2.height) {
-        ball.speedX = -BALL_SPEED;
-      }
-
-      // Check if a player scores
-      if (ball.x < 0) {
-        player2.score++;
-        ball.x = SCREEN_WIDTH / 2 - BALL_SIZE / 2;
-        ball.y = SCREEN_HEIGHT / 2 - BALL_SIZE / 2;
-        ball.speedX = BALL_SPEED;
-        ball.speedY = Math.floor(Math.random() * 2) == 0 ? -BALL_SPEED : BALL_SPEED;
-      }
-      if (ball.x + ball.size > SCREEN_WIDTH) {
-        player1.score++;
-        ball.x = SCREEN_WIDTH / 2 - BALL_SIZE / 2;
-        ball.y = SCREEN_HEIGHT / 2 - BALL_SIZE / 2;
-        ball.speedX = -BALL_SPEED;
-        ball.speedY = Math.floor(Math.random() * 2) == 0 ? -BALL_SPEED : BALL_SPEED;
-      }
-    }
-
-    var keys = {};
-
-    document.addEventListener("keydown", function (e) {
-      keys[e.keyCode] = true;
-    });
-
-    document.addEventListener("keyup", function (e) {
-      delete keys[e.keyCode];
-    });
-
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
-    }
-
-    loop();
-  </script>
+  <div class="color"></div>
 </body>
 
 </html>
