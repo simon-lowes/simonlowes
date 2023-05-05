@@ -22,6 +22,10 @@
 </head>
 
 <body>
+  <audio id="myAudio" loop>
+    <source src="neverthere.mp3" type="audio/mpeg">
+  </audio>
+
   <canvas id="canvas"></canvas>
   <script>
     var canvas = document.getElementById("canvas");
@@ -63,13 +67,7 @@
       ctx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
       // Draw the background color
-      var colorIndex = Math.floor(Date.now() / 100) % NUM_COLORS;
-      var bgColor1 = COLORS[colorIndex];
-      var bgColor2 = COLORS[(colorIndex + 1) % NUM_COLORS];
-      var gradient = ctx.createLinearGradient(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-      gradient.addColorStop(0, bgColor1);
-      gradient.addColorStop(1, bgColor2);
-      ctx.fillStyle = gradient;
+      ctx.fillStyle = COLORS[Math.floor(Date.now() / 500) % NUM_COLORS];
       ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
       // Draw the numbers
@@ -93,9 +91,24 @@
           nums[i][j] = Math.floor(Math.random() * 100);
         }
       }
-    }, 100);
+    }, 1000);
 
     setInterval(draw, 100);
+
+    // Get the audio element
+    var audio = document.getElementById("myAudio");
+
+    // Function to play and pause the audio on click
+    function toggleAudio() {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    }
+
+    // Add click event listener to the body element to toggle audio playback
+    document.body.addEventListener("click", toggleAudio);
   </script>
 </body>
 
