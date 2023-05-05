@@ -14,28 +14,23 @@
       overflow: hidden;
     }
 
-    .color {
-      width: 100%;
-      height: 100%;
+    .number {
+      font-size: 3em;
+      font-weight: bold;
       position: absolute;
       top: 0;
       left: 0;
-      transition: background-color 0.5s ease-in-out;
+      color: white;
+      transition: color 0.5s ease-in-out;
     }
   </style>
 </head>
 
 <body>
-  <div class="color"></div>
-
   <script>
     /* Utility functions for generating random numbers and colors */
     function random(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    function percentage(n) {
-      return Math.round(n * 10000) / 100;
     }
 
     function randomColor() {
@@ -45,13 +40,35 @@
       return "rgb(" + r + "," + g + "," + b + ")";
     }
 
-    // Set initial background color
-    document.querySelector('.color').style.backgroundColor = randomColor();
+    // Create a new number element and add it to the page
+    function createNumber() {
+      var number = document.createElement("div");
+      number.classList.add("number");
+      number.innerHTML = random(0, 99999);
+      number.style.left = random(0, document.documentElement.clientWidth - number.offsetWidth) + "px";
+      number.style.top = random(0, document.documentElement.clientHeight - number.offsetHeight) + "px";
+      document.body.appendChild(number);
+      return number;
+    }
 
-    // Update background color every 500 milliseconds
+    // Set initial number colors
+    var numbers = document.querySelectorAll('.number');
+    for (var i = 0; i < numbers.length; i++) {
+      numbers[i].style.color = randomColor();
+    }
+
+    // Update number colors every 500 milliseconds
     setInterval(function () {
-      document.querySelector('.color').style.backgroundColor = randomColor();
+      var numbers = document.querySelectorAll('.number');
+      for (var i = 0; i < numbers.length; i++) {
+        numbers[i].style.color = randomColor();
+      }
     }, 100);
+
+    // Create new numbers every second
+    setInterval(function () {
+      createNumber();
+    }, 200);
   </script>
 </body>
 
