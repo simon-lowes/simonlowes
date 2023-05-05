@@ -20,7 +20,7 @@
       position: absolute;
       top: 0;
       left: 0;
-      transition: background-color 1s ease-in-out;
+      transition: background-color 0.5s ease-in-out;
     }
   </style>
 </head>
@@ -48,10 +48,10 @@
     // Set initial background color
     document.querySelector('.color').style.backgroundColor = randomColor();
 
-    // Update background color every second
+    // Update background color every 500 milliseconds
     setInterval(function () {
       document.querySelector('.color').style.backgroundColor = randomColor();
-    }, 10);
+    }, 100);
   </script>
 </body>
 
