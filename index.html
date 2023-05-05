@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Pong</title>
+  <title>Simon Lowes</title>
   <style>
     canvas {
       border: 1px solid black;
@@ -16,8 +16,9 @@
     var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d");
 
-    var SCREEN_WIDTH = window.innerWidth;
-    var SCREEN_HEIGHT = window.innerHeight;
+    var SCREEN_WIDTH = document.documentElement.clientWidth;
+    var SCREEN_HEIGHT = document.documentElement.clientHeight;
+
     var BALL_SIZE = 20;
     var PADDLE_WIDTH = 10;
     var PADDLE_HEIGHT = 100;
