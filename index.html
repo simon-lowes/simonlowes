@@ -30,13 +30,13 @@
       }
 
       100% {
-        background-color: #ffffff;
+        background-color: #000000;
       }
 
       /* Generate 1000 color steps */
       @for $i from 1 through 1000 {
         #{percentage($i / 1000)}% {
-          background-color: hsl(#{random(0, 360)}, #{random(40, 60)}%, #{random(40, 60)}%);
+          background-color: #{randomColor()};
         }
       }
     }
@@ -47,13 +47,20 @@
   <div class="color"></div>
 
   <script>
-    /* Utility functions for generating random numbers */
+    /* Utility functions for generating random numbers and colors */
     function random(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
     function percentage(n) {
       return Math.round(n * 10000) / 100;
+    }
+
+    function randomColor() {
+      var r = random(0, 255);
+      var g = random(0, 255);
+      var b = random(0, 255);
+      return "rgb(" + r + "," + g + "," + b + ")";
     }
   </script>
 </body>
