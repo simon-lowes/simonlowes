@@ -20,20 +20,6 @@
       position: absolute;
       top: 0;
       left: 0;
-      animation: cycle 1s infinite cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes cycle {
-      0% {
-        background-color: #{randomColor()};
-      }
-
-      /* Generate 1000 color steps */
-      @for $i from 1 through 1000 {
-        #{percentage($i / 1000)}% {
-          background-color: #{randomColor()};
-        }
-      }
     }
   </style>
 </head>
@@ -60,6 +46,11 @@
 
     // Set initial background color
     document.querySelector('.color').style.backgroundColor = randomColor();
+
+    // Update background color every second
+    setInterval(function () {
+      document.querySelector('.color').style.backgroundColor = randomColor();
+    }, 1000);
   </script>
 </body>
 
