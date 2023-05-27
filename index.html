@@ -96,16 +96,19 @@
   <canvas id="canvas"></canvas>
   <script>
     var canvas = document.getElementById("canvas");
-    var ctx = canvas.getContext("2d");
+      var ctx = canvas.getContext("2d");
 
-    var SCREEN_WIDTH = document.documentElement.clientWidth;
-    var SCREEN_HEIGHT = document.documentElement.clientHeight;
+      function setCanvasSize() {
+        var SCREEN_WIDTH = document.documentElement.clientWidth;
+        var SCREEN_HEIGHT = document.documentElement.clientHeight;
 
-    canvas.width = SCREEN_WIDTH;
-    canvas.height = SCREEN_HEIGHT;
+        canvas.width = SCREEN_WIDTH;
+        canvas.height = SCREEN_HEIGHT;
+      }
 
-    setCanvasSize();
-    window.addEventListener("resize", setCanvasSize);
+      setCanvasSize();
+      window.addEventListener("resize", setCanvasSize);
+
 
     var COLORS = [];
     var NUM_COLORS = 100000;
