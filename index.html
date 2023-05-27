@@ -37,29 +37,46 @@
       z-index: -1;
     }
 
-    footer {
+        footer {
       position: fixed;
       bottom: 0;
       width: 100%;
       text-align: center;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0);
       /* semi-transparent black */
       padding: 10px 0;
+      color: #fff; /* Set the text color to white */
     }
 
-    footer a {
+    footer ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    footer ul li {
+      display: inline-block;
       margin: 0 10px;
-      <a href="https://www.instagram.com/simonlowesmusic" target="_blank"><img src="path-to-instagram-icon.png" alt="Instagram" /></a><a href="https://twitter.com/simonlowesmusic" target="_blank"><img src="/Users/simonlowes/Desktop/twitter-logo-01282021/Twitter logo/PNG" alt="Twitter" /></a><a href="https://www.youtube.com/simonlowesmusic" target="_blank"><img src="path-to-youtube-icon.png" alt="YouTube" /></a><a href="https://vimeo.com/yourusername" target="_blank"><img src="path-to-vimeo-icon.png" alt="Vimeo" /></a>
     }
 
-    footer img {
-      width: 24px;
-      height: 24px;
+    footer ul li a {
+      color: #fff; /* Set the link color to white */
+      text-decoration: none;
+      width: 10px; /* Adjust the width as needed */
+      height: 10px; /* Adjust the height as needed */
     }
+
+    footer ul li a img {
+  width: 50%; /* Make the image fill the available space */
+  height: 50%; /* Make the image fill the available space */
+  object-fit: contain; /* Maintain the aspect ratio of the image */
+}
+
   </style>
 </head>
 
 <body>
+
   <audio id="myAudio" loop>
     <source src="neverthere.mp3" type="audio/mpeg">
   </audio>
@@ -134,20 +151,31 @@
     setInterval(draw, 100);
 
     // Get the audio element
-    var audio = document.getElementById("myAudio");
+      var audio = document.getElementById("myAudio");
 
-    // Function to play and pause the audio on click
-    function toggleAudio() {
-      if (audio.paused) {
-        audio.play();
-      } else {
-        audio.pause();
+      // Function to play and pause the audio on click
+      function toggleAudio(event) {
+        var target = event.target;
+        if (!target.closest("footer")) {
+          if (audio.paused) {
+            audio.play();
+          } else {
+            audio.pause();
+          }
+        }
       }
-    }
 
-    // Add click event listener to the body element to toggle audio playback
-    document.body.addEventListener("click", toggleAudio);
+      document.body.addEventListener("click", toggleAudio);
   </script>
+  <footer>
+    <ul>
+      <li><a href="https://www.instagram.com/simonlowesmusic/" target="_blank"><img src="https://img.icons8.com/ios-filled/50/ffffff/instagram-new.png"/></a></li>
+      <li><a href="https://www.youtube.com/simonlowesmusic" target="_blank"><img src="https://img.icons8.com/ios-filled/50/ffffff/youtube-play.png"/></a></li>
+      <li><a href="https://open.spotify.com/artist/1E8slBJPNvUSPpRIh3xtkI?si=LOjXYVnQRhiZU6XmjkUdhg" target="_blank"><img src="https://img.icons8.com/ios-filled/50/ffffff/spotify.png"/></a></li>
+      <li><a href="https://music.apple.com/gb/artist/simon-lowes/1351008298" target="_blank"><img src="https://img.icons8.com/ios-filled/50/ffffff/apple-music.png"/></a></li>
+      <li><a href="https://soundcloud.com/simonlowesmusic" target="_blank"><img src="https://img.icons8.com/ios-filled/50/ffffff/soundcloud.png"/></a></li>
+      <li><a href="https://www.tiktok.com/@twentysixreds" target="_blank"><img src="https://img.icons8.com/ios-filled/50/ffffff/tiktok.png"/></a></li>
+      <li><a href="https://twitter.com/SimonLowesMusic" target="_blank<"><img src="https://img.icons8.com/ios-filled/50/ffffff/twitter.png"/></a></li>
 </body>
 
 </html>
