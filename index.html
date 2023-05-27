@@ -104,6 +104,9 @@
     canvas.width = SCREEN_WIDTH;
     canvas.height = SCREEN_HEIGHT;
 
+    setCanvasSize();
+    window.addEventListener("resize", setCanvasSize);
+
     var COLORS = [];
     var NUM_COLORS = 100000;
     for (var i = 0; i < NUM_COLORS; i++) {
