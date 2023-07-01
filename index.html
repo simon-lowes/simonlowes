@@ -41,16 +41,21 @@
   <meta name="twitter:image" content="URL to the image">
 
   <style>
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: monospace;
-      font-size: 12px;
-      display: flex;
-      flex-direction: column;
-    }
+    html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;  /* Changed to column to stack elements vertically */
+  justify-content: space-between;  /* To push the footer to the bottom */
+  height: 100vh;  
+  margin: 0;
+}
+
 
     canvas {
       position: absolute;
@@ -95,56 +100,50 @@
       object-fit: contain;
     }
 
-    .bandcamp-wrapper {
-      position: relative;
-      max-width: 100%;
-      width: 350px;
-      height: 350px;
-      margin: auto;
-    }
+   .bandcamp-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 80%;
+  height: 80%;
+  overflow: hidden;
+}
 
-    .bandcamp-wrapper iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+}
 
-    @media (max-width: 768px) {
-      .bandcamp-wrapper {
-        width: 100%;
-        height: auto;
-      }
 
       .bandcamp-wrapper iframe {
-        position: relative;
-        /*width: 100%;
-        height: 100%;*/
-      }
-    }
+  width: 80%;
+  height: 42px;
+  max-height: 400px; /* or whatever value you find optimal */
+}
+
+@media only screen and (max-width: 600px) {
+  .bandcamp-wrapper {
+    width: 90%;
+    height: 90%;
+  }}
+
+
+
+iframe {
+  display: block;  /* Block-level elements can be centered */
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;  /* Or whatever width you want */
+}
+
   </style>
 
   <script>
-    function adjustPlayerSize() {
-      var bandcampWrapper = document.querySelector('.bandcamp-wrapper');
-      var bandcampPlayer = document.querySelector('.bandcamp-wrapper iframe');
-      var footer = document.querySelector('footer');
-
-      var availableHeight = window.innerHeight - footer.offsetHeight;
-      var playerHeight = bandcampPlayer.offsetHeight;
-
-      if (playerHeight < availableHeight) {
-        var paddingTop = (availableHeight - playerHeight) / 2;
-        bandcampWrapper.style.paddingTop = paddingTop + 'px';
-      } else {
-        bandcampWrapper.style.paddingTop = '0';
-      }
-    }
-
-    window.addEventListener('resize', adjustPlayerSize);
-    window.addEventListener('load', adjustPlayerSize);
+    
   </script>
 
 </head>
@@ -235,12 +234,12 @@
     document.body.addEventListener("click", toggleAudio);
   </script>
 
-  <div class="bandcamp-wrapper">
-    <iframe style="border: 0;"
-      src="https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=large/bgcol=333333/linkcol=0f91ff/minimal=true/transparent=true/"
-      seamless>
-      <a href="https://simonlowes.bandcamp.com/album/imitate">Imitate by Simon Lowes</a>
-    </iframe>
+  <div class="content-wrapper">
+    <div class="bandcamp-wrapper">
+      <iframe style="border: 0; width: 350px; height: 470px;"
+        src="https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=large/bgcol=333333/linkcol=0f91ff/tracklist=false/transparent=true/"
+        seamless><a href="https://simonlowes.bandcamp.com/album/imitate">Imitate by Simon Lowes</a></iframe>
+    </div>
   </div>
 
   <footer>
