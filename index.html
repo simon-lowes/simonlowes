@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+  <link rel="stylesheet" type="text/css" href="css/style.css">
   <link rel="icon" href="favicons/fav16.ico" type="image/x-icon" sizes="16x16">
   <link rel="icon" href="favicons/fav32.ico" type="image/x-icon" sizes="32x32">
   <link rel="icon" href="favicons/fav48.ico" type="image/x-icon" sizes="48x48">
@@ -31,13 +32,7 @@
     ]
   }
   </script>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7NV4RLT1ZW"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-7NV4RLT1ZW');
-  </script>
+
   <title>Simon Lowes - Musician</title>
   <meta name="description"
     content="Simon Lowes - Discover and listen to the music of Simon Lowes on various platforms such as Spotify, Apple Music, YouTube Music, and SoundCloud. Follow Simon on social media platforms like YouTube, Facebook, Instagram, and Twitter.">
@@ -60,201 +55,14 @@
   <meta name="twitter:title" content="Simon Lowes - Musician">
   <meta name="twitter:description"
     content="Simon Lowes is a professional musician known for his unique style and captivating performances. Discover his music, tour dates, and more on the official website.">
-  <meta name="twitter:image" content="URL to the image">
-
-  <style>
-    html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-body {
-  display: flex;
-  flex-direction: column;  /* Changed to column to stack elements vertically */
-  justify-content: space-between;  /* To push the footer to the bottom */
-  height: 100vh;  
-  margin: 0;
-}
-
-
-    canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: -1;
-    }
-
-    footer {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      text-align: center;
-      background: rgba(0, 0, 0, 0.312);
-      /* semi-transparent black */
-      padding: 5px 0;
-      color: #fff;
-      /* Set the text color to white */
-    }
-
-    footer ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    footer ul li {
-      display: inline-block;
-      margin: 0 10px;
-    }
-
-    footer ul li a {
-      color: #fff;
-      text-decoration: none;
-      width: 10px;
-      height: 10px;
-    }
-
-    footer ul li a img {
-      width: 50%;
-      height: 50%;
-      object-fit: contain;
-    }
-
-   .bandcamp-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  width: 80%;
-  height: 80%;
-  overflow: hidden;
-}
-
-.content-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    flex-grow: 1;
-}
-
-
-      .bandcamp-wrapper iframe {
-  width: 80%;
-  height: 42px;
-  max-height: 400px; /* or whatever value you find optimal */
-}
-
-@media only screen and (max-width: 600px) {
-  .bandcamp-wrapper {
-    width: 90%;
-    height: 90%;
-  }}
-
-
-
-iframe {
-  display: block;  /* Block-level elements can be centered */
-  margin-left: auto;
-  margin-right: auto;
-  width: 50%;  /* Or whatever width you want */
-}
-
-  </style>
-
-  <script>
-    
-  </script>
+  <meta name="twitter:image" content="https://pbs.twimg.com/profile_images/1670264091825385474/RpztmIjq_400x400.jpg">
 
 </head>
 
 <body>
-  <audio id="myAudio" loop>
-    <source src="neverthere.mp3" type="audio/mpeg">
-  </audio>
 
-  <canvas id="canvas"></canvas>
-
-  <script>
-    var canvas = document.getElementById("canvas");
-    var ctx = canvas.getContext("2d");
-
-    var COLORS = [];
-    var NUM_COLS;
-    var NUM_ROWS;
-
-    function setCanvasSize() {
-      var SCREEN_WIDTH = document.documentElement.clientWidth;
-      var SCREEN_HEIGHT = document.documentElement.clientHeight;
-
-      canvas.width = SCREEN_WIDTH;
-      canvas.height = SCREEN_HEIGHT;
-
-      COLORS = [];
-      var NUM_COLORS = 100000;
-      for (var i = 0; i < NUM_COLORS; i++) {
-        COLORS.push(
-          "rgb(" +
-          Math.floor(Math.random() * 256) +
-          "," +
-          Math.floor(Math.random() * 256) +
-          "," +
-          Math.floor(Math.random() * 256) +
-          ")"
-        );
-      }
-
-      NUM_COLS = Math.floor(SCREEN_WIDTH / 10);
-      NUM_ROWS = Math.floor(SCREEN_HEIGHT / 10);
-    }
-
-    function draw() {
-      // Clear the canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw the background color
-      ctx.fillStyle = COLORS[Math.floor(Date.now() / 500) % COLORS.length];
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw the numbers
-      var x = 0;
-      var y = 0;
-      for (var i = 0; i < NUM_COLS; i++) {
-        for (var j = 0; j < NUM_ROWS; j++) {
-          var num = Math.floor(Math.random() * 100);
-          ctx.fillStyle = COLORS[num];
-          ctx.fillText(num, x, y);
-          y += 10;
-        }
-        x += 10;
-        y = 0;
-      }
-    }
-
-    setInterval(draw, 1000);
-
-    setCanvasSize();
-    window.addEventListener("resize", setCanvasSize);
-
-    // Get the audio element
-    var audio = document.getElementById("myAudio");
-
-    // Function to play and pause the audio on click
-    function toggleAudio(event) {
-      var target = event.target;
-      if (!target.closest("footer")) {
-        if (audio.paused) {
-          audio.play();
-        } else {
-          audio.pause();
-        }
-      }
-    }
-
-    document.body.addEventListener("click", toggleAudio);
-  </script>
+<canvas id="canvas"></canvas>
+<audio id="myAudio" src="neverthere.mp3"></audio>
 
   <div class="content-wrapper">
     <div class="bandcamp-wrapper">
@@ -288,6 +96,7 @@ iframe {
             src="https://img.icons8.com/ios-filled/50/ffffff/twitter.png" alt="Twitter" /></a></li>
     </ul>
   </footer>
+  <script src="JS/script.js"></script>
 </body>
 
 </html>
