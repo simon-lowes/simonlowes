@@ -20,6 +20,7 @@ body {
   justify-content: space-between;
   height: 100vh;
   margin: 0;
+  overflow: hidden;
 }
 
 canvas {
