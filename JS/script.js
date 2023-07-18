@@ -93,36 +93,24 @@ function toggleAudio(event) {
 
 document.body.addEventListener("click", toggleAudio);
 
-// Define the URLs for the large and small players
-var largePlayerURL = 'https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=large/bgcol=333333/linkcol=0f91ff/tracklist=false/transparent=true/';
-var smallPlayerURL = 'https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=small/bgcol=333333/linkcol=0f91ff/transparent=true/';  // replace with your small player URL
-
-// Get a reference to the player iframe
-var player = document.getElementById('bandcamp-player');
-
-// Function to detect if the user is on a mobile device
-function isMobile() {
-  return /Mobi|Android/i.test(navigator.userAgent);
+// Set the player source based on the orientation
+function setPlayerSource() {
+  // Delay the execution of the function by 200 milliseconds
+  setTimeout(function() {
+    var player = document.getElementById('bandcamp-player');
+    if (window.innerWidth < window.innerHeight) {
+      // Portrait mode
+      player.src = "https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=large/bgcol=333333/linkcol=0f91ff/tracklist=false/transparent=true/";
+    } else {
+      // Landscape mode
+      player.src = "https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=small/bgcol=ffffff/linkcol=0687f5/transparent=true/";
+    }
+  }, 200);
 }
 
-// Function to update the player size
-function updatePlayerSize() {
-  // Check if the device is in landscape mode and the user is on a mobile device
-  if (window.innerWidth > window.innerHeight && isMobile()) {
-    // If true, use the small player
-    player.src = smallPlayerURL;
-    player.width = "100%";
-    player.height = "500px";  // adjust this value as needed
-  } else {
-    // Otherwise, use the large player
-    player.src = largePlayerURL;
-    player.width = "350px";
-    player.height = "470px";
-  }
-}
+// Set the initial player source
+setPlayerSource();
 
-// Update the player size when the window is resized
-window.addEventListener('resize', updatePlayerSize);
+// Update the player source whenever the window is resized
+window.addEventListener('resize', setPlayerSource);
 
-// Update the player size when the page loads
-updatePlayerSize();
