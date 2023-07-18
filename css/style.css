@@ -15,13 +15,12 @@ body {
 }
 
 body {
-  position: relative;
+  height: calc(100 * var(--vh));
+  margin: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 100vh;
-  margin: 0;
-  overflow: hidden;
 }
 
 canvas {
