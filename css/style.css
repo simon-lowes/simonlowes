@@ -22,7 +22,6 @@ body {
   margin: 0;
 }
 
-
 canvas {
   position: absolute;
   top: 0;
@@ -39,7 +38,6 @@ footer {
 
   padding: 5px 0;
   color: #fff;
-
 }
 
 footer ul {
@@ -84,7 +82,6 @@ footer ul li a img {
   flex-grow: 1;
 }
 
-
 .bandcamp-wrapper iframe {
   width: 80%;
   height: 42px;
@@ -98,11 +95,33 @@ footer ul li a img {
   }
 }
 
-
-
 iframe {
   display: block;
   margin-left: auto;
   margin-right: auto;
   width: 50%;
+}
+
+.bandcamp-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+@media screen and (orientation: landscape) and (max-width: 600px) {
+  .bandcamp-container {
+    height: calc(100vh - 100px);
+    /* adjust this value as needed */
+  }
+}
+
+.bandcamp-container::-webkit-scrollbar {
+  display: none;
+}
+
+.bandcamp-container {
+  -ms-overflow-style: none;
+  /* Internet Explorer and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
