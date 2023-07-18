@@ -100,7 +100,7 @@ function setPlayerSource() {
     var player = document.getElementById('bandcamp-player');
     if (window.innerWidth < window.innerHeight) {
       // Portrait mode
-      player.src = "https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=large/bgcol=333333/linkcol=0f91ff/tracklist=false/transparent=true/";
+      player.src = "https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=small/bgcol=333333/linkcol=0687f5/transparent=true/";
     } else {
       // Landscape mode
       player.src = "https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=small/bgcol=333333/linkcol=0687f5/transparent=true/";
