@@ -1,26 +1,20 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+}
+
 .container-fluid {
   padding: 0;
 }
 
 .display-1 {
   text-align: center;
-}
-
-html,
-body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-body {
-  height: calc(100 * var(--vh));
-  margin: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 }
 
 canvas {
@@ -30,13 +24,51 @@ canvas {
   z-index: -1;
 }
 
+#player-container {
+  position: relative;
+  padding-bottom: 56.25%; /* This value is for an aspect ratio of 16:9. Adjust as needed */
+  height: 0;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+#bandcamp-player {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#bandcamp-link {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+  background-color: black;
+  padding: 10px;
+  text-decoration: none;
+}
+
+@media screen and (max-width: 500px) {
+  #bandcamp-player {
+    display: none;
+  }
+
+  #bandcamp-link {
+    display: block;
+  }
+}
+
 footer {
   position: fixed;
   bottom: 0;
   width: 100%;
   text-align: center;
   background: rgba(0, 0, 0, 0.312);
-
   padding: 5px 0;
   color: #fff;
 }
@@ -63,68 +95,4 @@ footer ul li a img {
   width: 50%;
   height: 50%;
   object-fit: contain;
-}
-
-.bandcamp-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  width: 80%;
-  height: 80%;
-  overflow: hidden;
-}
-
-.content-wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  flex-grow: 1;
-  overflow: hidden;
-}
-
-.bandcamp-wrapper iframe {
-  width: 80%;
-  height: 42px;
-  max-height: 400px;
-  overflow: hidden;
-}
-
-@media only screen and (max-width: 600px) {
-  .bandcamp-wrapper {
-    width: 90%;
-    height: 90%;
-  }
-}
-
-iframe {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 50%;
-}
-
-.bandcamp-container {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-@media screen and (orientation: landscape) and (max-width: 600px) {
-  .bandcamp-container {
-    height: calc(100vh - 100px);
-    /* adjust this value as needed */
-  }
-}
-
-.bandcamp-container::-webkit-scrollbar {
-  display: none;
-}
-
-.bandcamp-container {
-  -ms-overflow-style: none;
-  /* Internet Explorer and Edge */
-  scrollbar-width: none;
-  /* Firefox */
 }
