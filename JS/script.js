@@ -8,9 +8,6 @@ window.addEventListener('resize', () => {
   document.documentElement.style.setProperty('--vh', `${vh}px`);
 });
 
-// Your existing JavaScript code follows here...
-
-
 window.dataLayer = window.dataLayer || [];
 function gtag() { dataLayer.push(arguments); }
 gtag('js', new Date());
@@ -95,17 +92,14 @@ document.body.addEventListener("click", toggleAudio);
 
 // Set the player source based on the orientation
 function setPlayerSource() {
-  // Delay the execution of the function by 200 milliseconds
-  setTimeout(function() {
-    var player = document.getElementById('bandcamp-player');
-    if (window.innerWidth < window.innerHeight) {
-      // Portrait mode
-      player.src = "https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=small/bgcol=333333/linkcol=0687f5/transparent=true/";
-    } else {
-      // Landscape mode
-      player.src = "https://bandcamp.com/EmbeddedPlayer/album=1117926757/size=small/bgcol=333333/linkcol=0687f5/transparent=true/";
-    }
-  }, 200);
+  var player = document.getElementById('bandcamp-player');
+  if (window.innerWidth < window.innerHeight) {
+    // Portrait mode
+    player.src = "https://simonlowes.bandcamp.com/album/imitate";
+  } else {
+    // Landscape mode
+    player.src = "https://simonlowes.bandcamp.com/album/imitate";
+  }
 }
 
 // Set the initial player source
