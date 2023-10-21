@@ -89,22 +89,3 @@ function toggleAudio(event) {
 }
 
 document.body.addEventListener("click", toggleAudio);
-
-// Set the player source based on the orientation
-function setPlayerSource() {
-  var player = document.getElementById('bandcamp-player');
-  if (window.innerWidth < window.innerHeight) {
-    // Portrait mode
-    player.src = "https://simonlowes.bandcamp.com/album/imitate";
-  } else {
-    // Landscape mode
-    player.src = "https://simonlowes.bandcamp.com/album/imitate";
-  }
-}
-
-// Set the initial player source
-setPlayerSource();
-
-// Update the player source whenever the window is resized
-window.addEventListener('resize', setPlayerSource);
-
