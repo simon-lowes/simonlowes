@@ -4,17 +4,16 @@ body {
   margin: 0;
   padding: 0;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
   overflow: auto;
 }
 
-.container-fluid {
-  padding: 0;
-}
-
-.display-1 {
-  text-align: center;
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 
 canvas {
@@ -26,7 +25,7 @@ canvas {
 
 #player-container {
   position: relative;
-  padding-bottom: 56.25%; /* This value is for an aspect ratio of 16:9. Adjust as needed */
+  padding-bottom: 56.25%;
   height: 0;
   overflow: hidden;
   max-width: 100%;
@@ -41,7 +40,6 @@ canvas {
 }
 
 #bandcamp-link {
-  display: none;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -60,6 +58,8 @@ canvas {
 
   #bandcamp-link {
     display: block;
+    font-size: 14px;
+    padding: 5px;
   }
 }
 
