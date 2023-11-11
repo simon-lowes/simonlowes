@@ -9,14 +9,16 @@ window.addEventListener('resize', () => {
 });
 
 window.dataLayer = window.dataLayer || [];
-function gtag() { dataLayer.push(arguments); }
+function gtag() {
+  dataLayer.push(arguments);
+}
 gtag('js', new Date());
 gtag('config', 'G-7NV4RLT1ZW');
 
-var canvas = document.getElementById("canvas");
-var ctx = canvas.getContext("2d");
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-var COLORS = [];
+const COLORS = [];
 var NUM_COLS;
 var NUM_ROWS;
 
@@ -27,17 +29,19 @@ function setCanvasSize() {
   canvas.width = SCREEN_WIDTH;
   canvas.height = SCREEN_HEIGHT;
 
-  COLORS = [];
+  // Empty the COLORS array
+  COLORS.length = 0;
+
   var NUM_COLORS = 100000;
   for (var i = 0; i < NUM_COLORS; i++) {
     COLORS.push(
-      "rgb(" +
-      Math.floor(Math.random() * 256) +
-      "," +
-      Math.floor(Math.random() * 256) +
-      "," +
-      Math.floor(Math.random() * 256) +
-      ")"
+      'rgb(' +
+        Math.floor(Math.random() * 256) +
+        ',' +
+        Math.floor(Math.random() * 256) +
+        ',' +
+        Math.floor(Math.random() * 256) +
+        ')'
     );
   }
 
@@ -54,10 +58,10 @@ function draw() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Draw the numbers
-  var x = 0;
-  var y = 0;
-  for (var i = 0; i < NUM_COLS; i++) {
-    for (var j = 0; j < NUM_ROWS; j++) {
+  let x = 0;
+  let y = 0;
+  for (let i = 0; i < NUM_COLS; i++) {
+    for (let j = 0; j < NUM_ROWS; j++) {
       var num = Math.floor(Math.random() * 100);
       ctx.fillStyle = COLORS[num];
       ctx.fillText(num, x, y);
@@ -71,15 +75,15 @@ function draw() {
 setInterval(draw, 1000);
 
 setCanvasSize();
-window.addEventListener("resize", setCanvasSize);
+window.addEventListener('resize', setCanvasSize);
 
 // Get the audio element
-var audio = document.getElementById("myAudio");
+var audio = document.getElementById('myAudio');
 
 // Function to play and pause the audio on click
 function toggleAudio(event) {
   var target = event.target;
-  if (!target.closest("footer")) {
+  if (!target.closest('footer')) {
     if (audio.paused) {
       audio.play();
     } else {
@@ -88,4 +92,4 @@ function toggleAudio(event) {
   }
 }
 
-document.body.addEventListener("click", toggleAudio);
+document.body.addEventListener('click', toggleAudio);
