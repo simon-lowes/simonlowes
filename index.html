@@ -1,20 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- Google tag (gtag.js) -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-7NV4RLT1ZW"
-    ></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag('js', new Date());
-
-      gtag('config', 'G-7NV4RLT1ZW');
-    </script>
     <link rel="stylesheet" type="text/css" href="css/style.min.css" />
     <link
       rel="icon"
@@ -85,25 +71,227 @@
       content="Simon Lowes, Musician, Performer, Tours, Music, Lowes, Simon, Song, Songwriter, Writer, Guitar, Guitarist, Synthesizer, Drums, Alternative, Rock, Rock and Roll, Alternative Rock Musician, Rock Artist, Artist, Alternative Music, Singer-songwriter, Band, Indie rock, Alternative sound, Music producer, Production, Melodic Rock, Moderate Rock, Singer, Vocalist, Song composition, Alternative Genre, Slowburn, Slowburner, Live performance, Live Music, Live, Studio Recording, Saltwell Studio, Chris Pepper, Rob Baldock, re:liverecordings, Music Industry, Alternative Rock Band, Alt Rock, Creative Expression, Alternative Pop, Pop, Pop Music, Solo, Lyrics, SoundCloud, Apple Music, Spotify, BandCamp, YouTube-Music, Deezer, Amazon Music, Pandora, Tidal, iHeartRadio, Napster, JioSaavn, Gaana, Tencent Music, Anghami, Yandex Music, QQ Music, KKBOX, Wynk Music, Boomplay, YouTube, Genre-bending, Music Streaming, Streaming, Simon Lowe, Simon Low, Lowes Simon, Lowe Simon, Low Simon, Simon Lowes Musician, Simon Lowe Musician, Simon Low Musician, Lowes Simon Musician, Lowe Simon Musician, Low Simon Musician, Simon Lowes Music, Simon Lowe Music, Simon Low Music, Lowes Simon Music, Lowe Simon Music, Low Simon Music, Lowes Simon Music, Lowe Simon Music, Low Simon Music, Simon Lowes Singer, Simon Lowe Singer, Simon Low Singer, Lowes Simon Singer, Lowe Simon Singer, Simon Lowes Songwriter, Simon Lowe Songwriter, Simon Low Songwriter, Lowes Simon Songwriter, Lowe Simon Songwriter, Low Simon Songwriter, Simon Lowes Artist, Simon Lowe Artist, Simon Low Artist, Lowes Simon Artist, Lowe Simon Artist, Low Simon Artist, Simom Lowes Songs, Simon Lowe Songs, Simon Low Songs, Simon Lowes Band, Simon Lowe Band, Simon Low Band, Band Simon Lowes, Band Simon Lowe, Band Simon Low, Lowes Simon Band, Lowe Simon Band, Low Simon Band, Simon Lowes Ablums, Simon Lowe Albums, Simon Low Albums, Lowes Simon Albums, Lowe Simon Albums, Low Simon Albums, Simon Lowes Singles, Simon Lowe Singles, Simon Low Singles, Lowes Simon Singles, Lowe Simon Singles, Low Simon Singles, Simon Lowes Discography, Simon Lowe Discography, Simon Low Discography, Lowes Simon Discography, Lowe Simon Discography, Low Simon Discography, Simon Lowes Musical Artist, Simon Lowe Musical Artist, Simon Low Musical Artist, Lowes Simon Musical Artist, Lowe Simon Musical Artist, Low Simon Musical Artist, Simon Lowes Biography, Simon Lowe Biography, Simon Low Biography, Lowes Simon Biography, Lowe Simon Biography, Low Simon Biography, Simon Lowes Official Website, Simon Lowe Official Website, Simon Low Official Website, Lowes Simon Official Website, Lowe Simon Official Website, Low Simon Offical Website, Blues, Punk Rock, Acoustic Guitar, Electric Guitar, Fender, Gibson, Les Paul, Telecaster, Martin Guitar, Gibson Guitar, Fender Guitar, Fender Telecaster, Riffs, Instagram, Facebook, Tumblr, Twitter, TikTok, YouTube, Imitate Song, Slowburner Album, Time Song, Stolen Moment Song, Nobody Else Song, False Light Song, Mother Earth Song, For As Long As It Can Be Song, Here Right Now Song, Turn Me Off Song, Eternity Song, When It Falls Song, Air Song, Nobody Song, Slow Motion Song, Simon Loe, Simon Loes, Simon Loze"
     />
     <meta name="robots" content="index, follow" />
+    <style>
+      .skip-link {
+        position: absolute;
+        top: 0.5rem;
+        left: 50%;
+        transform: translate(-50%, -150%);
+        background: #ffffff;
+        color: #111111;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        z-index: 1000;
+        transition: transform 0.2s ease;
+      }
+      .skip-link:focus {
+        transform: translate(-50%, 0);
+        outline: 2px solid #111111;
+        outline-offset: 3px;
+      }
+      .audio-toggle {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        clip-path: inset(50%);
+        border: 0;
+        white-space: nowrap;
+      }
+      .audio-toggle:focus-visible,
+      .audio-toggle:active {
+        position: fixed;
+        left: 50%;
+        bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+        transform: translateX(-50%);
+        padding: 0.75rem 1.75rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        background: rgba(15, 15, 15, 0.85);
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        clip: auto;
+        clip-path: none;
+        width: auto;
+        height: auto;
+        margin: 0;
+        white-space: normal;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+      .audio-toggle:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 4px;
+      }
+      .audio-toggle[aria-pressed='true']:focus-visible,
+      .audio-toggle[aria-pressed='true']:active {
+        background: #ffffff;
+        color: #111111;
+      }
+      #cookie-message {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: min(90vw, 420px);
+        background: rgba(15, 15, 15, 0.95);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem 1.5rem;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        font-family: 'freight-sans-pro', 'Helvetica Neue', Helvetica, Arial,
+          sans-serif;
+        z-index: 999;
+      }
+      #cookie-message[hidden] {
+        display: none;
+      }
+      #cookie-message .cookie-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+      #cookie-message .cookie-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        position: relative;
+        background: transparent;
+      }
+      #cookie-message .cookie-icon::before,
+      #cookie-message .cookie-icon::after {
+        content: '';
+        position: absolute;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+      }
+      #cookie-message .cookie-icon::before {
+        width: 6px;
+        height: 6px;
+        top: 6px;
+        left: 9px;
+      }
+      #cookie-message .cookie-icon::after {
+        width: 5px;
+        height: 5px;
+        top: 16px;
+        right: 6px;
+      }
+      #cookie-message h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+      #cookie-message p {
+        margin: 0;
+        line-height: 1.4;
+        font-size: 1rem;
+      }
+      #cookie-message button.cookie-dismiss {
+        position: absolute;
+        top: 0.6rem;
+        right: 0.75rem;
+        background: none;
+        border: none;
+        color: #ffffff;
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+      }
+      #cookie-message button.cookie-dismiss:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 2px;
+      }
+      @media (max-width: 600px) {
+        #cookie-message {
+          top: 50%;
+          padding: 1rem 1.25rem 1.25rem;
+        }
+        #cookie-message p {
+          font-size: 0.95rem;
+        }
+        .audio-toggle:focus-visible,
+        .audio-toggle:active {
+          width: min(90%, 320px);
+        }
+      }
+    </style>
   </head>
   <body>
-    <canvas id="canvas"></canvas>
-    <div class="content-wrapper">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <canvas id="canvas" aria-hidden="true"></canvas>
+    <main class="content-wrapper" id="main-content">
       <!-- Embed Posthaven blog -->
       <iframe
         id="blog-iframe"
         title="Simon Lowes Blog"
         src="https://simonlowes.posthaven.com"
+        loading="lazy"
         style="width: 60%; height: 60vh; border: none"
       ></iframe>
+    </main>
+    <audio
+      id="myAudio"
+      src="neverthere.mp3"
+      preload="none"
+      aria-label="Audio player for &quot;Never There&quot;"
+    ></audio>
+    <button
+      id="audio-toggle"
+      class="audio-toggle"
+      type="button"
+      aria-controls="myAudio"
+      aria-pressed="false"
+    >
+      Play "Never There"
+    </button>
+    <div
+      id="cookie-message"
+      role="dialog"
+      aria-live="polite"
+      aria-label="Cookie notice"
+      aria-modal="true"
+      tabindex="-1"
+    >
+      <button
+        type="button"
+        class="cookie-dismiss"
+        aria-label="Close cookie notice"
+        data-cookie-dismiss
+      >
+        &times;
+      </button>
+      <div class="cookie-header">
+        <span class="cookie-icon" aria-hidden="true"></span>
+        <h2>Cookie Notice</h2>
+      </div>
+      <p>
+        This site does not currently use cookies or similar trackers. If that
+        changes, this notice will be updated. Close this message to continue
+        browsing.
+      </p>
     </div>
-    <audio id="myAudio" src="neverthere.mp3"></audio>
 
-    <footer>
+    <footer role="contentinfo">
       <ul>
         <li>
-          <a href="https://simonlowes.bandcamp.com" target="_blank"
-            ><img
+          <a
+            href="https://simonlowes.bandcamp.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          ><img
               src="https://img.icons8.com/ios-filled/50/ffffff/bandcamp.png"
               alt="BandCamp"
           /></a>
@@ -112,6 +300,7 @@
           <a
             href="https://open.spotify.com/artist/1E8slBJPNvUSPpRIh3xtkI?si=LOjXYVnQRhiZU6XmjkUdhg"
             target="_blank"
+            rel="noopener noreferrer"
             ><img
               src="https://img.icons8.com/ios-filled/50/ffffff/spotify.png"
               alt="Spotify"
@@ -121,6 +310,7 @@
           <a
             href="https://music.apple.com/gb/artist/simon-lowes/1351008298"
             target="_blank"
+            rel="noopener noreferrer"
             ><img
               src="https://img.icons8.com/ios-filled/50/ffffff/apple-music.png"
               alt="Apple Music"
@@ -130,27 +320,37 @@
           <a
             href="https://music.youtube.com/channel/UCI4xshiWQrOu_27TPmW9A2g?feature=share"
             target="_blank"
+            rel="noopener noreferrer"
             ><img
               src="https://img.icons8.com/ios-filled/50/ffffff/youtube-music.png"
               alt="YouTube Music"
           /></a>
         </li>
         <li>
-          <a href="https://soundcloud.com/simonlowesmusic" target="_blank"
+          <a
+            href="https://soundcloud.com/simonlowesmusic"
+            target="_blank"
+            rel="noopener noreferrer"
             ><img
               src="https://img.icons8.com/ios-filled/50/ffffff/soundcloud.png"
               alt="SoundCloud"
           /></a>
         </li>
         <li>
-          <a href="https://www.youtube.com/simonlowesmusic" target="_blank"
+          <a
+            href="https://www.youtube.com/simonlowesmusic"
+            target="_blank"
+            rel="noopener noreferrer"
             ><img
               src="https://img.icons8.com/ios-filled/50/ffffff/youtube-play.png"
               alt="YouTube Channel"
           /></a>
         </li>
         <li>
-          <a href="https://www.instagram.com/simonlowesmusic/" target="_blank"
+          <a
+            href="https://www.instagram.com/simonlowesmusic/"
+            target="_blank"
+            rel="noopener noreferrer"
             ><img
               src="https://img.icons8.com/ios-filled/50/ffffff/instagram-new.png"
               alt="Instagram"
@@ -159,6 +359,40 @@
       </ul>
     </footer>
 
+    <script>
+      (function () {
+        var notice = document.getElementById('cookie-message');
+        if (!notice) {
+          return;
+        }
+        var dismiss = notice.querySelector('[data-cookie-dismiss]');
+        var previouslyFocused = document.activeElement;
+        var closeNotice = function () {
+          notice.setAttribute('hidden', '');
+          notice.removeAttribute('aria-modal');
+          if (previouslyFocused && previouslyFocused.focus) {
+            previouslyFocused.focus();
+          }
+        };
+        if (dismiss) {
+          dismiss.addEventListener('click', closeNotice);
+        }
+        if (!notice.hasAttribute('hidden')) {
+          window.requestAnimationFrame(function () {
+            notice.focus();
+          });
+        }
+        notice.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape' || event.key === 'Esc') {
+            event.preventDefault();
+            closeNotice();
+          } else if (event.key === 'Tab' && dismiss) {
+            event.preventDefault();
+            dismiss.focus();
+          }
+        });
+      })();
+    </script>
     <script src="js/script.min.js" async></script>
   </body>
 </html>
