@@ -1,12 +1,6 @@
 // Calculate the viewport height and set it as a CSS variable
-let vh = window.innerHeight * 0.01;
-document.documentElement.style.setProperty('--vh', `${vh}px`);
-
-// Update the viewport height whenever the window is resized
-window.addEventListener('resize', () => {
-  let vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
-});
+var vh = window.innerHeight * 0.01;
+document.documentElement.style.setProperty('--vh', vh + 'px');
 
 window.dataLayer = window.dataLayer || [];
 function gtag() {
@@ -15,12 +9,37 @@ function gtag() {
 gtag('js', new Date());
 gtag('config', 'G-7NV4RLT1ZW');
 
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
 
-const COLORS = [];
-var NUM_COLS;
-var NUM_ROWS;
+// Only generate 100 colors (enough for the random number range 0-99)
+var COLORS = [];
+var NUM_COLORS = 100;
+for (var i = 0; i < NUM_COLORS; i++) {
+  COLORS.push(
+    'rgb(' +
+      Math.floor(Math.random() * 256) +
+      ',' +
+      Math.floor(Math.random() * 256) +
+      ',' +
+      Math.floor(Math.random() * 256) +
+      ')'
+  );
+}
+
+var NUM_COLS = 0;
+var NUM_ROWS = 0;
+
+// Debounce utility for resize events
+var resizeTimeout = null;
+function debounce(fn, delay) {
+  return function () {
+    if (resizeTimeout) {
+      clearTimeout(resizeTimeout);
+    }
+    resizeTimeout = setTimeout(fn, delay);
+  };
+}
 
 function setCanvasSize() {
   var SCREEN_WIDTH = document.documentElement.clientWidth;
@@ -29,40 +48,30 @@ function setCanvasSize() {
   canvas.width = SCREEN_WIDTH;
   canvas.height = SCREEN_HEIGHT;
 
-  // Empty the COLORS array
-  COLORS.length = 0;
-
-  var NUM_COLORS = 100000;
-  for (var i = 0; i < NUM_COLORS; i++) {
-    COLORS.push(
-      'rgb(' +
-        Math.floor(Math.random() * 256) +
-        ',' +
-        Math.floor(Math.random() * 256) +
-        ',' +
-        Math.floor(Math.random() * 256) +
-        ')'
-    );
-  }
-
   NUM_COLS = Math.floor(SCREEN_WIDTH / 10);
   NUM_ROWS = Math.floor(SCREEN_HEIGHT / 10);
+
+  // Update viewport height CSS variable
+  vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', vh + 'px');
 }
 
 function draw() {
-  // Clear the canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  var width = canvas.width;
+  var height = canvas.height;
 
-  // Draw the background color
-  ctx.fillStyle = COLORS[Math.floor(Date.now() / 500) % COLORS.length];
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Clear and draw the background color
+  ctx.fillStyle = COLORS[Math.floor(Date.now() / 500) % NUM_COLORS];
+  ctx.fillRect(0, 0, width, height);
 
   // Draw the numbers
-  let x = 0;
-  let y = 0;
-  for (let i = 0; i < NUM_COLS; i++) {
-    for (let j = 0; j < NUM_ROWS; j++) {
-      var num = Math.floor(Math.random() * 100);
+  var x = 0;
+  var y = 0;
+  var cols = NUM_COLS;
+  var rows = NUM_ROWS;
+  for (var i = 0; i < cols; i++) {
+    for (var j = 0; j < rows; j++) {
+      var num = Math.floor(Math.random() * NUM_COLORS);
       ctx.fillStyle = COLORS[num];
       ctx.fillText(num, x, y);
       y += 10;
@@ -72,24 +81,64 @@ function draw() {
   }
 }
 
+setCanvasSize();
 setInterval(draw, 1000);
 
-setCanvasSize();
-window.addEventListener('resize', setCanvasSize);
+window.addEventListener('resize', debounce(setCanvasSize, 150));
 
 // Get the audio element
 var audio = document.getElementById('myAudio');
+var audioToggle = document.getElementById('audio-toggle');
 
-// Function to play and pause the audio on click
-function toggleAudio(event) {
-  var target = event.target;
-  if (!target.closest('footer')) {
+if (audio && audioToggle) {
+  var updateAudioToggle = function () {
+    var isPlaying = !audio.paused;
+    audioToggle.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
+    audioToggle.textContent = isPlaying
+      ? 'Pause "Never There"'
+      : 'Play "Never There"';
+  };
+  audioToggle.addEventListener('click', function (event) {
+    event.stopPropagation();
+    if (audio.paused) {
+      var playAttempt = audio.play();
+      if (playAttempt && typeof playAttempt.catch === 'function') {
+        playAttempt.catch(function () {
+          audioToggle.setAttribute('aria-pressed', 'false');
+          updateAudioToggle();
+        });
+      }
+    } else {
+      audio.pause();
+    }
+  });
+  audio.addEventListener('play', updateAudioToggle);
+  audio.addEventListener('pause', updateAudioToggle);
+  updateAudioToggle();
+}
+
+if (audio) {
+  document.body.addEventListener('click', function (event) {
+    var target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+    if (target.closest('#cookie-message')) {
+      return;
+    }
+    if (audioToggle && target.closest('#audio-toggle')) {
+      return;
+    }
+    if (target.closest('footer')) {
+      return;
+    }
+    if (target.closest('.skip-link')) {
+      return;
+    }
     if (audio.paused) {
       audio.play();
     } else {
       audio.pause();
     }
-  }
+  });
 }
-
-document.body.addEventListener('click', toggleAudio);
