@@ -102,8 +102,6 @@ function setCanvasSize() {
 }
 
 function draw(timestamp) {
-  if (!timestamp) timestamp = performance.now();
-
   var width = canvas.width;
   var height = canvas.height;
 
