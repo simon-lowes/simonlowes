@@ -69,7 +69,7 @@ footer {
   z-index: 100;
 }
 
-footer ul {
+footer nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -80,11 +80,11 @@ footer ul {
   gap: 0.5rem;
 }
 
-footer ul li {
+footer nav ul li {
   display: flex;
 }
 
-footer ul li a {
+footer nav ul li a {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -95,18 +95,27 @@ footer ul li a {
   transition: background 0.2s ease, transform 0.15s ease;
 }
 
-footer ul li a:hover,
-footer ul li a:focus {
+footer nav ul li a:hover,
+footer nav ul li a:focus {
   background: rgba(255, 255, 255, 0.15);
   transform: scale(1.1);
 }
 
-footer ul li a:focus-visible {
+footer nav ul li a:focus {
   outline: 2px solid #fff;
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
-footer ul li a img {
+footer nav ul li a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+footer nav ul li a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+footer nav ul li a img {
   width: 32px;
   height: 32px;
   object-fit: contain;
@@ -128,7 +137,7 @@ footer ul li a img {
     gap: 0.75rem;
   }
 
-  footer ul li a img {
+  footer nav ul li a img {
     width: 36px;
     height: 36px;
   }
@@ -150,7 +159,7 @@ footer ul li a img {
     gap: 1rem;
   }
 
-  footer ul li a img {
+  footer nav ul li a img {
     width: 40px;
     height: 40px;
   }
@@ -177,7 +186,7 @@ footer ul li a img {
     gap: 1.25rem;
   }
 
-  footer ul li a img {
+  footer nav ul li a img {
     width: 44px;
     height: 44px;
   }
