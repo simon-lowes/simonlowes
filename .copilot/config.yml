@@ -1,0 +1,9 @@
+agent:
+  instructions: |
+    When modifying the site's layout or styling, prefer modern CSS approaches such as Flexbox and Grid.
+    Avoid introducing new dependencies or frameworks.
+    Keep all spacing, colours, and typography consistent with the existing design.
+    Ensure changes support a fully responsive layout from 320px mobile widths upwards.
+    When editing `index.html` or `css/style.css`, maintain a clean structure and avoid fixed positioning that breaks on smaller screens.
+    Always propose a clear plan before applying changes.
+    After making edits, provide concise commit messages summarising what was changed and why.
