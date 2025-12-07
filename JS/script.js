@@ -19,7 +19,7 @@ for (var i = 0; i < NUM_COLORS; i++) {
   COLORS_RGB.push([
     Math.floor(Math.random() * 256),
     Math.floor(Math.random() * 256),
-    Math.floor(Math.random() * 256)
+    Math.floor(Math.random() * 256),
   ]);
 }
 
@@ -52,7 +52,7 @@ function lerpColor(color1, color2, t) {
   return [
     Math.round(lerp(color1[0], color2[0], t)),
     Math.round(lerp(color1[1], color2[1], t)),
-    Math.round(lerp(color1[2], color2[2], t))
+    Math.round(lerp(color1[2], color2[2], t)),
   ];
 }
 
@@ -77,21 +77,33 @@ function initCellData() {
         currentNum: initialNum,
         targetNum: initialNum,
         currentColor: COLORS_RGB[initialNum].slice(),
-        targetColor: COLORS_RGB[initialNum].slice()
+        targetColor: COLORS_RGB[initialNum].slice(),
       };
     }
   }
 }
 
 function setCanvasSize() {
-  var SCREEN_WIDTH = document.documentElement.clientWidth;
-  var SCREEN_HEIGHT = document.documentElement.clientHeight;
+  // Use window dimensions to avoid mobile browser UI quirks leaving unpainted gaps
+  var SCREEN_WIDTH = window.innerWidth;
+  var SCREEN_HEIGHT = window.innerHeight;
 
-  canvas.width = SCREEN_WIDTH;
-  canvas.height = SCREEN_HEIGHT;
+  // Support high-DPI displays without changing layout size
+  var dpr = window.devicePixelRatio || 1;
+
+  canvas.width = Math.floor(SCREEN_WIDTH * dpr);
+  canvas.height = Math.floor(SCREEN_HEIGHT * dpr);
+
+  // Keep the canvas' CSS size tied to the viewport
+  canvas.style.width = SCREEN_WIDTH + 'px';
+  canvas.style.height = SCREEN_HEIGHT + 'px';
+
+  // Ensure drawing coordinates map to CSS pixels
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   NUM_COLS = Math.floor(SCREEN_WIDTH / 10);
-  NUM_ROWS = Math.floor(SCREEN_HEIGHT / 10);
+  // use ceil so we overdraw and don't leave a strip at the bottom
+  NUM_ROWS = Math.ceil(SCREEN_HEIGHT / 10);
 
   // Re-initialize cell data when canvas resizes
   initCellData();
@@ -194,60 +206,225 @@ setCanvasSize();
 requestAnimationFrame(draw);
 
 window.addEventListener('resize', debounce(setCanvasSize, 150));
+window.addEventListener('orientationchange', debounce(setCanvasSize, 150));
 
-// Get the audio element
-var audio = document.getElementById('myAudio');
-var audioToggle = document.getElementById('audio-toggle');
+// If available, respond to visual viewport changes (mobile address bar show/hide)
+if (window.visualViewport) {
+  window.visualViewport.addEventListener(
+    'resize',
+    debounce(setCanvasSize, 150)
+  );
+}
 
-if (audio && audioToggle) {
-  var updateAudioToggle = function () {
+// =============================================
+// Audio Player Controller
+// =============================================
+(function () {
+  var audio = document.getElementById('myAudio');
+  var player = document.getElementById('audio-player');
+  var playBtn = document.getElementById('audio-play-btn');
+  var seekSlider = document.getElementById('audio-seek');
+  var volumeSlider = document.getElementById('audio-volume');
+  var muteBtn = document.getElementById('audio-mute-btn');
+  var timeElapsed = document.getElementById('audio-time-elapsed');
+  var timeRemaining = document.getElementById('audio-time-remaining');
+
+  // Exit if essential elements missing
+  if (!audio || !player || !playBtn) {
+    return;
+  }
+
+  var isSeeking = false;
+  var previousVolume = 0.75; // Store volume before muting
+
+  // Set initial volume (75%)
+  audio.volume = 0.75;
+
+  // Format time as m:ss or -m:ss
+  function formatTime(seconds, showNegative) {
+    if (!isFinite(seconds) || isNaN(seconds)) {
+      return showNegative ? '-0:00' : '0:00';
+    }
+    var absSeconds = Math.abs(Math.floor(seconds));
+    var mins = Math.floor(absSeconds / 60);
+    var secs = absSeconds % 60;
+    var formatted = mins + ':' + (secs < 10 ? '0' : '') + secs;
+    return showNegative ? '-' + formatted : formatted;
+  }
+
+  // Update play button state
+  function updatePlayButton() {
     var isPlaying = !audio.paused;
-    audioToggle.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
-    audioToggle.textContent = isPlaying
-      ? 'Pause "Never There"'
-      : 'Play "Never There"';
-  };
-  audioToggle.addEventListener('click', function (event) {
-    event.stopPropagation();
+    playBtn.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
+    playBtn.setAttribute(
+      'aria-label',
+      isPlaying ? 'Pause Never There' : 'Play Never There'
+    );
+  }
+
+  // Update time displays and seek slider
+  function updateProgress() {
+    if (isSeeking) return;
+
+    var current = audio.currentTime || 0;
+    var duration = audio.duration || 0;
+
+    // Update seek slider
+    if (duration > 0) {
+      var percent = (current / duration) * 100;
+      seekSlider.value = percent;
+    }
+
+    // Update time displays
+    if (timeElapsed) {
+      timeElapsed.textContent = formatTime(current, false);
+    }
+    if (timeRemaining) {
+      var remaining = duration - current;
+      timeRemaining.textContent = formatTime(remaining, true);
+    }
+  }
+
+  // Update mute button state
+  function updateMuteButton() {
+    var isMuted = audio.muted || audio.volume === 0;
+    muteBtn.setAttribute('aria-pressed', isMuted ? 'true' : 'false');
+    muteBtn.setAttribute('aria-label', isMuted ? 'Unmute audio' : 'Mute audio');
+  }
+
+  // Update volume slider to match audio volume
+  function updateVolumeSlider() {
+    if (volumeSlider) {
+      volumeSlider.value = audio.muted ? 0 : audio.volume * 100;
+    }
+  }
+
+  // Handle audio load error
+  function handleError() {
+    player.classList.add('audio-player--error');
+    playBtn.disabled = true;
+    if (seekSlider) seekSlider.disabled = true;
+    if (volumeSlider) volumeSlider.disabled = true;
+    if (muteBtn) muteBtn.disabled = true;
+  }
+
+  // ----- Event Listeners -----
+
+  // Play/Pause toggle
+  playBtn.addEventListener('click', function () {
     if (audio.paused) {
-      var playAttempt = audio.play();
-      if (playAttempt && typeof playAttempt.catch === 'function') {
-        playAttempt.catch(function () {
-          audioToggle.setAttribute('aria-pressed', 'false');
-          updateAudioToggle();
+      var playPromise = audio.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(function (err) {
+          console.warn('Audio play failed:', err);
         });
       }
     } else {
       audio.pause();
     }
   });
-  audio.addEventListener('play', updateAudioToggle);
-  audio.addEventListener('pause', updateAudioToggle);
-  updateAudioToggle();
-}
 
-if (audio) {
-  document.body.addEventListener('click', function (event) {
-    var target = event.target;
-    if (!(target instanceof Element)) {
+  // Audio state changes
+  audio.addEventListener('play', updatePlayButton);
+  audio.addEventListener('pause', updatePlayButton);
+  audio.addEventListener('timeupdate', updateProgress);
+  audio.addEventListener('loadedmetadata', updateProgress);
+  audio.addEventListener('durationchange', updateProgress);
+  audio.addEventListener('volumechange', function () {
+    updateMuteButton();
+    updateVolumeSlider();
+  });
+  audio.addEventListener('error', handleError);
+
+  // Seek slider interaction
+  if (seekSlider) {
+    seekSlider.addEventListener('input', function () {
+      isSeeking = true;
+      var duration = audio.duration || 0;
+      if (duration > 0) {
+        var seekTime = (seekSlider.value / 100) * duration;
+        // Update time display while seeking
+        if (timeElapsed) {
+          timeElapsed.textContent = formatTime(seekTime, false);
+        }
+        if (timeRemaining) {
+          timeRemaining.textContent = formatTime(duration - seekTime, true);
+        }
+      }
+    });
+
+    seekSlider.addEventListener('change', function () {
+      var duration = audio.duration || 0;
+      if (duration > 0) {
+        audio.currentTime = (seekSlider.value / 100) * duration;
+      }
+      isSeeking = false;
+    });
+  }
+
+  // Volume slider
+  if (volumeSlider) {
+    volumeSlider.addEventListener('input', function () {
+      var vol = volumeSlider.value / 100;
+      audio.volume = vol;
+      audio.muted = vol === 0;
+      if (vol > 0) {
+        previousVolume = vol;
+      }
+    });
+  }
+
+  // Mute toggle
+  if (muteBtn) {
+    muteBtn.addEventListener('click', function () {
+      if (audio.muted || audio.volume === 0) {
+        // Unmute
+        audio.muted = false;
+        audio.volume = previousVolume > 0 ? previousVolume : 0.75;
+      } else {
+        // Mute
+        previousVolume = audio.volume;
+        audio.muted = true;
+      }
+    });
+  }
+
+  // Spacebar to toggle play/pause globally
+  document.addEventListener('keydown', function (event) {
+    // Only trigger on spacebar, not when typing in inputs
+    if (event.code !== 'Space' && event.key !== ' ') {
       return;
     }
-    if (target.closest('#cookie-message')) {
+
+    // Don't intercept if user is typing in a text field
+    var tagName = document.activeElement.tagName.toLowerCase();
+    var isTyping =
+      tagName === 'input' ||
+      tagName === 'textarea' ||
+      document.activeElement.isContentEditable;
+    if (isTyping) {
       return;
     }
-    if (audioToggle && target.closest('#audio-toggle')) {
-      return;
-    }
-    if (target.closest('footer')) {
-      return;
-    }
-    if (target.closest('.skip-link')) {
-      return;
-    }
+
+    // Prevent page scroll
+    event.preventDefault();
+
+    // Toggle play/pause
     if (audio.paused) {
-      audio.play();
+      var playPromise = audio.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(function (err) {
+          console.warn('Audio play failed:', err);
+        });
+      }
     } else {
       audio.pause();
     }
   });
-}
+
+  // Initialize UI state
+  updatePlayButton();
+  updateProgress();
+  updateMuteButton();
+  updateVolumeSlider();
+})();
