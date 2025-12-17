@@ -231,12 +231,8 @@ document.addEventListener('visibilitychange', function() {
   } else {
     isAnimationPaused = false;
     if (!animationFrameId) {
-      // Reset timing when resuming to avoid animation jumps
-      requestAnimationFrame(function(timestamp) {
-        lastBgChangeTime = timestamp;
-        lastCellChangeTime = timestamp;
-        animationFrameId = requestAnimationFrame(draw);
-      });
+      // Reset timing and restart animation via shared startAnimation logic
+      requestAnimationFrame(startAnimation);
     }
   }
 });
