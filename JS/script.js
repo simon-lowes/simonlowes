@@ -38,7 +38,7 @@ function loadGoogleAnalytics() {
 if (document.readyState === 'complete') {
   loadGoogleAnalytics();
 } else {
-  window.addEventListener('load', loadGoogleAnalytics);
+  window.addEventListener('load', loadGoogleAnalytics, { once: true });
 }
 
 var canvas = document.getElementById('canvas');
