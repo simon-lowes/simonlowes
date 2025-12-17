@@ -69,6 +69,7 @@ var BG_TRANSITION_DURATION = 2200; // Slightly increased from 2000ms for smoothe
 var CELL_TRANSITION_DURATION = 1700; // Slightly increased from 1500ms for smoother transitions
 var lastBgChangeTime = 0;
 var lastCellChangeTime = 0;
+// Animation control state
 var animationFrameId = null;
 var isAnimationPaused = false;
 
