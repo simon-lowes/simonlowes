@@ -194,5 +194,104 @@ describe('DOM Integration Tests', () => {
       expect(requestAnimationFrame).toHaveBeenCalled();
       expect(callback).toHaveBeenCalledWith(0);
     });
+
+    it('should mock cancelAnimationFrame', () => {
+      // cancelAnimationFrame is already mocked in setup
+      expect(cancelAnimationFrame).toBeDefined();
+      
+      const id = 123;
+      cancelAnimationFrame(id);
+
+      expect(cancelAnimationFrame).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('Performance Optimizations', () => {
+    it('should support requestIdleCallback', () => {
+      // Check if requestIdleCallback exists or can be polyfilled
+      if (typeof requestIdleCallback !== 'undefined') {
+        expect(requestIdleCallback).toBeDefined();
+      } else {
+        // Fallback to setTimeout should work
+        expect(setTimeout).toBeDefined();
+      }
+    });
+
+    it('should support visibilitychange event', () => {
+      const handler = vi.fn();
+      document.addEventListener('visibilitychange', handler);
+      
+      // Simulate visibility change
+      Object.defineProperty(document, 'hidden', {
+        writable: true,
+        configurable: true,
+        value: true,
+      });
+      
+      const event = new window.Event('visibilitychange');
+      document.dispatchEvent(event);
+      
+      expect(handler).toHaveBeenCalled();
+      
+      // Cleanup
+      document.removeEventListener('visibilitychange', handler);
+    });
+
+    it('should toggle document.hidden state', () => {
+      // Initially visible
+      Object.defineProperty(document, 'hidden', {
+        writable: true,
+        configurable: true,
+        value: false,
+      });
+      expect(document.hidden).toBe(false);
+      
+      // Simulate tab hidden
+      Object.defineProperty(document, 'hidden', {
+        writable: true,
+        configurable: true,
+        value: true,
+      });
+      expect(document.hidden).toBe(true);
+    });
+
+    it('should dynamically create script element', () => {
+      const script = document.createElement('script');
+      script.src = 'https://example.com/script.js';
+      script.async = true;
+      
+      expect(script.tagName).toBe('SCRIPT');
+      expect(script.src).toBe('https://example.com/script.js');
+      expect(script.async).toBe(true);
+    });
+
+    it('should append script to document head', () => {
+      const script = document.createElement('script');
+      script.src = 'https://example.com/analytics.js';
+      
+      document.head.appendChild(script);
+      
+      const addedScript = document.head.querySelector('script[src="https://example.com/analytics.js"]');
+      expect(addedScript).toBeTruthy();
+    });
+
+    it('should check document.readyState', () => {
+      expect(document.readyState).toBeDefined();
+      // Can be 'loading', 'interactive', or 'complete'
+      expect(['loading', 'interactive', 'complete']).toContain(document.readyState);
+    });
+
+    it('should support load event listener', () => {
+      const handler = vi.fn();
+      window.addEventListener('load', handler);
+      
+      const event = new window.Event('load');
+      window.dispatchEvent(event);
+      
+      expect(handler).toHaveBeenCalled();
+      
+      // Cleanup
+      window.removeEventListener('load', handler);
+    });
   });
 });
