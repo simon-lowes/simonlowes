@@ -129,6 +129,19 @@ export function setViewportHeight() {
   return vh;
 }
 
+// Measure fixed elements and set CSS variables for layout
+export function updateFixedElementHeights() {
+  var player = document.getElementById('audio-player');
+  var footer = document.querySelector('footer');
+  var root = document.documentElement;
+
+  var playerHeight = player ? player.getBoundingClientRect().height : 0;
+  var footerHeight = footer ? footer.getBoundingClientRect().height : 0;
+
+  root.style.setProperty('--player-h', playerHeight + 'px');
+  root.style.setProperty('--footer-h', footerHeight + 'px');
+}
+
 export function initCellData(NUM_COLS, NUM_ROWS, COLORS_RGB) {
   var cellData = [];
   for (var i = 0; i < NUM_COLS; i++) {
