@@ -1,6 +1,14 @@
 :root {
   /* Fallback for mobile viewport units; JS updates this on resize */
   --vh: 1vh;
+  /* Fixed element heights measured by JS */
+  --player-h: 60px;
+  --footer-h: 60px;
+  /* Proportional edge gap: scales with viewport height, clamped for usability */
+  --edge-gap: clamp(0.75rem, 2.5vh, 2.5rem);
+  /* Unified width system: content multiplier (decimal) and horizontal inset */
+  --content-w: 1;
+  --h-inset: 2rem;
 }
 
 /* =============================================
@@ -45,7 +53,8 @@ canvas {
 .content-wrapper {
   flex: 1;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: stretch;
   align-items: center;
   position: relative;
   z-index: 1; /* above canvas */
@@ -53,17 +62,18 @@ canvas {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
-  padding-top: 80px; /* space for audio player above */
-  padding-bottom: 80px; /* space for footer below */
+  /* Dynamic padding: edge gap + element height + inner gap + safe areas */
+  padding-top: calc(var(--edge-gap) + var(--player-h) + var(--edge-gap) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--edge-gap) + var(--footer-h) + var(--edge-gap) + env(safe-area-inset-bottom));
+  min-height: 0;
 }
 
 /* ----- Blog iframe ----- */
 #blog-iframe {
-  width: 100%;
-  /* Taller on small screens to reduce empty space above/below */
-  height: 78vh;
-  height: 78dvh;
-  height: calc(var(--vh, 1vh) * 78);
+  width: calc(100% * var(--content-w));
+  /* Fill remaining space in flex container */
+  flex: 1;
+  min-height: 0;
   border: none;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
@@ -72,18 +82,20 @@ canvas {
 /* ----- Footer ----- */
 footer {
   position: fixed;
-  bottom: calc(1rem + env(safe-area-inset-bottom));
+  bottom: calc(var(--edge-gap) + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 2rem); /* match audio player width on mobile */
-  max-width: calc(1200px - 2rem);
+  /* Unified width: percentage of available space after inset */
+  width: calc((100% - var(--h-inset)) * var(--content-w));
+  max-width: calc((1200px - var(--h-inset)) * var(--content-w));
   text-align: center;
   background: rgba(15, 15, 15, 0.4); /* match audio player transparency */
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  padding: calc(0.75rem + env(safe-area-inset-bottom)) 0.5rem 0.75rem;
+  /* Responsive padding for very small screens */
+  padding: calc(clamp(0.5rem, 2vw, 0.75rem) + env(safe-area-inset-bottom)) clamp(0.25rem, 1vw, 0.5rem) clamp(0.5rem, 2vw, 0.75rem);
   color: #fff;
   z-index: 100;
 }
@@ -93,10 +105,10 @@ footer nav ul {
   padding: 0;
   margin: 0;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* Force single row */
   justify-content: center;
   align-items: center;
-  gap: 0.5rem;
+  gap: clamp(0.25rem, 1.5vw, 0.5rem);
 }
 
 footer nav ul li {
@@ -109,7 +121,10 @@ footer nav ul li a {
   align-items: center;
   color: #fff;
   text-decoration: none;
-  padding: 0.25rem;
+  padding: clamp(0.125rem, 1vw, 0.25rem);
+  /* Allow flex items to shrink below content size (MDN: min-width auto prevents shrinking) */
+  min-width: 0;
+  min-height: 44px; /* Maintain vertical tap target for accessibility */
   border-radius: 8px;
   transition: background 0.2s ease, transform 0.15s ease;
 }
@@ -135,104 +150,77 @@ footer nav ul li a:focus-visible {
 }
 
 footer nav ul li a img {
-  width: 32px;
-  height: 32px;
+  /* Responsive icon size: min 24px, preferred 5vw, max 32px */
+  width: clamp(24px, 5vw, 32px);
+  height: clamp(24px, 5vw, 32px);
   object-fit: contain;
 }
 
 /* ----- Tablet (480px+) ----- */
 @media (min-width: 480px) {
+  :root {
+    --content-w: 0.9;
+    --h-inset: 3rem;
+  }
+
   .content-wrapper {
     padding: 1.5rem;
-    padding-top: 85px; /* space for audio player above */
-    padding-bottom: 85px; /* space for footer below */
-  }
-
-  #blog-iframe {
-    width: 90%;
-    height: 74vh;
-    height: 74dvh;
-    height: calc(var(--vh, 1vh) * 74);
-  }
-
-  footer {
-    bottom: calc(1rem + env(safe-area-inset-bottom));
-    width: calc(
-      min(100% - 3rem, 1200px - 3rem) * 0.9
-    ); /* match audio player width */
+    padding-top: calc(var(--edge-gap) + var(--player-h) + var(--edge-gap) + env(safe-area-inset-top));
+    padding-bottom: calc(var(--edge-gap) + var(--footer-h) + var(--edge-gap) + env(safe-area-inset-bottom));
   }
 
   footer ul {
-    gap: 0.75rem;
+    gap: clamp(0.375rem, 2vw, 0.75rem);
   }
 
   footer nav ul li a img {
-    width: 36px;
-    height: 36px;
+    width: clamp(28px, 5.5vw, 36px);
+    height: clamp(28px, 5.5vw, 36px);
   }
 }
 
 /* ----- Tablet landscape / small desktop (768px+) ----- */
 @media (min-width: 768px) {
+  :root {
+    --content-w: 0.75;
+    --h-inset: 4rem;
+  }
+
   .content-wrapper {
     padding: 2rem;
-    padding-top: 90px; /* space for audio player above */
-    padding-bottom: 90px; /* space for footer below */
-  }
-
-  #blog-iframe {
-    width: 75%;
-    height: 70vh;
-    height: 70dvh;
-    height: calc(var(--vh, 1vh) * 70);
-  }
-
-  footer {
-    bottom: calc(1rem + env(safe-area-inset-bottom));
-    width: calc(
-      min(100% - 4rem, 1200px - 4rem) * 0.75
-    ); /* match audio player width */
+    padding-top: calc(var(--edge-gap) + var(--player-h) + var(--edge-gap) + env(safe-area-inset-top));
+    padding-bottom: calc(var(--edge-gap) + var(--footer-h) + var(--edge-gap) + env(safe-area-inset-bottom));
   }
 
   footer ul {
-    gap: 1rem;
+    gap: clamp(0.5rem, 2vw, 1rem);
   }
 
   footer nav ul li a img {
-    width: 40px;
-    height: 40px;
+    width: clamp(32px, 5vw, 40px);
+    height: clamp(32px, 5vw, 40px);
   }
 }
 
 /* ----- Desktop (1024px+) ----- */
 @media (min-width: 1024px) {
+  :root {
+    --content-w: 0.6;
+  }
+
   .content-wrapper {
     padding: 2rem;
-    padding-top: 95px; /* space for audio player above */
-    padding-bottom: 95px; /* space for footer below */
-  }
-
-  #blog-iframe {
-    width: 60%;
-    height: 70vh;
-    height: 70dvh;
-    height: calc(var(--vh, 1vh) * 70);
-  }
-
-  footer {
-    bottom: calc(1rem + env(safe-area-inset-bottom));
-    width: calc(
-      min(100% - 4rem, 1200px - 4rem) * 0.6
-    ); /* match audio player width */
+    padding-top: calc(var(--edge-gap) + var(--player-h) + var(--edge-gap) + env(safe-area-inset-top));
+    padding-bottom: calc(var(--edge-gap) + var(--footer-h) + var(--edge-gap) + env(safe-area-inset-bottom));
   }
 
   footer ul {
-    gap: 1.25rem;
+    gap: clamp(0.75rem, 2vw, 1.25rem);
   }
 
   footer nav ul li a img {
-    width: 44px;
-    height: 44px;
+    width: clamp(36px, 4vw, 44px);
+    height: clamp(36px, 4vw, 44px);
   }
 }
 
@@ -242,11 +230,12 @@ footer nav ul li a img {
 
 .audio-player {
   position: fixed;
-  top: calc(1rem + env(safe-area-inset-top));
+  top: calc(var(--edge-gap) + env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 2rem);
-  max-width: calc(1200px - 2rem);
+  /* Unified width: percentage of available space after inset */
+  width: calc((100% - var(--h-inset)) * var(--content-w));
+  max-width: calc((1200px - var(--h-inset)) * var(--content-w));
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -514,8 +503,6 @@ footer nav ul li a img {
 /* Tablet and up: more space for seek bar */
 @media (min-width: 480px) {
   .audio-player {
-    top: calc(1rem + env(safe-area-inset-top));
-    width: calc(min(100% - 3rem, 1200px - 3rem) * 0.9);
     gap: 0.75rem;
     padding: 0.625rem 1rem;
   }
@@ -532,8 +519,6 @@ footer nav ul li a img {
 /* Desktop: full-width seek bar */
 @media (min-width: 768px) {
   .audio-player {
-    top: calc(1rem + env(safe-area-inset-top));
-    width: calc(min(100% - 4rem, 1200px - 4rem) * 0.75);
     gap: 1rem;
   }
 
@@ -543,14 +528,6 @@ footer nav ul li a img {
 
   .audio-player__volume-slider {
     width: 100px;
-  }
-}
-
-/* Large desktop: match iframe width */
-@media (min-width: 1024px) {
-  .audio-player {
-    top: calc(1rem + env(safe-area-inset-top));
-    width: calc(min(100% - 4rem, 1200px - 4rem) * 0.6);
   }
 }
 
