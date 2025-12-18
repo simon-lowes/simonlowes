@@ -12,34 +12,32 @@ import {
   handleAudioError,
   closeCookieNotice,
   setViewportHeight,
+  updateFixedElementHeights,
   initCellData as initCellDataUtil
 } from './utils.js';
 
 // Calculate the viewport height and set it as a CSS variable
 setViewportHeight();
 
-// Defer Google Analytics loading until after page load to reduce blocking time
-function loadGoogleAnalytics() {
-  window.dataLayer = window.dataLayer || [];
-  function gtag() {
-    dataLayer.push(arguments);
-  }
-  gtag('js', new Date());
-  gtag('config', 'G-7NV4RLT1ZW');
-  
-  // Dynamically load GA script
-  var gaScript = document.createElement('script');
-  gaScript.async = true;
-  gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-7NV4RLT1ZW';
-  document.head.appendChild(gaScript);
+// Measure fixed elements after DOM is ready
+function updateLayoutMeasurements() {
+  setViewportHeight();
+  updateFixedElementHeights();
 }
 
-// Load GA after page is fully loaded
-if (document.readyState === 'complete') {
-  loadGoogleAnalytics();
+// Initial measurement after DOM content loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateLayoutMeasurements);
 } else {
-  window.addEventListener('load', loadGoogleAnalytics, { once: true });
+  updateLayoutMeasurements();
 }
+
+window.dataLayer = window.dataLayer || [];
+function gtag() {
+  dataLayer.push(arguments);
+}
+gtag('js', new Date());
+gtag('config', 'G-7NV4RLT1ZW');
 
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
@@ -57,7 +55,6 @@ for (var i = 0; i < NUM_COLORS; i++) {
 
 var NUM_COLS = 0;
 var NUM_ROWS = 0;
-var CELL_SIZE = 15; // Increased from 10px to 15px to reduce grid size by ~56%
 
 // Smooth animation state
 var currentBgColor = [128, 128, 128];
@@ -65,13 +62,10 @@ var targetBgColor = COLORS_RGB[0].slice();
 var cellData = []; // Stores current and target values for each cell
 var bgTransitionProgress = 0;
 var cellTransitionProgress = 0;
-var BG_TRANSITION_DURATION = 2200; // Slightly increased from 2000ms for smoother transitions
-var CELL_TRANSITION_DURATION = 1700; // Slightly increased from 1500ms for smoother transitions
+var BG_TRANSITION_DURATION = 2000; // 2 seconds for background color transition
+var CELL_TRANSITION_DURATION = 1500; // 1.5 seconds for cell transitions
 var lastBgChangeTime = 0;
 var lastCellChangeTime = 0;
-// Animation control state
-var animationFrameId = null;
-var isAnimationPaused = false;
 
 function initCellData() {
   cellData = initCellDataUtil(NUM_COLS, NUM_ROWS, COLORS_RGB);
@@ -95,23 +89,18 @@ function setCanvasSize() {
   // Ensure drawing coordinates map to CSS pixels
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  NUM_COLS = Math.floor(SCREEN_WIDTH / CELL_SIZE);
+  NUM_COLS = Math.floor(SCREEN_WIDTH / 10);
   // use ceil so we overdraw and don't leave a strip at the bottom
-  NUM_ROWS = Math.ceil(SCREEN_HEIGHT / CELL_SIZE);
+  NUM_ROWS = Math.ceil(SCREEN_HEIGHT / 10);
 
   // Re-initialize cell data when canvas resizes
   initCellData();
 
-  // Update viewport height CSS variable
-  setViewportHeight();
+  // Update viewport height and fixed element measurements
+  updateLayoutMeasurements();
 }
 
 function draw(timestamp) {
-  // Skip drawing if animation is paused
-  if (isAnimationPaused) {
-    return;
-  }
-
   var width = canvas.width;
   var height = canvas.height;
 
@@ -189,54 +178,19 @@ function draw(timestamp) {
           cellTransitionProgress < 0.5 ? cell.currentNum : cell.targetNum;
         ctx.fillText(displayNum, x, y);
       }
-      y += CELL_SIZE;
+      y += 10;
     }
-    x += CELL_SIZE;
+    x += 10;
     y = 0;
   }
 
-  // Continue the animation loop
-  animationFrameId = requestAnimationFrame(draw);
+  // Use requestAnimationFrame for smooth 60fps rendering
+  requestAnimationFrame(draw);
 }
 
 setCanvasSize();
-
-// Start the animation loop when the browser is idle
-// This defers the heavy canvas animation work until after critical page content is loaded
-function startAnimation(timestamp) {
-  lastBgChangeTime = timestamp;
-  lastCellChangeTime = timestamp;
-  animationFrameId = requestAnimationFrame(draw);
-}
-
-// Use requestIdleCallback to defer animation start, with fallback to setTimeout
-if (typeof requestIdleCallback !== 'undefined') {
-  requestIdleCallback(function() {
-    requestAnimationFrame(startAnimation);
-  }, { timeout: 2000 });
-} else {
-  // Fallback for browsers that don't support requestIdleCallback
-  setTimeout(function() {
-    requestAnimationFrame(startAnimation);
-  }, 1000);
-}
-
-// Pause animation when page is not visible to save CPU/battery
-document.addEventListener('visibilitychange', function() {
-  if (document.hidden) {
-    isAnimationPaused = true;
-    if (animationFrameId) {
-      cancelAnimationFrame(animationFrameId);
-      animationFrameId = null;
-    }
-  } else {
-    isAnimationPaused = false;
-    if (!animationFrameId) {
-      // Reset timing and restart animation via shared startAnimation logic
-      requestAnimationFrame(startAnimation);
-    }
-  }
-});
+// Start the animation loop with requestAnimationFrame
+requestAnimationFrame(draw);
 
 window.addEventListener('resize', debounce(setCanvasSize, 150));
 window.addEventListener('orientationchange', debounce(setCanvasSize, 150));
