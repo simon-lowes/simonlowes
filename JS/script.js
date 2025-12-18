@@ -16,355 +16,218 @@ import {
   initCellData as initCellDataUtil
 } from './utils.js';
 
-// Calculate the viewport height and set it as a CSS variable
+/* ===============================
+   Layout measurement (FIXED UI)
+   =============================== */
+
+// Initial viewport height
 setViewportHeight();
 
-// Measure fixed elements after DOM is ready
 function updateLayoutMeasurements() {
   setViewportHeight();
   updateFixedElementHeights();
 }
 
-// Initial measurement after DOM content loaded
+// Run once DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', updateLayoutMeasurements);
 } else {
   updateLayoutMeasurements();
 }
 
-window.dataLayer = window.dataLayer || [];
-function gtag() {
-  dataLayer.push(arguments);
-}
-gtag('js', new Date());
-gtag('config', 'G-7NV4RLT1ZW');
+/* ===============================
+   Defer Google Analytics
+   =============================== */
 
-var canvas = document.getElementById('canvas');
-var ctx = canvas.getContext('2d');
+function loadGoogleAnalytics() {
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    dataLayer.push(arguments);
+  }
 
-// Store colors as RGB arrays for smooth interpolation
-var NUM_COLORS = 100;
-var COLORS_RGB = [];
-for (var i = 0; i < NUM_COLORS; i++) {
-  COLORS_RGB.push([
-    Math.floor(Math.random() * 256),
-    Math.floor(Math.random() * 256),
-    Math.floor(Math.random() * 256),
-  ]);
+  const gaScript = document.createElement('script');
+  gaScript.async = true;
+  gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-7NV4RLT1ZW';
+  document.head.appendChild(gaScript);
+
+  gtag('js', new Date());
+  gtag('config', 'G-7NV4RLT1ZW');
 }
 
-var NUM_COLS = 0;
-var NUM_ROWS = 0;
+if (document.readyState === 'complete') {
+  loadGoogleAnalytics();
+} else {
+  window.addEventListener('load', loadGoogleAnalytics, { once: true });
+}
 
-// Smooth animation state
-var currentBgColor = [128, 128, 128];
-var targetBgColor = COLORS_RGB[0].slice();
-var cellData = []; // Stores current and target values for each cell
-var bgTransitionProgress = 0;
-var cellTransitionProgress = 0;
-var BG_TRANSITION_DURATION = 2000; // 2 seconds for background color transition
-var CELL_TRANSITION_DURATION = 1500; // 1.5 seconds for cell transitions
-var lastBgChangeTime = 0;
-var lastCellChangeTime = 0;
+/* ===============================
+   Canvas animation
+   =============================== */
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const NUM_COLORS = 100;
+const COLORS_RGB = Array.from({ length: NUM_COLORS }, () => [
+  Math.floor(Math.random() * 256),
+  Math.floor(Math.random() * 256),
+  Math.floor(Math.random() * 256),
+]);
+
+let NUM_COLS = 0;
+let NUM_ROWS = 0;
+const CELL_SIZE = 15;
+
+let currentBgColor = [128, 128, 128];
+let targetBgColor = COLORS_RGB[0].slice();
+let cellData = [];
+let lastBgChangeTime = 0;
+let lastCellChangeTime = 0;
+
+const BG_TRANSITION_DURATION = 2200;
+const CELL_TRANSITION_DURATION = 1700;
+
+let animationFrameId = null;
+let isAnimationPaused = false;
 
 function initCellData() {
   cellData = initCellDataUtil(NUM_COLS, NUM_ROWS, COLORS_RGB);
 }
 
 function setCanvasSize() {
-  // Use window dimensions to avoid mobile browser UI quirks leaving unpainted gaps
-  var SCREEN_WIDTH = window.innerWidth;
-  var SCREEN_HEIGHT = window.innerHeight;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const dpr = window.devicePixelRatio || 1;
 
-  // Support high-DPI displays without changing layout size
-  var dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
 
-  canvas.width = Math.floor(SCREEN_WIDTH * dpr);
-  canvas.height = Math.floor(SCREEN_HEIGHT * dpr);
-
-  // Keep the canvas' CSS size tied to the viewport
-  canvas.style.width = SCREEN_WIDTH + 'px';
-  canvas.style.height = SCREEN_HEIGHT + 'px';
-
-  // Ensure drawing coordinates map to CSS pixels
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  NUM_COLS = Math.floor(SCREEN_WIDTH / 10);
-  // use ceil so we overdraw and don't leave a strip at the bottom
-  NUM_ROWS = Math.ceil(SCREEN_HEIGHT / 10);
+  NUM_COLS = Math.floor(w / CELL_SIZE);
+  NUM_ROWS = Math.ceil(h / CELL_SIZE);
 
-  // Re-initialize cell data when canvas resizes
   initCellData();
-
-  // Update viewport height and fixed element measurements
   updateLayoutMeasurements();
 }
 
 function draw(timestamp) {
-  var width = canvas.width;
-  var height = canvas.height;
+  if (isAnimationPaused) return;
 
-  // Handle background color transition
-  var bgElapsed = timestamp - lastBgChangeTime;
+  const bgElapsed = timestamp - lastBgChangeTime;
   if (bgElapsed >= BG_TRANSITION_DURATION) {
-    // Pick new target color
     currentBgColor = targetBgColor.slice();
     targetBgColor = COLORS_RGB[Math.floor(Math.random() * NUM_COLORS)].slice();
     lastBgChangeTime = timestamp;
-    bgElapsed = 0;
   }
-  bgTransitionProgress = easeInOut(
-    Math.min(bgElapsed / BG_TRANSITION_DURATION, 1)
-  );
-  var interpolatedBg = lerpColor(
-    currentBgColor,
-    targetBgColor,
-    bgTransitionProgress
-  );
-  ctx.fillStyle =
-    'rgb(' +
-    interpolatedBg[0] +
-    ',' +
-    interpolatedBg[1] +
-    ',' +
-    interpolatedBg[2] +
-    ')';
-  ctx.fillRect(0, 0, width, height);
 
-  // Handle cell transitions
-  var cellElapsed = timestamp - lastCellChangeTime;
+  const bgT = easeInOut(Math.min(bgElapsed / BG_TRANSITION_DURATION, 1));
+  const bg = lerpColor(currentBgColor, targetBgColor, bgT);
+
+  ctx.fillStyle = `rgb(${bg[0]},${bg[1]},${bg[2]})`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const cellElapsed = timestamp - lastCellChangeTime;
   if (cellElapsed >= CELL_TRANSITION_DURATION) {
-    // Update all cells with new targets
-    for (var i = 0; i < NUM_COLS; i++) {
-      for (var j = 0; j < NUM_ROWS; j++) {
-        if (cellData[i] && cellData[i][j]) {
-          cellData[i][j].currentNum = cellData[i][j].targetNum;
-          cellData[i][j].currentColor = cellData[i][j].targetColor.slice();
-          var newNum = Math.floor(Math.random() * NUM_COLORS);
-          cellData[i][j].targetNum = newNum;
-          cellData[i][j].targetColor = COLORS_RGB[newNum].slice();
-        }
-      }
-    }
+    cellData.flat().forEach(cell => {
+      cell.currentNum = cell.targetNum;
+      cell.currentColor = cell.targetColor.slice();
+      const n = Math.floor(Math.random() * NUM_COLORS);
+      cell.targetNum = n;
+      cell.targetColor = COLORS_RGB[n].slice();
+    });
     lastCellChangeTime = timestamp;
-    cellElapsed = 0;
   }
-  cellTransitionProgress = easeInOut(
-    Math.min(cellElapsed / CELL_TRANSITION_DURATION, 1)
-  );
 
-  // Draw the numbers with smooth transitions
-  var x = 0;
-  var y = 0;
-  for (var i = 0; i < NUM_COLS; i++) {
-    for (var j = 0; j < NUM_ROWS; j++) {
-      if (cellData[i] && cellData[i][j]) {
-        var cell = cellData[i][j];
-        var interpolatedColor = lerpColor(
-          cell.currentColor,
-          cell.targetColor,
-          cellTransitionProgress
-        );
-        ctx.fillStyle =
-          'rgb(' +
-          interpolatedColor[0] +
-          ',' +
-          interpolatedColor[1] +
-          ',' +
-          interpolatedColor[2] +
-          ')';
-        // Display the number (smoothly transition to target)
-        var displayNum =
-          cellTransitionProgress < 0.5 ? cell.currentNum : cell.targetNum;
-        ctx.fillText(displayNum, x, y);
-      }
-      y += 10;
+  const t = easeInOut(Math.min(cellElapsed / CELL_TRANSITION_DURATION, 1));
+
+  let x = 0;
+  let y = 0;
+  for (let i = 0; i < NUM_COLS; i++) {
+    for (let j = 0; j < NUM_ROWS; j++) {
+      const cell = cellData[i]?.[j];
+      if (!cell) continue;
+
+      const c = lerpColor(cell.currentColor, cell.targetColor, t);
+      ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
+      ctx.fillText(t < 0.5 ? cell.currentNum : cell.targetNum, x, y);
+
+      y += CELL_SIZE;
     }
-    x += 10;
+    x += CELL_SIZE;
     y = 0;
   }
 
-  // Use requestAnimationFrame for smooth 60fps rendering
-  requestAnimationFrame(draw);
+  animationFrameId = requestAnimationFrame(draw);
 }
 
 setCanvasSize();
-// Start the animation loop with requestAnimationFrame
-requestAnimationFrame(draw);
+
+function startAnimation(ts) {
+  lastBgChangeTime = ts;
+  lastCellChangeTime = ts;
+  animationFrameId = requestAnimationFrame(draw);
+}
+
+(requestIdleCallback || setTimeout)(() => requestAnimationFrame(startAnimation), 1000);
+
+document.addEventListener('visibilitychange', () => {
+  isAnimationPaused = document.hidden;
+  if (!isAnimationPaused && !animationFrameId) {
+    requestAnimationFrame(startAnimation);
+  }
+});
 
 window.addEventListener('resize', debounce(setCanvasSize, 150));
 window.addEventListener('orientationchange', debounce(setCanvasSize, 150));
 
-// If available, respond to visual viewport changes (mobile address bar show/hide)
 if (window.visualViewport) {
-  window.visualViewport.addEventListener(
-    'resize',
-    debounce(setCanvasSize, 150)
-  );
+  visualViewport.addEventListener('resize', debounce(setCanvasSize, 150));
 }
 
-// =============================================
-// Audio Player Controller
-// =============================================
+/* ===============================
+   Audio Player Controller
+   =============================== */
+
 (function () {
-  var audio = document.getElementById('myAudio');
-  var player = document.getElementById('audio-player');
-  var playBtn = document.getElementById('audio-play-btn');
-  var seekSlider = document.getElementById('audio-seek');
-  var volumeSlider = document.getElementById('audio-volume');
-  var muteBtn = document.getElementById('audio-mute-btn');
-  var timeElapsed = document.getElementById('audio-time-elapsed');
-  var timeRemaining = document.getElementById('audio-time-remaining');
+  const audio = document.getElementById('myAudio');
+  const playBtn = document.getElementById('audio-play-btn');
+  const seek = document.getElementById('audio-seek');
+  const vol = document.getElementById('audio-volume');
+  const mute = document.getElementById('audio-mute-btn');
+  const elapsed = document.getElementById('audio-time-elapsed');
+  const remaining = document.getElementById('audio-time-remaining');
 
-  // Exit if essential elements missing
-  if (!audio || !player || !playBtn) {
-    return;
-  }
+  if (!audio || !playBtn) return;
 
-  var isSeeking = false;
-  var previousVolume = 0.75; // Store volume before muting
-
-  // Set initial volume (75%)
   audio.volume = 0.75;
+  let seeking = false;
+  let prevVol = 0.75;
 
-  // Wrapper functions to match existing signatures
-  function updatePlayButtonWrapper() {
-    updatePlayButton(audio, playBtn);
-  }
+  playBtn.onclick = () => (audio.paused ? audio.play() : audio.pause());
+  audio.onplay = () => updatePlayButton(audio, playBtn);
+  audio.onpause = () => updatePlayButton(audio, playBtn);
+  audio.ontimeupdate = () => updateProgress(audio, seek, elapsed, remaining, seeking);
+  audio.onvolumechange = () => {
+    updateMuteButton(audio, mute);
+    updateVolumeSlider(audio, vol);
+  };
 
-  function updateProgressWrapper() {
-    updateProgress(audio, seekSlider, timeElapsed, timeRemaining, isSeeking);
-  }
+  seek.oninput = () => (seeking = true);
+  seek.onchange = () => {
+    audio.currentTime = (seek.value / 100) * audio.duration;
+    seeking = false;
+  };
 
-  function updateMuteButtonWrapper() {
-    updateMuteButton(audio, muteBtn);
-  }
+  vol.oninput = () => {
+    audio.volume = vol.value / 100;
+    audio.muted = audio.volume === 0;
+    if (audio.volume) prevVol = audio.volume;
+  };
 
-  function updateVolumeSliderWrapper() {
-    updateVolumeSlider(audio, volumeSlider);
-  }
-
-  function handleError() {
-    handleAudioError(player, playBtn, seekSlider, volumeSlider, muteBtn);
-  }
-
-  // ----- Event Listeners -----
-
-  // Play/Pause toggle
-  playBtn.addEventListener('click', function () {
-    if (audio.paused) {
-      var playPromise = audio.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(function (err) {
-          console.warn('Audio play failed:', err);
-        });
-      }
-    } else {
-      audio.pause();
-    }
-  });
-
-  // Audio state changes
-  audio.addEventListener('play', updatePlayButtonWrapper);
-  audio.addEventListener('pause', updatePlayButtonWrapper);
-  audio.addEventListener('timeupdate', updateProgressWrapper);
-  audio.addEventListener('loadedmetadata', updateProgressWrapper);
-  audio.addEventListener('durationchange', updateProgressWrapper);
-  audio.addEventListener('volumechange', function () {
-    updateMuteButtonWrapper();
-    updateVolumeSliderWrapper();
-  });
-  audio.addEventListener('error', handleError);
-
-  // Seek slider interaction
-  if (seekSlider) {
-    seekSlider.addEventListener('input', function () {
-      isSeeking = true;
-      var duration = audio.duration || 0;
-      if (duration > 0) {
-        var seekTime = (seekSlider.value / 100) * duration;
-        // Update time display while seeking
-        if (timeElapsed) {
-          timeElapsed.textContent = formatTime(seekTime, false);
-        }
-        if (timeRemaining) {
-          timeRemaining.textContent = formatTime(duration - seekTime, true);
-        }
-      }
-    });
-
-    seekSlider.addEventListener('change', function () {
-      var duration = audio.duration || 0;
-      if (duration > 0) {
-        audio.currentTime = (seekSlider.value / 100) * duration;
-      }
-      isSeeking = false;
-    });
-  }
-
-  // Volume slider
-  if (volumeSlider) {
-    volumeSlider.addEventListener('input', function () {
-      var vol = volumeSlider.value / 100;
-      audio.volume = vol;
-      audio.muted = vol === 0;
-      if (vol > 0) {
-        previousVolume = vol;
-      }
-    });
-  }
-
-  // Mute toggle
-  if (muteBtn) {
-    muteBtn.addEventListener('click', function () {
-      if (audio.muted || audio.volume === 0) {
-        // Unmute
-        audio.muted = false;
-        audio.volume = previousVolume > 0 ? previousVolume : 0.75;
-      } else {
-        // Mute
-        previousVolume = audio.volume;
-        audio.muted = true;
-      }
-    });
-  }
-
-  // Spacebar to toggle play/pause globally
-  document.addEventListener('keydown', function (event) {
-    // Only trigger on spacebar, not when typing in inputs
-    if (event.code !== 'Space' && event.key !== ' ') {
-      return;
-    }
-
-    // Don't intercept if user is typing in a text field
-    var tagName = document.activeElement.tagName.toLowerCase();
-    var isTyping =
-      tagName === 'input' ||
-      tagName === 'textarea' ||
-      document.activeElement.isContentEditable;
-    if (isTyping) {
-      return;
-    }
-
-    // Prevent page scroll
-    event.preventDefault();
-
-    // Toggle play/pause
-    if (audio.paused) {
-      var playPromise = audio.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(function (err) {
-          console.warn('Audio play failed:', err);
-        });
-      }
-    } else {
-      audio.pause();
-    }
-  });
-
-  // Initialize UI state
-  updatePlayButtonWrapper();
-  updateProgressWrapper();
-  updateMuteButtonWrapper();
-  updateVolumeSliderWrapper();
+  mute.onclick = () => {
+    audio.muted ? (audio.volume = prevVol) : (audio.muted = true);
+  };
 })();
