@@ -12,11 +12,25 @@ import {
   handleAudioError,
   closeCookieNotice,
   setViewportHeight,
+  updateFixedElementHeights,
   initCellData as initCellDataUtil
 } from './utils.js';
 
 // Calculate the viewport height and set it as a CSS variable
 setViewportHeight();
+
+// Measure fixed elements after DOM is ready
+function updateLayoutMeasurements() {
+  setViewportHeight();
+  updateFixedElementHeights();
+}
+
+// Initial measurement after DOM content loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateLayoutMeasurements);
+} else {
+  updateLayoutMeasurements();
+}
 
 window.dataLayer = window.dataLayer || [];
 function gtag() {
@@ -82,8 +96,8 @@ function setCanvasSize() {
   // Re-initialize cell data when canvas resizes
   initCellData();
 
-  // Update viewport height CSS variable
-  setViewportHeight();
+  // Update viewport height and fixed element measurements
+  updateLayoutMeasurements();
 }
 
 function draw(timestamp) {
