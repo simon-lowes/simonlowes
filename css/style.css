@@ -9,6 +9,15 @@
   /* Unified width system: content multiplier (decimal) and horizontal inset */
   --content-w: 1;
   --h-inset: 2rem;
+  /* Color scheme for improved maintainability */
+  --color-bg-primary: #000;
+  --color-bg-secondary: rgba(15, 15, 15, 0.4);
+  --color-text-primary: #fff;
+  --color-text-secondary: rgba(255, 255, 255, 0.85);
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-interactive-bg: rgba(255, 255, 255, 0.15);
+  --color-interactive-bg-hover: rgba(255, 255, 255, 0.25);
 }
 
 /* =============================================
