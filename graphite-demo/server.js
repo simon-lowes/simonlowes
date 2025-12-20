@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+// Security: prevent Express from disclosing framework info via X-Powered-By
+app.disable('x-powered-by');
 const port = 3000;
 
 // Fake data for the activity feed
