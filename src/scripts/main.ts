@@ -3,7 +3,6 @@
  * Handles canvas animation, audio player, and Google Analytics
  */
 
-import { initSentry } from "./sentry";
 import {
   easeInOut,
   lerpColor,
@@ -20,12 +19,6 @@ import {
   type RGBColor,
   type CellData,
 } from "./utils";
-
-// =============================================
-// Error Tracking
-// =============================================
-
-initSentry();
 
 // =============================================
 // Viewport & Layout Setup

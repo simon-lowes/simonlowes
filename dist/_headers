@@ -1,5 +1,5 @@
-# Security Headers for Netlify/Cloudflare Pages
-# These headers improve security and SEO
+# Legacy Netlify Headers (kept for reference)
+# Vercel uses vercel.json instead - this file is ignored by Vercel
 
 /*
   # Prevent clickjacking attacks
