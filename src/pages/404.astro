@@ -1,0 +1,82 @@
+---
+const title = "Page Not Found - Simon Lowes";
+const description = "The page you're looking for doesn't exist.";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+    <link rel="icon" href="/favicons/fav32.ico" type="image/x-icon" sizes="32x32" />
+
+    <style>
+      .error-page {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--color-bg-primary, #000);
+        color: var(--color-text-primary, #fff);
+        font-family: "freight-sans-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .error-page__code {
+        font-size: clamp(4rem, 15vw, 8rem);
+        font-weight: 700;
+        margin: 0;
+        line-height: 1;
+        opacity: 0.3;
+      }
+
+      .error-page__title {
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-weight: 600;
+        margin: 1rem 0;
+      }
+
+      .error-page__description {
+        font-size: 1.1rem;
+        opacity: 0.85;
+        margin: 0 0 2rem;
+        max-width: 400px;
+      }
+
+      .error-page__link {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        background: var(--color-interactive-bg, rgba(255, 255, 255, 0.15));
+        color: var(--color-text-primary, #fff);
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: background 0.2s ease;
+      }
+
+      .error-page__link:hover {
+        background: var(--color-interactive-bg-hover, rgba(255, 255, 255, 0.25));
+      }
+
+      .error-page__link:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body class="error-page">
+    <p class="error-page__code">404</p>
+    <h1 class="error-page__title">Page Not Found</h1>
+    <p class="error-page__description">
+      The page you're looking for doesn't exist or has been moved.
+    </p>
+    <a href="/" class="error-page__link">Go to Homepage</a>
+  </body>
+</html>
