@@ -179,20 +179,42 @@ const posts = (await getCollection("blog"))
           font-size: 0.95rem;
         }
       }
+      /* Override content-wrapper to use fixed positioning like blog pages */
+      .content-wrapper {
+        position: fixed;
+        inset: 0;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-top: calc(
+          var(--edge-gap) + var(--player-h) + var(--edge-gap) + env(safe-area-inset-top)
+        );
+        padding-bottom: calc(
+          var(--edge-gap) + var(--footer-h) + var(--edge-gap) + env(safe-area-inset-bottom)
+        );
+        padding-left: 1rem;
+        padding-right: 1rem;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
       /* Blog slot (replaces the Posthaven iframe) */
       .blog-panel {
         position: relative;
         z-index: 2;
         width: 100%;
-        max-width: none;
+        max-width: 800px;
+        height: 100%;
         box-sizing: border-box;
         margin: 0;
-        padding: 1.25rem 1.25rem 1.5rem;
+        padding: 1.5rem 2rem 2rem;
         border-radius: 16px;
-        background: rgba(15, 15, 15, 0.85);
+        background: rgba(15, 15, 15, 0.92);
         border: 1px solid rgba(255, 255, 255, 0.12);
         box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
         color: #ffffff;
+        overflow-y: auto;
       }
       .blog-panel__header {
         margin-bottom: 0.75rem;
@@ -231,9 +253,14 @@ const posts = (await getCollection("blog"))
         justify-content: space-between;
         gap: 1rem;
       }
-      @media (max-width: 520px) {
+      @media (max-width: 600px) {
+        .content-wrapper {
+          padding-left: 0.75rem;
+          padding-right: 0.75rem;
+        }
         .blog-panel {
-          padding: 1rem 1rem 1.15rem;
+          padding: 1.25rem 1.25rem 1.5rem;
+          border-radius: 12px;
         }
         .blog-panel__item {
           justify-content: flex-start;
