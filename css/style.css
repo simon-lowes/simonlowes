@@ -571,3 +571,254 @@ footer nav ul li a img {
     transform: none;
   }
 }
+
+/* =============================================
+   Blog Prose Typography (AstroPaper-inspired)
+   ============================================= */
+
+.prose {
+  color: #fff;
+  font-family: "freight-sans-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 1.7;
+}
+
+.prose h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.prose h2 {
+  font-size: 1.5rem;
+  font-weight: 650;
+  margin: 2rem 0 0.75rem;
+  line-height: 1.3;
+}
+
+.prose h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.75rem 0 0.5rem;
+  line-height: 1.4;
+}
+
+.prose h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.prose p {
+  margin: 1rem 0;
+}
+
+.prose a {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  transition: opacity 0.15s ease;
+}
+
+.prose a:hover {
+  opacity: 0.8;
+}
+
+.prose strong {
+  font-weight: 650;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose ul,
+.prose ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin: 0.5rem 0;
+}
+
+.prose ul li {
+  list-style-type: disc;
+}
+
+.prose ol li {
+  list-style-type: decimal;
+}
+
+.prose blockquote {
+  margin: 1.5rem 0;
+  padding: 0.75rem 1rem 0.75rem 1.25rem;
+  border-left: 3px solid rgb(255 255 255 / 40%);
+  background: rgb(255 255 255 / 5%);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+}
+
+.prose blockquote p {
+  margin: 0;
+}
+
+.prose code {
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Menlo, monospace;
+  font-size: 0.9em;
+  background: rgb(255 255 255 / 10%);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+.prose pre {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: rgb(0 0 0 / 40%);
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.prose hr {
+  margin: 2rem 0;
+  border: none;
+  border-top: 1px solid rgb(255 255 255 / 15%);
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+}
+
+.prose figure {
+  margin: 1.5rem 0;
+}
+
+.prose figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.75;
+  text-align: center;
+}
+
+.prose table {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: collapse;
+}
+
+.prose th,
+.prose td {
+  padding: 0.75rem;
+  border: 1px solid rgb(255 255 255 / 15%);
+  text-align: left;
+}
+
+.prose th {
+  background: rgb(255 255 255 / 5%);
+  font-weight: 600;
+}
+
+/* Blog navigation */
+.blog-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+
+.blog-nav a {
+  color: #fff;
+  text-decoration: none;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+
+.blog-nav a:hover {
+  opacity: 1;
+}
+
+.blog-nav--footer {
+  margin-top: 2rem;
+  margin-bottom: 0;
+  padding-top: 1rem;
+  padding-bottom: 0;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  border-bottom: none;
+}
+
+/* Blog post header */
+.blog-header {
+  margin-bottom: 2rem;
+}
+
+.blog-header__title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  line-height: 1.2;
+}
+
+.blog-header__meta {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* Blog post list */
+.blog-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.blog-list__item {
+  padding: 1rem 0;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
+
+.blog-list__item:last-child {
+  border-bottom: none;
+}
+
+.blog-list__link {
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.blog-list__link:hover {
+  opacity: 0.8;
+}
+
+.blog-list__title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.blog-list__date {
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
+
+.blog-list__description {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  opacity: 0.85;
+  line-height: 1.5;
+}

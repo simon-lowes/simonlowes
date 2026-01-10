@@ -1,0 +1,278 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  canonicalUrl?: string;
+  ogType?: "website" | "article";
+  publishedTime?: string;
+}
+
+const { title, description, canonicalUrl, ogType = "article", publishedTime } = Astro.props;
+
+const siteUrl = "https://simonlowes.com";
+const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={fullCanonicalUrl} />
+    <meta property="og:site_name" content="Simon Lowes" />
+    {
+      publishedTime && ogType === "article" && (
+        <>
+          <meta property="article:published_time" content={publishedTime} />
+          <meta property="article:author" content="Simon Lowes" />
+        </>
+      )
+    }
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href={fullCanonicalUrl} />
+
+    <!-- Favicons -->
+    <link rel="icon" href="/favicons/fav16.ico" type="image/x-icon" sizes="16x16" />
+    <link rel="icon" href="/favicons/fav32.ico" type="image/x-icon" sizes="32x32" />
+    <link rel="icon" href="/favicons/fav64.ico" type="image/x-icon" sizes="64x64" />
+    <link rel="icon" href="/favicons/fav128.ico" type="image/x-icon" sizes="128x128" />
+    <link rel="icon" href="/favicons/fav256.ico" type="image/x-icon" sizes="256x256" />
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#0f0f0f" />
+    <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+
+    <slot name="head" />
+
+    <style>
+      .blog-content-wrapper {
+        position: relative;
+        z-index: 2;
+        min-height: 100vh;
+        padding: calc(var(--player-h, 60px) + 1.5rem) 1rem calc(var(--footer-h, 60px) + 1.5rem);
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .blog-container {
+        width: 100%;
+        max-width: 800px;
+        background: rgba(15, 15, 15, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        padding: 1.5rem 2rem 2rem;
+        color: #ffffff;
+      }
+
+      @media (max-width: 600px) {
+        .blog-content-wrapper {
+          padding: calc(var(--player-h, 60px) + 1rem) 0.75rem calc(var(--footer-h, 60px) + 1rem);
+        }
+        .blog-container {
+          padding: 1.25rem 1.25rem 1.5rem;
+          border-radius: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <canvas id="canvas" aria-hidden="true"></canvas>
+
+    <main class="blog-content-wrapper" id="main-content">
+      <article class="blog-container">
+        <slot />
+      </article>
+    </main>
+
+    <!-- Audio Player -->
+    <div
+      class="audio-player"
+      id="audio-player"
+      role="region"
+      aria-label="Audio player for Never There"
+    >
+      <audio id="myAudio" src="/neverthere.mp3" preload="metadata"></audio>
+      <button
+        type="button"
+        class="audio-player__play"
+        id="audio-play-btn"
+        aria-label="Play Never There"
+        aria-pressed="false"
+      >
+        <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M8 5v14l11-7z"></path>
+        </svg>
+        <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path>
+        </svg>
+      </button>
+      <span
+        class="audio-player__time audio-player__time--elapsed"
+        id="audio-time-elapsed"
+        aria-live="off">0:00</span
+      >
+      <input
+        type="range"
+        class="audio-player__seek"
+        id="audio-seek"
+        min="0"
+        max="100"
+        value="0"
+        step="0.1"
+        aria-label="Seek slider"
+      />
+      <span
+        class="audio-player__time audio-player__time--remaining"
+        id="audio-time-remaining"
+        aria-live="off">-0:00</span
+      >
+      <div class="audio-player__volume">
+        <button
+          type="button"
+          class="audio-player__mute"
+          id="audio-mute-btn"
+          aria-label="Mute audio"
+          aria-pressed="false"
+        >
+          <svg class="icon-volume" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+            ></path>
+          </svg>
+          <svg class="icon-muted" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"
+            ></path>
+          </svg>
+        </button>
+        <input
+          type="range"
+          class="audio-player__volume-slider"
+          id="audio-volume"
+          min="0"
+          max="100"
+          value="75"
+          step="1"
+          aria-label="Volume slider"
+        />
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer role="contentinfo">
+      <nav aria-label="Social media and music platforms">
+        <ul>
+          <li>
+            <a
+              href="https://simonlowes.bandcamp.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Visit Simon Lowes on BandCamp (opens in new tab)"
+              ><img
+                src="https://img.icons8.com/ios-filled/50/ffffff/bandcamp.png"
+                alt="BandCamp icon"
+              /></a
+            >
+          </li>
+          <li>
+            <a
+              href="https://open.spotify.com/artist/1E8slBJPNvUSPpRIh3xtkI?si=LOjXYVnQRhiZU6XmjkUdhg"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Listen to Simon Lowes on Spotify (opens in new tab)"
+              ><img
+                src="https://img.icons8.com/ios-filled/50/ffffff/spotify.png"
+                alt="Spotify icon"
+              /></a
+            >
+          </li>
+          <li>
+            <a
+              href="https://music.apple.com/gb/artist/simon-lowes/1351008298"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Listen to Simon Lowes on Apple Music (opens in new tab)"
+              ><img
+                src="https://img.icons8.com/ios-filled/50/ffffff/apple-music.png"
+                alt="Apple Music icon"
+              /></a
+            >
+          </li>
+          <li>
+            <a
+              href="https://music.youtube.com/channel/UCI4xshiWQrOu_27TPmW9A2g?feature=share"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Listen to Simon Lowes on YouTube Music (opens in new tab)"
+              ><img
+                src="https://img.icons8.com/ios-filled/50/ffffff/youtube-music.png"
+                alt="YouTube Music icon"
+              /></a
+            >
+          </li>
+          <li>
+            <a
+              href="https://soundcloud.com/simonlowesmusic"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Listen to Simon Lowes on SoundCloud (opens in new tab)"
+              ><img
+                src="https://img.icons8.com/ios-filled/50/ffffff/soundcloud.png"
+                alt="SoundCloud icon"
+              /></a
+            >
+          </li>
+          <li>
+            <a
+              href="https://www.youtube.com/simonlowesmusic"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Watch Simon Lowes on YouTube (opens in new tab)"
+              ><img
+                src="https://img.icons8.com/ios-filled/50/ffffff/youtube-play.png"
+                alt="YouTube icon"
+              /></a
+            >
+          </li>
+          <li>
+            <a
+              href="https://www.instagram.com/simonlowesmusic/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow Simon Lowes on Instagram (opens in new tab)"
+              ><img
+                src="https://img.icons8.com/ios-filled/50/ffffff/instagram-new.png"
+                alt="Instagram icon"
+              /></a
+            >
+          </li>
+        </ul>
+      </nav>
+    </footer>
+
+    <script>
+      import "../scripts/main";
+    </script>
+  </body>
+</html>

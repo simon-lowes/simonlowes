@@ -66,10 +66,11 @@ export function lerpColor(color1: RGBColor, color2: RGBColor, t: number): RGBCol
  * @param fn - Function to debounce
  * @param delay - Delay in milliseconds
  */
+// eslint-disable-next-line no-unused-vars
 export function debounce<T extends (...args: unknown[]) => void>(
   fn: T,
   delay: number
-): (...args: Parameters<T>) => void {
+): (..._args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
 
   return function (this: unknown, ...args: Parameters<T>): void {
@@ -273,11 +274,12 @@ export function initCellData(
     cellData[i] = [];
     for (let j = 0; j < numRows; j++) {
       const initialNum = Math.floor(Math.random() * colorsRGB.length);
-      cellData[i][j] = {
+      const initialColor = colorsRGB[initialNum]!;
+      cellData[i]![j] = {
         currentNum: initialNum,
         targetNum: initialNum,
-        currentColor: [...colorsRGB[initialNum]] as RGBColor,
-        targetColor: [...colorsRGB[initialNum]] as RGBColor,
+        currentColor: [...initialColor] as RGBColor,
+        targetColor: [...initialColor] as RGBColor,
       };
     }
   }

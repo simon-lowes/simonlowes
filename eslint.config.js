@@ -10,14 +10,14 @@ export default [
       parser: tsParser,
     },
     rules: {
-      "no-unused-vars": "warn",
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "no-console": "warn",
     },
   },
   {
     files: ["**/*.js"],
     rules: {
-      "no-unused-vars": "warn",
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "no-console": "warn",
     },
   },
