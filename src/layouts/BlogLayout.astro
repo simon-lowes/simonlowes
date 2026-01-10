@@ -63,30 +63,44 @@ const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).hr
 
     <style>
       .blog-content-wrapper {
-        position: relative;
+        position: fixed;
+        inset: 0;
         z-index: 2;
-        min-height: 100vh;
-        padding: calc(var(--player-h, 60px) + 1.5rem) 1rem calc(var(--footer-h, 60px) + 1.5rem);
-        box-sizing: border-box;
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center;
+        /* Use same edge-gap as homepage for consistent spacing */
+        padding-top: calc(
+          var(--edge-gap) + var(--player-h) + var(--edge-gap) + env(safe-area-inset-top)
+        );
+        padding-bottom: calc(
+          var(--edge-gap) + var(--footer-h) + var(--edge-gap) + env(safe-area-inset-bottom)
+        );
+        padding-left: 1rem;
+        padding-right: 1rem;
+        box-sizing: border-box;
+        overflow: hidden;
       }
 
       .blog-container {
         width: 100%;
         max-width: 800px;
+        max-height: 100%;
+        overflow-y: auto;
         background: rgba(15, 15, 15, 0.92);
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 16px;
         box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
         padding: 1.5rem 2rem 2rem;
         color: #ffffff;
+        box-sizing: border-box;
       }
 
       @media (max-width: 600px) {
         .blog-content-wrapper {
-          padding: calc(var(--player-h, 60px) + 1rem) 0.75rem calc(var(--footer-h, 60px) + 1rem);
+          padding-left: 0.75rem;
+          padding-right: 0.75rem;
         }
         .blog-container {
           padding: 1.25rem 1.25rem 1.5rem;
