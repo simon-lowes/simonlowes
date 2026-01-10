@@ -43,9 +43,10 @@ if (document.readyState === "loading") {
 // =============================================
 
 declare global {
+  // eslint-disable-next-line no-unused-vars
   interface Window {
     dataLayer: unknown[];
-    gtag: (...args: unknown[]) => void;
+    gtag: (..._args: unknown[]) => void;
   }
 }
 
@@ -95,7 +96,7 @@ function initBackgroundCanvas(): void {
 
   // Smooth animation state
   let currentBgColor: RGBColor = [128, 128, 128];
-  let targetBgColor: RGBColor = [...COLORS_RGB[0]];
+  let targetBgColor: RGBColor = [...COLORS_RGB[0]!] as RGBColor;
   let cellData: CellData[][] = [];
   let bgTransitionProgress = 0;
   let cellTransitionProgress = 0;
@@ -120,19 +121,19 @@ function initBackgroundCanvas(): void {
     // Support high-DPI displays without changing layout size
     const dpr = window.devicePixelRatio || 1;
 
-    canvas.width = Math.floor(viewportWidth * dpr);
-    canvas.height = Math.floor(viewportHeight * dpr);
+    canvas!.width = Math.floor(viewportWidth * dpr);
+    canvas!.height = Math.floor(viewportHeight * dpr);
 
     // Keep the canvas' CSS size tied to the viewport
-    canvas.style.width = `${viewportWidth}px`;
-    canvas.style.height = `${viewportHeight}px`;
+    canvas!.style.width = `${viewportWidth}px`;
+    canvas!.style.height = `${viewportHeight}px`;
 
     // Ensure drawing coordinates map to CSS pixels
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // Set font once (don't do it per-cell)
-    ctx.font = "10px monospace";
-    ctx.textBaseline = "top";
+    ctx!.font = "10px monospace";
+    ctx!.textBaseline = "top";
 
     NUM_COLS = Math.floor(viewportWidth / 10);
     // use ceil so we overdraw and don't leave a strip at the bottom
@@ -169,15 +170,15 @@ function initBackgroundCanvas(): void {
     let bgElapsed = timestamp - lastBgChangeTime;
     if (bgElapsed >= BG_TRANSITION_DURATION) {
       // Pick new target color
-      currentBgColor = [...targetBgColor];
-      targetBgColor = [...COLORS_RGB[Math.floor(Math.random() * NUM_COLORS)]];
+      currentBgColor = [...targetBgColor] as RGBColor;
+      targetBgColor = [...COLORS_RGB[Math.floor(Math.random() * NUM_COLORS)]!] as RGBColor;
       lastBgChangeTime = timestamp;
       bgElapsed = 0;
     }
     bgTransitionProgress = easeInOut(Math.min(bgElapsed / BG_TRANSITION_DURATION, 1));
     const interpolatedBg = lerpColor(currentBgColor, targetBgColor, bgTransitionProgress);
-    ctx.fillStyle = `rgb(${interpolatedBg[0]},${interpolatedBg[1]},${interpolatedBg[2]})`;
-    ctx.fillRect(0, 0, width, height);
+    ctx!.fillStyle = `rgb(${interpolatedBg[0]},${interpolatedBg[1]},${interpolatedBg[2]})`;
+    ctx!.fillRect(0, 0, width, height);
 
     // Handle cell transitions
     let cellElapsed = timestamp - lastCellChangeTime;
@@ -185,12 +186,13 @@ function initBackgroundCanvas(): void {
       // Update all cells with new targets
       for (let i = 0; i < NUM_COLS; i++) {
         for (let j = 0; j < NUM_ROWS; j++) {
-          if (cellData[i]?.[j]) {
-            cellData[i][j].currentNum = cellData[i][j].targetNum;
-            cellData[i][j].currentColor = [...cellData[i][j].targetColor];
+          const cell = cellData[i]?.[j];
+          if (cell) {
+            cell.currentNum = cell.targetNum;
+            cell.currentColor = [...cell.targetColor] as RGBColor;
             const newNum = Math.floor(Math.random() * NUM_COLORS);
-            cellData[i][j].targetNum = newNum;
-            cellData[i][j].targetColor = [...COLORS_RGB[newNum]];
+            cell.targetNum = newNum;
+            cell.targetColor = [...COLORS_RGB[newNum]!] as RGBColor;
           }
         }
       }
@@ -204,17 +206,17 @@ function initBackgroundCanvas(): void {
     let y = 0;
     for (let col = 0; col < NUM_COLS; col++) {
       for (let row = 0; row < NUM_ROWS; row++) {
-        if (cellData[col]?.[row]) {
-          const cell = cellData[col][row];
+        const cell = cellData[col]?.[row];
+        if (cell) {
           const interpolatedColor = lerpColor(
             cell.currentColor,
             cell.targetColor,
             cellTransitionProgress
           );
-          ctx.fillStyle = `rgb(${interpolatedColor[0]},${interpolatedColor[1]},${interpolatedColor[2]})`;
+          ctx!.fillStyle = `rgb(${interpolatedColor[0]},${interpolatedColor[1]},${interpolatedColor[2]})`;
           // Display the number (smoothly transition to target)
           const displayNum = cellTransitionProgress < 0.5 ? cell.currentNum : cell.targetNum;
-          ctx.fillText(String(displayNum), x, y);
+          ctx!.fillText(String(displayNum), x, y);
         }
         y += 10;
       }
@@ -297,6 +299,7 @@ initBackgroundCanvas();
   playBtn.addEventListener("click", () => {
     if (audio.paused) {
       audio.play().catch((err: Error) => {
+        // eslint-disable-next-line no-console
         console.warn("Audio play failed:", err);
       });
     } else {
@@ -390,6 +393,7 @@ initBackgroundCanvas();
     // Toggle play/pause
     if (audio.paused) {
       audio.play().catch((err: Error) => {
+        // eslint-disable-next-line no-console
         console.warn("Audio play failed:", err);
       });
     } else {
