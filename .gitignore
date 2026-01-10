@@ -1,4 +1,23 @@
+# Dependencies
 node_modules/
+
+# Build output
+dist/
+
+# Astro cache
+.astro/
+
+# Test artifacts
 coverage/
-*.log
+playwright-report/
+test-results/
+.playwright-mcp/
+
+# OS files
 .DS_Store
+*.log
+
+# Environment
+.env
+.env.*
+!.env.example
