@@ -30,11 +30,11 @@
   "license": "ISC",
   "devDependencies": {
     "@astrojs/mdx": "^4.0.0",
-    "@astrojs/sitemap": "^3.0.0",
+    "@astrojs/sitemap": "^3.6.1",
     "@playwright/test": "^1.57.0",
     "@typescript-eslint/parser": "^8.52.0",
     "@vitest/ui": "^4.0.16",
-    "astro": "^5.0.0",
+    "astro": "^5.16.8",
     "axe-core": "^4.11.1",
     "eslint": "^9.39.2",
     "eslint-plugin-astro": "^1.5.0",
