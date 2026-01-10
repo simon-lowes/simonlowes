@@ -226,7 +226,7 @@ footer nav ul li a img {
 /* ----- Desktop (1024px+) ----- */
 @media (width >= 1024px) {
   :root {
-    --content-w: 0.6;
+    --content-w: 0.7;
   }
 
   .content-wrapper {
