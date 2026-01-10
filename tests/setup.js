@@ -1,4 +1,4 @@
-import { beforeEach, vi } from 'vitest';
+import { beforeEach, vi } from "vitest";
 
 // Mock browser APIs
 beforeEach(() => {
@@ -16,7 +16,7 @@ beforeEach(() => {
     Promise.resolve({
       ok: true,
       json: () => Promise.resolve({}),
-      text: () => Promise.resolve(''),
+      text: () => Promise.resolve(""),
     })
   );
 

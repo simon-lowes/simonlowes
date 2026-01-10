@@ -57,7 +57,7 @@ test.describe("Blog Pages", () => {
     await expect(page).toHaveURL(/\/blog\/.+\//);
 
     // Post title should be in the page
-    const pageTitle = page.locator(".blog-post__title");
+    const pageTitle = page.locator(".blog-header__title");
     await expect(pageTitle).toHaveText(postTitle || "");
   });
 
