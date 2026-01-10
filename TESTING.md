@@ -27,6 +27,7 @@ npm run test:coverage
 ## What's Tested
 
 ### Utility Functions
+
 - **Math utilities**: `lerp()`, `easeInOut()`, `lerpColor()`
 - **Audio player**: `formatTime()`, `updatePlayButton()`, `updateProgress()`, `updateMuteButton()`, `updateVolumeSlider()`, `handleAudioError()`
 - **Canvas utilities**: `setViewportHeight()`, `initCellData()`
@@ -34,6 +35,7 @@ npm run test:coverage
 - **Performance**: `debounce()`
 
 ### DOM Manipulation
+
 - Element queries and updates
 - Attribute modifications (aria-pressed, aria-label)
 - Text content updates
@@ -41,6 +43,7 @@ npm run test:coverage
 - Form control states (disabled, value)
 
 ### Browser API Mocks
+
 - `localStorage` - getItem, setItem, removeItem, clear
 - `fetch` - Promise-based HTTP requests
 - `requestAnimationFrame` / `cancelAnimationFrame` - Animation timing
@@ -49,6 +52,7 @@ npm run test:coverage
 ## Test Environment
 
 The tests run in a jsdom environment which simulates a browser DOM without requiring an actual browser. This allows for:
+
 - Fast execution
 - Reliable CI/CD integration
 - Full DOM API access
@@ -57,8 +61,9 @@ The tests run in a jsdom environment which simulates a browser DOM without requi
 ## Continuous Integration
 
 Tests automatically run on:
+
 - Every push to `main`, `master`, `develop` branches
-- Every push to `copilot/**` branches  
+- Every push to `copilot/**` branches
 - Every pull request to `main`, `master`, `develop` branches
 
 The CI workflow runs tests on Node.js 18.x and 20.x to ensure compatibility.
@@ -77,12 +82,13 @@ Coverage reports are generated when running `npm run test:coverage` and are avai
 4. Run `npm test` to verify your tests pass
 
 Example:
-```javascript
-import { describe, it, expect } from 'vitest';
-import { myFunction } from '../JS/utils.js';
 
-describe('myFunction', () => {
-  it('should return expected value', () => {
+```javascript
+import { describe, it, expect } from "vitest";
+import { myFunction } from "../JS/utils.js";
+
+describe("myFunction", () => {
+  it("should return expected value", () => {
     expect(myFunction(1, 2)).toBe(3);
   });
 });

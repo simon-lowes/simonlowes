@@ -96,12 +96,10 @@ Open a PR linked to Issue #7 with:
 The agent should proceed with the following explicit choices:
 
 1. **Volume control**
-
    - Include a visible volume slider in the player UI.
    - Default to a sensible starting volume (e.g., 70–80%) and persist preference if the current codebase already stores settings.
 
 2. **Mute behaviour**
-
    - Provide a **speaker icon** that toggles mute/unmute.
    - No separate mute button is required beyond the icon + slider pairing.
    - When muted, the icon state should visually reflect mute.
