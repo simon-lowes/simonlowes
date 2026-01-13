@@ -59,6 +59,36 @@ canvas {
   pointer-events: none;
 }
 
+/* ----- Skip to main content link (accessibility) ----- */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 1000;
+  background: rgb(0 212 255 / 90%);
+  color: #0a0a0f;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 40%);
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  overflow: visible;
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
 /* ----- Main content wrapper ----- */
 .content-wrapper {
   flex: 1;
