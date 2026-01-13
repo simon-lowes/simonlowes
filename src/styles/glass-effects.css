@@ -1,0 +1,180 @@
+/**
+ * Glass Morphism Effects
+ * Frosted glass UI components for the cosmic theme
+ */
+
+/* Base glass card - frosted effect */
+.glass-card {
+  background: rgb(10 10 15 / 70%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgb(0 212 255 / 10%);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 30%),
+    inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+/* Glass card with subtle glow */
+.glass-card--glow {
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 30%),
+    0 0 40px rgb(0 212 255 / 5%),
+    inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+/* Interactive glass card - for blog posts, buttons */
+.glass-card--interactive {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.glass-card--interactive:hover {
+  transform: translateY(-2px);
+  border-color: rgb(0 212 255 / 20%);
+  box-shadow:
+    0 12px 40px rgb(0 0 0 / 40%),
+    0 0 60px rgb(0 212 255 / 8%),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+}
+
+/* Glass panel - for main content containers */
+.glass-panel {
+  background: rgb(10 10 15 / 80%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgb(0 212 255 / 8%);
+  border-radius: 20px;
+  box-shadow:
+    0 16px 48px rgb(0 0 0 / 40%),
+    inset 0 1px 0 rgb(255 255 255 / 3%);
+}
+
+/* Glass button */
+.glass-button {
+  background: rgb(255 255 255 / 8%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 12px;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+.glass-button:hover {
+  background: rgb(255 255 255 / 12%);
+  border-color: rgb(0 212 255 / 20%);
+  transform: scale(1.02);
+}
+
+.glass-button:active {
+  transform: scale(0.98);
+}
+
+.glass-button:focus-visible {
+  outline: 2px solid rgb(0 212 255 / 50%);
+  outline-offset: 2px;
+}
+
+/* Glow effects */
+.glow-cyan {
+  box-shadow: 0 0 20px rgb(0 212 255 / 30%);
+}
+
+.glow-cyan-subtle {
+  box-shadow: 0 0 30px rgb(0 212 255 / 10%);
+}
+
+.text-glow {
+  text-shadow: 0 0 20px rgb(0 212 255 / 50%);
+}
+
+/* Icon hover glow */
+.icon-glow {
+  transition:
+    filter 0.3s ease,
+    transform 0.2s ease;
+}
+
+.icon-glow:hover {
+  filter: drop-shadow(0 0 8px rgb(0 212 255 / 60%));
+  transform: scale(1.1);
+}
+
+/* Floating animation */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.float-animation {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Pulse glow animation */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 20px rgb(0 212 255 / 20%),
+      0 8px 32px rgb(0 0 0 / 30%);
+  }
+
+  50% {
+    box-shadow:
+      0 0 40px rgb(0 212 255 / 30%),
+      0 8px 32px rgb(0 0 0 / 30%);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .glass-card--interactive,
+  .glass-button,
+  .icon-glow {
+    transition: none;
+  }
+
+  .glass-card--interactive:hover,
+  .glass-button:hover,
+  .icon-glow:hover {
+    transform: none;
+  }
+
+  .float-animation {
+    animation: none;
+  }
+
+  .pulse-glow {
+    animation: none;
+  }
+}
+
+/* Backdrop filter fallback for unsupported browsers */
+@supports not (backdrop-filter: blur(20px)) {
+  .glass-card,
+  .glass-panel {
+    background: rgb(10 10 15 / 95%);
+  }
+
+  .glass-button {
+    background: rgb(30 30 40 / 90%);
+  }
+}
