@@ -139,11 +139,10 @@ footer {
   width: calc((100% - var(--h-inset)) * var(--content-w));
   max-width: calc((1200px - var(--h-inset)) * var(--content-w));
   text-align: center;
-  background: rgb(15 15 15 / 40%); /* match audio player transparency */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgb(255 255 255 / 8%);
-  border-radius: 12px;
+  /* No background box - icons float freely */
+  background: transparent;
+  border: none;
+  border-radius: 0;
   /* Responsive padding for very small screens */
   padding: calc(clamp(0.5rem, 2vw, 0.75rem) + env(safe-area-inset-bottom))
     clamp(0.25rem, 1vw, 0.5rem) clamp(0.5rem, 2vw, 0.75rem);
@@ -184,7 +183,7 @@ footer nav ul li a {
 
 footer nav ul li a:hover,
 footer nav ul li a:focus {
-  background: rgb(255 255 255 / 15%);
+  /* No background box - just scale */
   transform: scale(1.1);
 }
 
@@ -202,11 +201,45 @@ footer nav ul li a:focus-visible {
   outline-offset: 3px;
 }
 
+/* Brand colors on hover - official hex colors */
+/* Bandcamp: #629aa9 (teal) */
+footer nav ul li a[data-social="bandcamp"]:hover img {
+  filter: brightness(0) saturate(100%) invert(58%) sepia(18%) saturate(683%) hue-rotate(148deg)
+    brightness(94%) contrast(89%) drop-shadow(0 0 8px #629aa9);
+}
+/* Spotify: #1DB954 (green) */
+footer nav ul li a[data-social="spotify"]:hover img {
+  filter: brightness(0) saturate(100%) invert(53%) sepia(94%) saturate(421%) hue-rotate(101deg)
+    brightness(91%) contrast(87%) drop-shadow(0 0 8px #1db954);
+}
+/* Apple Music: #FA57C1 (pink) */
+footer nav ul li a[data-social="apple-music"]:hover img {
+  filter: brightness(0) saturate(100%) invert(48%) sepia(96%) saturate(1547%) hue-rotate(300deg)
+    brightness(98%) contrast(97%) drop-shadow(0 0 8px #fa57c1);
+}
+/* YouTube Music: #FF0000 (red) */
+footer nav ul li a[data-social="youtube-music"]:hover img {
+  filter: brightness(0) saturate(100%) invert(12%) sepia(97%) saturate(7471%) hue-rotate(4deg)
+    brightness(104%) contrast(117%) drop-shadow(0 0 8px #f00);
+}
+/* YouTube: #FF0000 (red) */
+footer nav ul li a[data-social="youtube"]:hover img {
+  filter: brightness(0) saturate(100%) invert(12%) sepia(97%) saturate(7471%) hue-rotate(4deg)
+    brightness(104%) contrast(117%) drop-shadow(0 0 8px #f00);
+}
+/* Instagram: #E4405F (gradient pink - using primary) */
+footer nav ul li a[data-social="instagram"]:hover img {
+  filter: brightness(0) saturate(100%) invert(36%) sepia(69%) saturate(2234%) hue-rotate(326deg)
+    brightness(95%) contrast(93%) drop-shadow(0 0 8px #e4405f);
+}
+
+/* Icon sizing */
 footer nav ul li a img {
   /* Responsive icon size: min 24px, preferred 5vw, max 32px */
   width: clamp(24px, 5vw, 32px);
   height: clamp(24px, 5vw, 32px);
   object-fit: contain;
+  transition: filter 0.3s ease;
 }
 
 /* ----- Tablet (480px+) ----- */
