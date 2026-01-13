@@ -46,11 +46,14 @@ const PLANET_COLORS = [
   0x1e3a5f, // Deep blue (gas giant)
 ];
 
+// Camera position - set back from origin to see stars in front
+const CAMERA_Z = 100;
+
 // Forward motion constants (subtle drift - ~30+ seconds to traverse)
-const FORWARD_SPEED = 0.4;
-const STAR_RECYCLE_Z = 50; // Stars recycle when they pass this z
-const CELESTIAL_SPAWN_Z = -2000;
-const CELESTIAL_RECYCLE_Z = 100;
+const FORWARD_SPEED = 0.5;
+const STAR_RECYCLE_Z = CAMERA_Z + 50; // Stars recycle when they pass behind camera
+const CELESTIAL_SPAWN_Z = -1500;
+const CELESTIAL_RECYCLE_Z = CAMERA_Z + 100;
 
 export class Starfield {
   private scene: THREE.Scene;
@@ -79,14 +82,14 @@ export class Starfield {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0a0f);
 
-    // Camera setup
+    // Camera setup - positioned back to see stars in front
     this.camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      2000
+      3000 // Extended far plane to see distant stars
     );
-    this.camera.position.z = 0;
+    this.camera.position.z = CAMERA_Z;
 
     // Renderer setup
     this.renderer = new THREE.WebGLRenderer({

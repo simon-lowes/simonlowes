@@ -77,106 +77,58 @@ const posts = (await getCollection("blog"))
     <style>
       /* Skip-link styles now in global CSS (public/css/style.css) */
 
-      /* Cookie notice - bottom-left corner per web standards */
+      /* Cookie notice - minimal bottom-left banner per web standards */
       #cookie-message {
         position: fixed;
-        bottom: 1.5rem;
-        left: 1.5rem;
-        right: auto;
-        top: auto;
-        transform: none;
-        max-width: 380px;
-        background: rgba(10, 10, 15, 0.95);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        color: #e0e0e0;
-        border: 1px solid rgba(0, 212, 255, 0.15);
-        border-radius: 16px;
-        padding: 1.25rem 1.5rem 1.5rem;
-        box-shadow:
-          0 18px 45px rgba(0, 0, 0, 0.5),
-          0 0 40px rgba(0, 212, 255, 0.05);
+        bottom: 1rem;
+        left: 1rem;
+        max-width: 280px;
+        background: rgba(20, 20, 30, 0.92);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         font-family: "freight-sans-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 0.8125rem;
+        line-height: 1.4;
         z-index: 999;
       }
       #cookie-message[hidden] {
         display: none;
       }
-      #cookie-message .cookie-header {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 0.75rem;
-      }
-      #cookie-message .cookie-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        border: 2px solid rgba(0, 212, 255, 0.5);
-        position: relative;
-        background: transparent;
-      }
-      #cookie-message .cookie-icon::before,
-      #cookie-message .cookie-icon::after {
-        content: "";
-        position: absolute;
-        background: rgba(0, 212, 255, 0.5);
-        border-radius: 50%;
-      }
-      #cookie-message .cookie-icon::before {
-        width: 6px;
-        height: 6px;
-        top: 6px;
-        left: 9px;
-      }
-      #cookie-message .cookie-icon::after {
-        width: 5px;
-        height: 5px;
-        top: 16px;
-        right: 6px;
-      }
-      #cookie-message h2 {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: #e0e0e0;
-      }
       #cookie-message p {
-        margin: 0;
-        line-height: 1.4;
-        font-size: 1rem;
-        color: rgba(224, 224, 224, 0.85);
+        margin: 0 0 0.5rem;
+      }
+      #cookie-message .cookie-actions {
+        display: flex;
+        justify-content: flex-end;
       }
       #cookie-message button.cookie-dismiss {
-        position: absolute;
-        top: 0.6rem;
-        right: 0.75rem;
-        background: none;
-        border: none;
-        color: rgba(0, 212, 255, 0.7);
-        font-size: 1.25rem;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+        background: rgba(0, 212, 255, 0.12);
+        border: 1px solid rgba(0, 212, 255, 0.25);
+        border-radius: 4px;
+        color: #00d4ff;
         cursor: pointer;
-        padding: 0;
-        line-height: 1;
-        transition: color 0.2s ease;
+        transition: background 0.15s ease;
       }
       #cookie-message button.cookie-dismiss:hover {
-        color: #00d4ff;
+        background: rgba(0, 212, 255, 0.22);
       }
       #cookie-message button.cookie-dismiss:focus-visible {
         outline: 2px solid rgba(0, 212, 255, 0.5);
         outline-offset: 2px;
       }
-      @media (max-width: 600px) {
+      @media (max-width: 480px) {
         #cookie-message {
           left: 0.75rem;
           right: 0.75rem;
           bottom: 0.75rem;
           max-width: none;
-          padding: 1rem 1.25rem 1.25rem;
-        }
-        #cookie-message p {
-          font-size: 0.95rem;
         }
       }
       /* Content wrapper with glass panel styling */
@@ -497,27 +449,17 @@ const posts = (await getCollection("blog"))
     </div>
     <div
       id="cookie-message"
-      role="dialog"
+      role="status"
       aria-live="polite"
       aria-label="Cookie notice"
       tabindex="-1"
     >
-      <button
-        type="button"
-        class="cookie-dismiss"
-        aria-label="Close cookie notice"
-        data-cookie-dismiss
-      >
-        &times;
-      </button>
-      <div class="cookie-header">
-        <span class="cookie-icon" aria-hidden="true"></span>
-        <h2>Cookie Notice</h2>
+      <p>This site doesn't use cookies or trackers.</p>
+      <div class="cookie-actions">
+        <button type="button" class="cookie-dismiss" aria-label="Dismiss" data-cookie-dismiss
+          >Got it</button
+        >
       </div>
-      <p>
-        This site does not currently use cookies or similar trackers. If that changes, this notice
-        will be updated. Close this message to continue browsing.
-      </p>
     </div>
 
     <footer role="contentinfo">
