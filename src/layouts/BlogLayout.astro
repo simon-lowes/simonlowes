@@ -1,4 +1,6 @@
 ---
+import SpaceBackground from "../components/SpaceBackground.astro";
+
 interface Props {
   title: string;
   description: string;
@@ -111,7 +113,7 @@ const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).hr
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    <canvas id="canvas" aria-hidden="true"></canvas>
+    <SpaceBackground />
 
     <main class="blog-content-wrapper" id="main-content">
       <article class="blog-container">
