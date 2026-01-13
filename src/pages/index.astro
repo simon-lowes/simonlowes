@@ -1,5 +1,7 @@
 ---
 import { getCollection } from "astro:content";
+import SpaceBackground from "../components/SpaceBackground.astro";
+import "../styles/glass-effects.css";
 
 const posts = (await getCollection("blog"))
   .filter((p) => !p.data.draft)
@@ -63,7 +65,7 @@ const posts = (await getCollection("blog"))
     <link rel="canonical" href="https://simonlowes.com/" />
 
     <!-- PWA -->
-    <meta name="theme-color" content="#0f0f0f" />
+    <meta name="theme-color" content="#0a0a0f" />
     <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
 
     <meta name="google-site-verification" content="gwurdptI6ejhc1SisVjfxFNaGX2lU19i646cuMxbK20" />
@@ -78,19 +80,19 @@ const posts = (await getCollection("blog"))
         top: 0.5rem;
         left: 50%;
         transform: translate(-50%, -150%);
-        background: #ffffff;
-        color: #111111;
+        background: rgba(0, 212, 255, 0.9);
+        color: #0a0a0f;
         padding: 0.5rem 1rem;
         border-radius: 999px;
         font-weight: 600;
         text-decoration: none;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         z-index: 1000;
         transition: transform 0.2s ease;
       }
       .skip-link:focus {
         transform: translate(-50%, 0);
-        outline: 2px solid #111111;
+        outline: 2px solid #fff;
         outline-offset: 3px;
       }
       #cookie-message {
@@ -99,12 +101,16 @@ const posts = (await getCollection("blog"))
         left: 50%;
         transform: translate(-50%, -50%);
         width: min(90vw, 420px);
-        background: rgba(15, 15, 15, 0.95);
-        color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(10, 10, 15, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        color: #e0e0e0;
+        border: 1px solid rgba(0, 212, 255, 0.15);
         border-radius: 16px;
         padding: 1.25rem 1.5rem 1.5rem;
-        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        box-shadow:
+          0 18px 45px rgba(0, 0, 0, 0.5),
+          0 0 40px rgba(0, 212, 255, 0.05);
         font-family: "freight-sans-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
         z-index: 999;
       }
@@ -121,7 +127,7 @@ const posts = (await getCollection("blog"))
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        border: 2px solid rgba(255, 255, 255, 0.6);
+        border: 2px solid rgba(0, 212, 255, 0.5);
         position: relative;
         background: transparent;
       }
@@ -129,7 +135,7 @@ const posts = (await getCollection("blog"))
       #cookie-message .cookie-icon::after {
         content: "";
         position: absolute;
-        background: rgba(255, 255, 255, 0.6);
+        background: rgba(0, 212, 255, 0.5);
         border-radius: 50%;
       }
       #cookie-message .cookie-icon::before {
@@ -148,11 +154,13 @@ const posts = (await getCollection("blog"))
         margin: 0;
         font-size: 1.05rem;
         font-weight: 600;
+        color: #e0e0e0;
       }
       #cookie-message p {
         margin: 0;
         line-height: 1.4;
         font-size: 1rem;
+        color: rgba(224, 224, 224, 0.85);
       }
       #cookie-message button.cookie-dismiss {
         position: absolute;
@@ -160,14 +168,18 @@ const posts = (await getCollection("blog"))
         right: 0.75rem;
         background: none;
         border: none;
-        color: #ffffff;
+        color: rgba(0, 212, 255, 0.7);
         font-size: 1.25rem;
         cursor: pointer;
         padding: 0;
         line-height: 1;
+        transition: color 0.2s ease;
+      }
+      #cookie-message button.cookie-dismiss:hover {
+        color: #00d4ff;
       }
       #cookie-message button.cookie-dismiss:focus-visible {
-        outline: 2px solid #ffffff;
+        outline: 2px solid rgba(0, 212, 255, 0.5);
         outline-offset: 2px;
       }
       @media (max-width: 600px) {
@@ -179,7 +191,7 @@ const posts = (await getCollection("blog"))
           font-size: 0.95rem;
         }
       }
-      /* Override content-wrapper to use fixed positioning like blog pages */
+      /* Content wrapper with glass panel styling */
       .content-wrapper {
         position: fixed;
         inset: 0;
@@ -199,7 +211,7 @@ const posts = (await getCollection("blog"))
         box-sizing: border-box;
         overflow: hidden;
       }
-      /* Blog slot (replaces the Posthaven iframe) */
+      /* Blog panel with glass effect */
       .blog-panel {
         position: relative;
         z-index: 2;
@@ -209,11 +221,16 @@ const posts = (await getCollection("blog"))
         box-sizing: border-box;
         margin: 0;
         padding: 1.5rem 2rem 2rem;
-        border-radius: 16px;
-        background: rgba(15, 15, 15, 0.92);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-        color: #ffffff;
+        border-radius: 20px;
+        background: rgba(10, 10, 15, 0.75);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(0, 212, 255, 0.1);
+        box-shadow:
+          0 16px 48px rgba(0, 0, 0, 0.5),
+          0 0 60px rgba(0, 212, 255, 0.03),
+          inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        color: #e0e0e0;
         overflow-y: auto;
       }
       .blog-panel__header {
@@ -224,10 +241,12 @@ const posts = (await getCollection("blog"))
         font-size: 1.25rem;
         font-weight: 650;
         letter-spacing: 0.01em;
+        color: #e0e0e0;
+        text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
       }
       .blog-panel__subtitle {
         margin: 0.25rem 0 0;
-        opacity: 0.85;
+        opacity: 0.75;
         line-height: 1.4;
       }
       .blog-panel__content p {
@@ -238,6 +257,13 @@ const posts = (await getCollection("blog"))
         color: inherit;
         text-decoration: underline;
         text-underline-offset: 0.2em;
+        transition:
+          color 0.2s ease,
+          text-shadow 0.2s ease;
+      }
+      .blog-panel a:hover {
+        color: #00d4ff;
+        text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
       }
       .blog-panel__list {
         list-style: none;
@@ -252,6 +278,16 @@ const posts = (await getCollection("blog"))
         align-items: baseline;
         justify-content: space-between;
         gap: 1rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        transition:
+          background 0.2s ease,
+          border-color 0.2s ease;
+        border: 1px solid transparent;
+      }
+      .blog-panel__item:hover {
+        background: rgba(0, 212, 255, 0.05);
+        border-color: rgba(0, 212, 255, 0.1);
       }
       @media (max-width: 600px) {
         .content-wrapper {
@@ -260,7 +296,7 @@ const posts = (await getCollection("blog"))
         }
         .blog-panel {
           padding: 1.25rem 1.25rem 1.5rem;
-          border-radius: 12px;
+          border-radius: 16px;
         }
         .blog-panel__item {
           justify-content: flex-start;
@@ -272,20 +308,95 @@ const posts = (await getCollection("blog"))
         }
       }
       .blog-panel__date {
-        opacity: 0.75;
+        opacity: 0.6;
         white-space: nowrap;
         font-size: 0.9rem;
       }
       .blog-panel__more {
         margin-top: 0.9rem;
       }
+      /* Enhanced footer with glass effect */
+      footer {
+        background: rgba(10, 10, 15, 0.7) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(0, 212, 255, 0.1) !important;
+        box-shadow:
+          0 -4px 32px rgba(0, 0, 0, 0.4),
+          0 0 40px rgba(0, 212, 255, 0.03) !important;
+      }
+      footer nav ul li a {
+        transition:
+          background 0.2s ease,
+          transform 0.15s ease,
+          filter 0.3s ease !important;
+      }
+      footer nav ul li a:hover {
+        background: rgba(0, 212, 255, 0.15) !important;
+        filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5));
+      }
+      footer nav ul li a img {
+        transition: filter 0.3s ease;
+      }
+      footer nav ul li a:hover img {
+        filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.6));
+      }
+      /* Enhanced audio player glass styling */
+      .audio-player {
+        background: rgba(10, 10, 15, 0.7) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(0, 212, 255, 0.1) !important;
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.4),
+          0 0 40px rgba(0, 212, 255, 0.03) !important;
+      }
+      .audio-player__play {
+        background: rgba(0, 212, 255, 0.15) !important;
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        transition:
+          background 0.2s ease,
+          transform 0.15s ease,
+          box-shadow 0.3s ease !important;
+      }
+      .audio-player__play:hover {
+        background: rgba(0, 212, 255, 0.25) !important;
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+      }
+      .audio-player__seek::-webkit-slider-thumb {
+        background: #00d4ff !important;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+      }
+      .audio-player__seek::-moz-range-thumb {
+        background: #00d4ff !important;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+      }
+      .audio-player__volume-slider::-webkit-slider-thumb {
+        background: #00d4ff !important;
+      }
+      .audio-player__volume-slider::-moz-range-thumb {
+        background: #00d4ff !important;
+      }
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        .blog-panel__item,
+        footer nav ul li a,
+        .audio-player__play {
+          transition: none !important;
+        }
+        .blog-panel__item:hover,
+        footer nav ul li a:hover {
+          transform: none !important;
+        }
+      }
     </style>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    <canvas id="canvas" aria-hidden="true"></canvas>
+    <!-- Three.js Space Background -->
+    <SpaceBackground />
     <main class="content-wrapper" id="main-content">
-      <section id="blog-slot" class="blog-panel" aria-label="Blog">
+      <section id="blog-slot" class="blog-panel glass-panel" aria-label="Blog">
         <header class="blog-panel__header">
           <h2 class="blog-panel__title">Blog</h2>
           <p class="blog-panel__subtitle">Latest updates and notes.</p>

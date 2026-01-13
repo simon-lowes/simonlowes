@@ -1,0 +1,103 @@
+/* Space Theme - Glass Morphism */
+
+:root {
+  --space-bg: #0a0a12;
+  --space-accent: #00d4ff;
+  --space-accent-dim: rgb(0 212 255 / 15%);
+  --glass-bg: rgb(10 10 20 / 65%);
+  --glass-border: rgb(0 212 255 / 12%);
+  --text-primary: #e8e8e8;
+  --text-secondary: #a0a0a0;
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 40%),
+    inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+.glass-panel:hover {
+  border-color: rgb(0 212 255 / 25%);
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 40%),
+    0 0 20px rgb(0 212 255 / 10%),
+    inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+.glow-text {
+  color: var(--space-accent);
+  text-shadow: 0 0 20px rgb(0 212 255 / 50%);
+}
+
+.glow-border {
+  box-shadow: 0 0 15px rgb(0 212 255 / 30%);
+}
+
+/* Ensure body doesn't have conflicting background */
+body {
+  background: var(--space-bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* Additional utility classes */
+.glass-card {
+  background: rgb(10 10 15 / 70%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgb(0 212 255 / 10%);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 30%),
+    inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+.glass-button {
+  background: rgb(255 255 255 / 8%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 12px;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.glass-button:hover {
+  background: rgb(255 255 255 / 12%);
+  border-color: rgb(0 212 255 / 20%);
+  transform: scale(1.02);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .glass-panel,
+  .glass-card,
+  .glass-button {
+    transition: none;
+  }
+
+  .glass-button:hover {
+    transform: none;
+  }
+}
+
+/* Backdrop filter fallback for unsupported browsers */
+@supports not (backdrop-filter: blur(20px)) {
+  .glass-panel,
+  .glass-card {
+    background: rgb(10 10 15 / 95%);
+  }
+
+  .glass-button {
+    background: rgb(30 30 40 / 90%);
+  }
+}
