@@ -9,15 +9,16 @@
   /* Unified width system: content multiplier (decimal) and horizontal inset */
   --content-w: 1;
   --h-inset: 2rem;
-  /* Color scheme for improved maintainability */
-  --color-bg-primary: #000;
-  --color-bg-secondary: rgb(15 15 15 / 40%);
-  --color-text-primary: #fff;
-  --color-text-secondary: rgb(255 255 255 / 85%);
-  --color-text-muted: rgb(255 255 255 / 60%);
-  --color-border: rgb(255 255 255 / 8%);
-  --color-interactive-bg: rgb(255 255 255 / 15%);
-  --color-interactive-bg-hover: rgb(255 255 255 / 25%);
+  /* Color scheme - Cosmic theme */
+  --color-bg-primary: #0a0a0f;
+  --color-bg-secondary: rgb(10 10 15 / 70%);
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: rgb(224 224 224 / 85%);
+  --color-text-muted: rgb(224 224 224 / 60%);
+  --color-border: rgb(0 212 255 / 10%);
+  --color-interactive-bg: rgb(0 212 255 / 15%);
+  --color-interactive-bg-hover: rgb(0 212 255 / 25%);
+  --color-accent: #00d4ff;
 }
 
 /* =============================================
@@ -43,7 +44,7 @@ body {
   flex-direction: column;
   overflow-x: hidden; /* prevent horizontal scroll */
   overflow-y: auto;
-  background: #000; /* solid fallback behind canvas */
+  background: #0a0a0f; /* cosmic dark blue-black fallback */
 }
 
 /* ----- Canvas background ----- */
