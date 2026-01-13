@@ -44,7 +44,7 @@ body {
   flex-direction: column;
   overflow-x: hidden; /* prevent horizontal scroll */
   overflow-y: auto;
-  background: #0a0a0f; /* cosmic dark blue-black fallback */
+  background: transparent; /* Allow canvas starfield to show through */
 }
 
 /* ----- Canvas background ----- */
