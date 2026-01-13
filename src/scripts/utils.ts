@@ -217,6 +217,34 @@ export function closeCookieNotice(
 }
 
 // =============================================
+// Cookie Notice Persistence (localStorage)
+// =============================================
+
+const COOKIE_NOTICE_KEY = "cookie_notice_dismissed";
+
+/**
+ * Check if the user has previously dismissed the cookie notice
+ */
+export function hasDismissedCookieNotice(): boolean {
+  try {
+    return localStorage.getItem(COOKIE_NOTICE_KEY) === "true";
+  } catch {
+    return false; // localStorage unavailable (private browsing, etc.)
+  }
+}
+
+/**
+ * Save the cookie notice dismissal to localStorage
+ */
+export function saveCookieNoticeDismissal(): void {
+  try {
+    localStorage.setItem(COOKIE_NOTICE_KEY, "true");
+  } catch {
+    // Silently fail if localStorage unavailable
+  }
+}
+
+// =============================================
 // Canvas / Viewport Functions
 // =============================================
 

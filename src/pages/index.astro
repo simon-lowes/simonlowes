@@ -75,32 +75,17 @@ const posts = (await getCollection("blog"))
     />
     <meta name="robots" content="index, follow" />
     <style>
-      .skip-link {
-        position: absolute;
-        top: 0.5rem;
-        left: 50%;
-        transform: translate(-50%, -150%);
-        background: rgba(0, 212, 255, 0.9);
-        color: #0a0a0f;
-        padding: 0.5rem 1rem;
-        border-radius: 999px;
-        font-weight: 600;
-        text-decoration: none;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-        z-index: 1000;
-        transition: transform 0.2s ease;
-      }
-      .skip-link:focus {
-        transform: translate(-50%, 0);
-        outline: 2px solid #fff;
-        outline-offset: 3px;
-      }
+      /* Skip-link styles now in global CSS (public/css/style.css) */
+
+      /* Cookie notice - bottom-left corner per web standards */
       #cookie-message {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: min(90vw, 420px);
+        bottom: 1.5rem;
+        left: 1.5rem;
+        right: auto;
+        top: auto;
+        transform: none;
+        max-width: 380px;
         background: rgba(10, 10, 15, 0.95);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
@@ -184,7 +169,10 @@ const posts = (await getCollection("blog"))
       }
       @media (max-width: 600px) {
         #cookie-message {
-          top: 50%;
+          left: 0.75rem;
+          right: 0.75rem;
+          bottom: 0.75rem;
+          max-width: none;
           padding: 1rem 1.25rem 1.25rem;
         }
         #cookie-message p {
@@ -512,7 +500,6 @@ const posts = (await getCollection("blog"))
       role="dialog"
       aria-live="polite"
       aria-label="Cookie notice"
-      aria-modal="true"
       tabindex="-1"
     >
       <button
@@ -626,27 +613,60 @@ const posts = (await getCollection("blog"))
 
     <script>
       (function () {
+        var COOKIE_KEY = "cookie_notice_dismissed";
+
+        // Check if already dismissed
+        function hasDismissed() {
+          try {
+            return localStorage.getItem(COOKIE_KEY) === "true";
+          } catch (e) {
+            return false;
+          }
+        }
+
+        // Save dismissal to localStorage
+        function saveDismissal() {
+          try {
+            localStorage.setItem(COOKIE_KEY, "true");
+          } catch (e) {
+            // Silently fail
+          }
+        }
+
         var notice = document.getElementById("cookie-message");
         if (!notice) {
           return;
         }
+
+        // If already dismissed, hide and exit early
+        if (hasDismissed()) {
+          notice.setAttribute("hidden", "");
+          return;
+        }
+
         var dismiss = notice.querySelector("[data-cookie-dismiss]");
         var previouslyFocused = document.activeElement;
+
         var closeNotice = function () {
+          saveDismissal(); // Persist the dismissal
           notice.setAttribute("hidden", "");
           notice.removeAttribute("aria-modal");
           if (previouslyFocused && previouslyFocused.focus) {
             previouslyFocused.focus();
           }
         };
+
         if (dismiss) {
           dismiss.addEventListener("click", closeNotice);
         }
+
+        // Focus the notice for accessibility
         if (!notice.hasAttribute("hidden")) {
           window.requestAnimationFrame(function () {
             notice.focus();
           });
         }
+
         notice.addEventListener("keydown", function (event) {
           if (event.key === "Escape" || event.key === "Esc") {
             event.preventDefault();

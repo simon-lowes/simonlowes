@@ -23,10 +23,34 @@ const NEBULA_COLORS = {
 
 interface StarLayer {
   group: THREE.Group;
+  geometry: THREE.BufferGeometry;
   zMin: number;
   zMax: number;
   parallaxFactor: number;
 }
+
+interface CelestialBody {
+  mesh: THREE.Mesh | THREE.Sprite;
+  type: "planet" | "galaxy";
+  speed: number;
+}
+
+// Planet color palette (earthy, rocky, gaseous)
+const PLANET_COLORS = [
+  0x4a6741, // Forest green
+  0x6b4423, // Rusty brown
+  0x3d5a80, // Ocean blue
+  0x8b4513, // Sienna
+  0x2f4f4f, // Dark slate
+  0x704214, // Mars red-brown
+  0x1e3a5f, // Deep blue (gas giant)
+];
+
+// Forward motion constants (subtle drift - ~30+ seconds to traverse)
+const FORWARD_SPEED = 0.4;
+const STAR_RECYCLE_Z = 50; // Stars recycle when they pass this z
+const CELESTIAL_SPAWN_Z = -2000;
+const CELESTIAL_RECYCLE_Z = 100;
 
 export class Starfield {
   private scene: THREE.Scene;
@@ -35,11 +59,16 @@ export class Starfield {
   private canvas: HTMLCanvasElement;
   private animationId: number | null = null;
   private layers: StarLayer[] = [];
+  private celestialBodies: CelestialBody[] = [];
   private parallax: ParallaxController;
   private reducedMotion: boolean;
   private lastTime = 0;
   private targetFps = 60;
   private frameInterval = 1000 / 60;
+
+  // Camera rotation targets for smooth steering
+  private targetRotationX = 0;
+  private targetRotationY = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -74,6 +103,9 @@ export class Starfield {
 
     // Create star layers
     this.createLayers();
+
+    // Create planets and galaxies
+    this.createCelestialBodies();
 
     // Bind event handlers
     this.handleResize = this.handleResize.bind(this);
@@ -149,6 +181,7 @@ export class Starfield {
 
     this.layers.push({
       group: farGroup,
+      geometry: farGeometry,
       zMin: farZMin,
       zMax: farZMax,
       parallaxFactor: 0.02,
@@ -196,6 +229,7 @@ export class Starfield {
 
     this.layers.push({
       group: midGroup,
+      geometry: midGeometry,
       zMin: midZMin,
       zMax: midZMax,
       parallaxFactor: 0.05,
@@ -238,10 +272,101 @@ export class Starfield {
 
     this.layers.push({
       group: nearGroup,
+      geometry: nearGeometry,
       zMin: nearZMin,
       zMax: nearZMax,
       parallaxFactor: 0.1,
     });
+  }
+
+  /**
+   * Create procedural planets and galaxies
+   */
+  private createCelestialBodies(): void {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const planetCount = isMobile ? 3 : 5;
+    const galaxyCount = isMobile ? 1 : 2;
+
+    // Create planets - scattered at different depths
+    for (let i = 0; i < planetCount; i++) {
+      const planet = this.createPlanet();
+      planet.position.set(
+        (Math.random() - 0.5) * 800,
+        (Math.random() - 0.5) * 400,
+        CELESTIAL_SPAWN_Z + Math.random() * 1500
+      );
+      this.scene.add(planet);
+      this.celestialBodies.push({
+        mesh: planet,
+        type: "planet",
+        speed: 0.6 + Math.random() * 0.3, // Slightly slower than stars
+      });
+    }
+
+    // Create galaxies - farther away, larger
+    for (let i = 0; i < galaxyCount; i++) {
+      const galaxy = this.createGalaxy();
+      galaxy.position.set(
+        (Math.random() - 0.5) * 1000,
+        (Math.random() - 0.5) * 500,
+        CELESTIAL_SPAWN_Z - 500 + Math.random() * 1000
+      );
+      this.scene.add(galaxy);
+      this.celestialBodies.push({
+        mesh: galaxy,
+        type: "galaxy",
+        speed: 0.4 + Math.random() * 0.2, // Even slower for scale
+      });
+    }
+  }
+
+  /**
+   * Create a procedural planet sphere
+   */
+  private createPlanet(): THREE.Mesh {
+    const size = 3 + Math.random() * 8;
+    const color = PLANET_COLORS[Math.floor(Math.random() * PLANET_COLORS.length)];
+
+    const geometry = new THREE.SphereGeometry(size, 24, 24);
+    const material = new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.4 + Math.random() * 0.3,
+    });
+
+    return new THREE.Mesh(geometry, material);
+  }
+
+  /**
+   * Create a galaxy sprite (flat elliptical glow)
+   */
+  private createGalaxy(): THREE.Sprite {
+    // Create a simple gradient texture for galaxy
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d")!;
+
+    // Radial gradient for soft glow
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, "rgba(150, 150, 255, 0.8)");
+    gradient.addColorStop(0.3, "rgba(100, 100, 200, 0.4)");
+    gradient.addColorStop(1, "rgba(50, 50, 150, 0)");
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(60 + Math.random() * 40, 30 + Math.random() * 20, 1);
+
+    return sprite;
   }
 
   private createStarMaterial(): THREE.ShaderMaterial {
@@ -310,19 +435,70 @@ export class Starfield {
     // Skip rendering when tab is hidden
     if (document.hidden) return;
 
-    // Update parallax
+    // Update parallax input
     const parallaxOffset = this.parallax.update();
 
-    // Apply parallax to each layer
-    this.layers.forEach((layer) => {
-      if (!this.reducedMotion) {
-        layer.group.position.x = parallaxOffset.x * layer.parallaxFactor * 100;
-        layer.group.position.y = parallaxOffset.y * layer.parallaxFactor * 100;
-      }
-    });
+    if (!this.reducedMotion) {
+      // INVERSE POV STEERING: Mouse right = look left, mouse up = look down
+      // This creates the flight sim / No Man's Sky cockpit feel
+      this.targetRotationY = -parallaxOffset.x * 0.3; // Yaw (horizontal)
+      this.targetRotationX = parallaxOffset.y * 0.2; // Pitch (vertical)
+
+      // Smooth camera rotation interpolation
+      this.camera.rotation.y += (this.targetRotationY - this.camera.rotation.y) * 0.05;
+      this.camera.rotation.x += (this.targetRotationX - this.camera.rotation.x) * 0.05;
+
+      // FORWARD MOTION: Move stars toward camera
+      this.updateForwardMotion();
+    }
 
     // Render
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * Update star positions for forward motion and recycle when passed
+   */
+  private updateForwardMotion(): void {
+    const spreadX = 2000;
+    const spreadY = 2000;
+
+    // Update each star layer
+    this.layers.forEach((layer) => {
+      const positions = layer.geometry.attributes.position.array as Float32Array;
+      const count = positions.length / 3;
+
+      // Speed varies by layer depth (near moves faster)
+      const layerSpeed = FORWARD_SPEED * layer.parallaxFactor * 10;
+
+      for (let i = 0; i < count; i++) {
+        const i3 = i * 3;
+
+        // Move star toward camera (increase z)
+        positions[i3 + 2] += layerSpeed;
+
+        // Recycle star if it passed camera
+        if (positions[i3 + 2] > STAR_RECYCLE_Z) {
+          positions[i3 + 2] = layer.zMin + Math.random() * (layer.zMax - layer.zMin);
+          positions[i3] = (Math.random() - 0.5) * spreadX;
+          positions[i3 + 1] = (Math.random() - 0.5) * spreadY;
+        }
+      }
+
+      layer.geometry.attributes.position.needsUpdate = true;
+    });
+
+    // Update celestial bodies
+    this.celestialBodies.forEach((body) => {
+      body.mesh.position.z += FORWARD_SPEED * body.speed;
+
+      // Recycle if passed camera
+      if (body.mesh.position.z > CELESTIAL_RECYCLE_Z) {
+        body.mesh.position.z = CELESTIAL_SPAWN_Z + Math.random() * 500;
+        body.mesh.position.x = (Math.random() - 0.5) * 800;
+        body.mesh.position.y = (Math.random() - 0.5) * 400;
+      }
+    });
   }
 
   public start(): void {
@@ -344,7 +520,7 @@ export class Starfield {
     window.removeEventListener("resize", this.handleResize);
     this.parallax.destroy();
 
-    // Dispose of Three.js resources
+    // Dispose of Three.js resources - star layers
     this.layers.forEach((layer) => {
       layer.group.children.forEach((child) => {
         if (child instanceof THREE.Points) {
@@ -353,6 +529,18 @@ export class Starfield {
         }
       });
       this.scene.remove(layer.group);
+    });
+
+    // Dispose of celestial bodies
+    this.celestialBodies.forEach((body) => {
+      if (body.mesh instanceof THREE.Mesh) {
+        body.mesh.geometry.dispose();
+        (body.mesh.material as THREE.Material).dispose();
+      } else if (body.mesh instanceof THREE.Sprite) {
+        (body.mesh.material as THREE.SpriteMaterial).map?.dispose();
+        body.mesh.material.dispose();
+      }
+      this.scene.remove(body.mesh);
     });
 
     this.renderer.dispose();
