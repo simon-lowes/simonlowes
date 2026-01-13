@@ -441,19 +441,20 @@ export class Starfield {
     // Update parallax input
     const parallaxOffset = this.parallax.update();
 
-    if (!this.reducedMotion) {
-      // INVERSE POV STEERING: Mouse right = look left, mouse up = look down
-      // This creates the flight sim / No Man's Sky cockpit feel
-      this.targetRotationY = -parallaxOffset.x * 0.3; // Yaw (horizontal)
-      this.targetRotationX = parallaxOffset.y * 0.2; // Pitch (vertical)
+    // Motion scale: gentler for reduced-motion preference, full otherwise
+    const motionScale = this.reducedMotion ? 0.3 : 1.0;
 
-      // Smooth camera rotation interpolation
-      this.camera.rotation.y += (this.targetRotationY - this.camera.rotation.y) * 0.05;
-      this.camera.rotation.x += (this.targetRotationX - this.camera.rotation.x) * 0.05;
+    // INVERSE POV STEERING: Mouse right = look left, mouse up = look down
+    // This creates the flight sim / No Man's Sky cockpit feel
+    this.targetRotationY = -parallaxOffset.x * 0.3 * motionScale; // Yaw (horizontal)
+    this.targetRotationX = parallaxOffset.y * 0.2 * motionScale; // Pitch (vertical)
 
-      // FORWARD MOTION: Move stars toward camera
-      this.updateForwardMotion();
-    }
+    // Smooth camera rotation interpolation
+    this.camera.rotation.y += (this.targetRotationY - this.camera.rotation.y) * 0.05;
+    this.camera.rotation.x += (this.targetRotationX - this.camera.rotation.x) * 0.05;
+
+    // FORWARD MOTION: Move stars toward camera
+    this.updateForwardMotion(motionScale);
 
     // Render
     this.renderer.render(this.scene, this.camera);
@@ -461,8 +462,9 @@ export class Starfield {
 
   /**
    * Update star positions for forward motion and recycle when passed
+   * @param scale - Motion intensity multiplier (0.3 for reduced-motion, 1.0 normal)
    */
-  private updateForwardMotion(): void {
+  private updateForwardMotion(scale: number = 1.0): void {
     const spreadX = 2000;
     const spreadY = 2000;
 
@@ -471,8 +473,8 @@ export class Starfield {
       const positions = layer.geometry.attributes.position.array as Float32Array;
       const count = positions.length / 3;
 
-      // Speed varies by layer depth (near moves faster)
-      const layerSpeed = FORWARD_SPEED * layer.parallaxFactor * 10;
+      // Speed varies by layer depth (near moves faster), scaled by motion preference
+      const layerSpeed = FORWARD_SPEED * layer.parallaxFactor * 10 * scale;
 
       for (let i = 0; i < count; i++) {
         const i3 = i * 3;
@@ -491,9 +493,9 @@ export class Starfield {
       layer.geometry.attributes.position.needsUpdate = true;
     });
 
-    // Update celestial bodies
+    // Update celestial bodies (planets, galaxies)
     this.celestialBodies.forEach((body) => {
-      body.mesh.position.z += FORWARD_SPEED * body.speed;
+      body.mesh.position.z += FORWARD_SPEED * body.speed * scale;
 
       // Recycle if passed camera
       if (body.mesh.position.z > CELESTIAL_RECYCLE_Z) {
