@@ -271,31 +271,53 @@ const posts = (await getCollection("blog"))
       .blog-panel__more {
         margin-top: 0.9rem;
       }
-      /* Enhanced footer with glass effect */
+      /* Footer - no box, icons float freely */
       footer {
-        background: rgba(10, 10, 15, 0.7) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(0, 212, 255, 0.1) !important;
-        box-shadow:
-          0 -4px 32px rgba(0, 0, 0, 0.4),
-          0 0 40px rgba(0, 212, 255, 0.03) !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: none !important;
+        box-shadow: none !important;
       }
       footer nav ul li a {
-        transition:
-          background 0.2s ease,
-          transform 0.15s ease,
-          filter 0.3s ease !important;
+        transition: transform 0.15s ease !important;
       }
       footer nav ul li a:hover {
-        background: rgba(0, 212, 255, 0.15) !important;
-        filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5));
+        transform: scale(1.1);
       }
       footer nav ul li a img {
         transition: filter 0.3s ease;
       }
-      footer nav ul li a:hover img {
-        filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.6));
+      /* Brand colors on hover - official hex colors */
+      /* Bandcamp: #629aa9 (teal) */
+      footer nav ul li a[data-social="bandcamp"]:hover img {
+        filter: brightness(0) saturate(100%) invert(58%) sepia(18%) saturate(683%)
+          hue-rotate(148deg) brightness(94%) contrast(89%) drop-shadow(0 0 8px #629aa9);
+      }
+      /* Spotify: #1DB954 (green) */
+      footer nav ul li a[data-social="spotify"]:hover img {
+        filter: brightness(0) saturate(100%) invert(53%) sepia(94%) saturate(421%)
+          hue-rotate(101deg) brightness(91%) contrast(87%) drop-shadow(0 0 8px #1db954);
+      }
+      /* Apple Music: #FA57C1 (pink) */
+      footer nav ul li a[data-social="apple-music"]:hover img {
+        filter: brightness(0) saturate(100%) invert(48%) sepia(96%) saturate(1547%)
+          hue-rotate(300deg) brightness(98%) contrast(97%) drop-shadow(0 0 8px #fa57c1);
+      }
+      /* YouTube Music: #FF0000 (red) */
+      footer nav ul li a[data-social="youtube-music"]:hover img {
+        filter: brightness(0) saturate(100%) invert(12%) sepia(97%) saturate(7471%) hue-rotate(4deg)
+          brightness(104%) contrast(117%) drop-shadow(0 0 8px #ff0000);
+      }
+      /* YouTube: #FF0000 (red) */
+      footer nav ul li a[data-social="youtube"]:hover img {
+        filter: brightness(0) saturate(100%) invert(12%) sepia(97%) saturate(7471%) hue-rotate(4deg)
+          brightness(104%) contrast(117%) drop-shadow(0 0 8px #ff0000);
+      }
+      /* Instagram: #E4405F (gradient pink - using primary) */
+      footer nav ul li a[data-social="instagram"]:hover img {
+        filter: brightness(0) saturate(100%) invert(36%) sepia(69%) saturate(2234%)
+          hue-rotate(326deg) brightness(95%) contrast(93%) drop-shadow(0 0 8px #e4405f);
       }
       /* Enhanced audio player glass styling */
       .audio-player {
@@ -494,6 +516,7 @@ const posts = (await getCollection("blog"))
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Visit Simon Lowes on BandCamp (opens in new tab)"
+              data-social="bandcamp"
               ><img
                 src="https://img.icons8.com/ios-filled/50/ffffff/bandcamp.png"
                 alt="BandCamp icon"
@@ -506,6 +529,7 @@ const posts = (await getCollection("blog"))
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Listen to Simon Lowes on Spotify (opens in new tab)"
+              data-social="spotify"
               ><img
                 src="https://img.icons8.com/ios-filled/50/ffffff/spotify.png"
                 alt="Spotify icon"
@@ -518,6 +542,7 @@ const posts = (await getCollection("blog"))
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Listen to Simon Lowes on Apple Music (opens in new tab)"
+              data-social="apple-music"
               ><img
                 src="https://img.icons8.com/ios-filled/50/ffffff/apple-music.png"
                 alt="Apple Music icon"
@@ -530,21 +555,10 @@ const posts = (await getCollection("blog"))
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Listen to Simon Lowes on YouTube Music (opens in new tab)"
+              data-social="youtube-music"
               ><img
                 src="https://img.icons8.com/ios-filled/50/ffffff/youtube-music.png"
                 alt="YouTube Music icon"
-              /></a
-            >
-          </li>
-          <li>
-            <a
-              href="https://soundcloud.com/simonlowesmusic"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Listen to Simon Lowes on SoundCloud (opens in new tab)"
-              ><img
-                src="https://img.icons8.com/ios-filled/50/ffffff/soundcloud.png"
-                alt="SoundCloud icon"
               /></a
             >
           </li>
@@ -554,6 +568,7 @@ const posts = (await getCollection("blog"))
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Watch Simon Lowes on YouTube (opens in new tab)"
+              data-social="youtube"
               ><img
                 src="https://img.icons8.com/ios-filled/50/ffffff/youtube-play.png"
                 alt="YouTube icon"
@@ -566,6 +581,7 @@ const posts = (await getCollection("blog"))
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Follow Simon Lowes on Instagram (opens in new tab)"
+              data-social="instagram"
               ><img
                 src="https://img.icons8.com/ios-filled/50/ffffff/instagram-new.png"
                 alt="Instagram icon"
