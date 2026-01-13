@@ -51,17 +51,22 @@
   const canvas = document.getElementById("starfield-canvas") as HTMLCanvasElement;
 
   if (canvas) {
-    // Check for WebGL support
-    const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-    if (!gl) {
-      // WebGL not supported - CSS fallback will be used
+    // Check WebGL support without consuming the context
+    // (creating a context on the actual canvas would prevent Three.js from using it)
+    const testCanvas = document.createElement("canvas");
+    const hasWebGL = !!(
+      testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl")
+    );
+
+    if (!hasWebGL) {
+      // WebGL not supported - CSS fallback
       canvas.style.background = `
         radial-gradient(ellipse at 20% 30%, rgba(45, 27, 78, 0.4) 0%, transparent 50%),
         radial-gradient(ellipse at 80% 70%, rgba(13, 27, 42, 0.4) 0%, transparent 50%),
         linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 50%, #0a0a0f 100%)
       `;
     } else {
-      // Initialize the starfield
+      // Initialize Three.js starfield
       try {
         initStarfield(canvas);
 
