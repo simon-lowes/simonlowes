@@ -593,71 +593,82 @@ const posts = (await getCollection("blog"))
     </footer>
 
     <script>
-      (function () {
-        var COOKIE_KEY = "cookie_notice_dismissed";
+      // Cookie notice - must work with View Transitions
+      const COOKIE_KEY = "cookie_notice_dismissed";
 
-        // Check if already dismissed
-        function hasDismissed() {
-          try {
-            return localStorage.getItem(COOKIE_KEY) === "true";
-          } catch (e) {
-            return false;
-          }
+      function hasDismissed(): boolean {
+        try {
+          return localStorage.getItem(COOKIE_KEY) === "true";
+        } catch {
+          return false;
         }
+      }
 
-        // Save dismissal to localStorage
-        function saveDismissal() {
-          try {
-            localStorage.setItem(COOKIE_KEY, "true");
-          } catch (e) {
-            // Silently fail
-          }
+      function saveDismissal(): void {
+        try {
+          localStorage.setItem(COOKIE_KEY, "true");
+        } catch {
+          // Silently fail
         }
+      }
 
-        var notice = document.getElementById("cookie-message");
-        if (!notice) {
-          return;
-        }
+      function initCookieNotice(): void {
+        const notice = document.getElementById("cookie-message");
+        if (!notice) return;
 
-        // If already dismissed, hide and exit early
+        // Always check dismissal state on navigation (View Transitions)
         if (hasDismissed()) {
           notice.setAttribute("hidden", "");
           return;
         }
 
-        var dismiss = notice.querySelector("[data-cookie-dismiss]");
-        var previouslyFocused = document.activeElement;
+        // Show the notice if not dismissed
+        notice.removeAttribute("hidden");
 
-        var closeNotice = function () {
-          saveDismissal(); // Persist the dismissal
+        const dismiss = notice.querySelector("[data-cookie-dismiss]");
+        const previouslyFocused = document.activeElement as HTMLElement | null;
+
+        const closeNotice = (): void => {
+          saveDismissal();
           notice.setAttribute("hidden", "");
           notice.removeAttribute("aria-modal");
-          if (previouslyFocused && previouslyFocused.focus) {
+          if (previouslyFocused?.focus) {
             previouslyFocused.focus();
           }
         };
 
-        if (dismiss) {
-          dismiss.addEventListener("click", closeNotice);
+        // Remove old listeners to avoid duplicates on re-navigation
+        const newDismiss = dismiss?.cloneNode(true) as HTMLElement | null;
+        if (dismiss && newDismiss) {
+          dismiss.parentNode?.replaceChild(newDismiss, dismiss);
+          newDismiss.addEventListener("click", closeNotice);
         }
 
         // Focus the notice for accessibility
         if (!notice.hasAttribute("hidden")) {
-          window.requestAnimationFrame(function () {
-            notice.focus();
-          });
+          requestAnimationFrame(() => notice.focus());
         }
 
-        notice.addEventListener("keydown", function (event) {
+        // Handle keyboard events (clone to remove old listeners)
+        const handleKeydown = (event: KeyboardEvent): void => {
           if (event.key === "Escape" || event.key === "Esc") {
             event.preventDefault();
             closeNotice();
-          } else if (event.key === "Tab" && dismiss) {
+          } else if (event.key === "Tab" && newDismiss) {
             event.preventDefault();
-            dismiss.focus();
+            newDismiss.focus();
           }
-        });
-      })();
+        };
+
+        // Use a flag to prevent duplicate keydown listeners
+        if (!notice.dataset.keydownAttached) {
+          notice.addEventListener("keydown", handleKeydown as EventListener);
+          notice.dataset.keydownAttached = "true";
+        }
+      }
+
+      // Run on initial load and after View Transitions navigation
+      document.addEventListener("astro:page-load", initCookieNotice);
     </script>
     <script>
       import "../scripts/main";
