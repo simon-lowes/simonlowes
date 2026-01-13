@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import { ViewTransitions } from "astro:transitions";
 import SpaceBackground from "../components/SpaceBackground.astro";
 import "../styles/glass-effects.css";
 
@@ -67,6 +68,9 @@ const posts = (await getCollection("blog"))
     <!-- PWA -->
     <meta name="theme-color" content="#0a0a0f" />
     <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
+
+    <!-- View Transitions for seamless navigation -->
+    <ViewTransitions />
 
     <meta name="google-site-verification" content="gwurdptI6ejhc1SisVjfxFNaGX2lU19i646cuMxbK20" />
     <meta

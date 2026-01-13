@@ -1,4 +1,6 @@
 ---
+import { ViewTransitions } from "astro:transitions";
+
 interface Props {
   title: string;
   description: string;
@@ -69,6 +71,9 @@ const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).hr
     <!-- PWA -->
     <meta name="theme-color" content="#0f0f0f" />
     <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
+
+    <!-- View Transitions for seamless navigation -->
+    <ViewTransitions />
 
     <!-- Styles -->
     <link rel="stylesheet" type="text/css" href="/css/style.css" />
