@@ -83,15 +83,17 @@ const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).hr
         padding-bottom: calc(
           var(--edge-gap) + var(--footer-h) + var(--edge-gap) + env(safe-area-inset-bottom)
         );
-        padding-left: 1rem;
-        padding-right: 1rem;
+        /* No horizontal padding - blog-container handles its own width */
+        padding-left: 0;
+        padding-right: 0;
         box-sizing: border-box;
         overflow: hidden;
       }
 
       .blog-container {
-        width: 100%;
-        max-width: 800px;
+        /* Unified width system - matches audio player and footer */
+        width: calc((100% - var(--h-inset)) * var(--content-w));
+        max-width: calc((1200px - var(--h-inset)) * var(--content-w));
         height: 100%;
         overflow-y: auto;
         background: rgba(15, 15, 15, 0.92);
@@ -105,10 +107,12 @@ const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).hr
 
       @media (max-width: 600px) {
         .blog-content-wrapper {
-          padding-left: 0.75rem;
-          padding-right: 0.75rem;
+          /* No container padding - blog-container width formula handles margins */
+          padding-left: 0;
+          padding-right: 0;
         }
         .blog-container {
+          /* Keep using unified width formula - it handles margins via --h-inset */
           padding: 1.25rem 1.25rem 1.5rem;
           border-radius: 12px;
         }
