@@ -5,7 +5,7 @@
  */
 ---
 
-<canvas id="starfield-canvas" aria-hidden="true"></canvas>
+<canvas id="starfield-canvas" aria-hidden="true" transition:persist="starfield"></canvas>
 
 <style>
   #starfield-canvas {
@@ -88,9 +88,13 @@
     }
   }
 
-  // Cleanup on page navigation (Astro)
-  document.addEventListener("astro:before-swap", cleanup);
-
-  // Cleanup on page unload
+  // With transition:persist, the canvas survives navigation
+  // Only cleanup on actual page unload (closing tab/browser)
   window.addEventListener("beforeunload", cleanup);
+
+  // Handle View Transitions - ensure animation continues after swap
+  document.addEventListener("astro:after-swap", () => {
+    // Canvas persists, but we may need to ensure render loop continues
+    // The starfield instance remains alive, so no action needed
+  });
 </script>
