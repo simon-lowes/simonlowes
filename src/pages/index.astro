@@ -158,17 +158,19 @@ const posts = (await getCollection("blog"))
         padding-bottom: calc(
           var(--edge-gap) + var(--footer-h) + var(--edge-gap) + env(safe-area-inset-bottom)
         );
-        padding-left: 1rem;
-        padding-right: 1rem;
+        /* No horizontal padding - blog-panel handles its own width */
+        padding-left: 0;
+        padding-right: 0;
         box-sizing: border-box;
         overflow: hidden;
       }
-      /* Blog panel with glass effect */
+      /* Blog panel with glass effect - matches audio player and footer width */
       .blog-panel {
         position: relative;
         z-index: 2;
-        width: 100%;
-        max-width: 800px;
+        /* Unified width system - matches audio player and footer */
+        width: calc((100% - var(--h-inset)) * var(--content-w));
+        max-width: calc((1200px - var(--h-inset)) * var(--content-w));
         height: 100%;
         box-sizing: border-box;
         margin: 0;
@@ -243,10 +245,12 @@ const posts = (await getCollection("blog"))
       }
       @media (max-width: 600px) {
         .content-wrapper {
-          padding-left: 0.75rem;
-          padding-right: 0.75rem;
+          /* No container padding - blog-panel width formula handles margins */
+          padding-left: 0;
+          padding-right: 0;
         }
         .blog-panel {
+          /* Keep using unified width formula - it handles margins via --h-inset */
           padding: 1.25rem 1.25rem 1.5rem;
           border-radius: 16px;
         }
