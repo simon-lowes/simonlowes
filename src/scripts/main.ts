@@ -60,9 +60,14 @@ gtag("config", "G-7NV4RLT1ZW");
 
 // =============================================
 // Audio Player Controller
+// Works with Astro View Transitions - reinitializes on each navigation
 // =============================================
 
-(function initAudioPlayer(): void {
+// Track state across navigations
+let previousVolume = 0.75;
+let spacebarListenerAttached = false;
+
+function initAudioPlayer(): void {
   const audio = document.getElementById("myAudio") as HTMLAudioElement | null;
   const player = document.getElementById("audio-player");
   const playBtn = document.getElementById("audio-play-btn") as HTMLButtonElement | null;
@@ -76,10 +81,9 @@ gtag("config", "G-7NV4RLT1ZW");
   if (!audio || !player || !playBtn) return;
 
   let isSeeking = false;
-  let previousVolume = 0.75; // Store volume before muting
 
   // Set initial volume (75%)
-  audio.volume = 0.75;
+  audio.volume = previousVolume;
 
   // Wrapper functions to match existing signatures
   function updatePlayButtonWrapper(): void {
@@ -103,9 +107,12 @@ gtag("config", "G-7NV4RLT1ZW");
   }
 
   // ----- Event Listeners -----
+  // Clone elements to remove old listeners (prevents duplicates on re-navigation)
 
   // Play/Pause toggle
-  playBtn.addEventListener("click", () => {
+  const newPlayBtn = playBtn.cloneNode(true) as HTMLButtonElement;
+  playBtn.parentNode?.replaceChild(newPlayBtn, playBtn);
+  newPlayBtn.addEventListener("click", () => {
     if (audio.paused) {
       audio.play().catch((err: Error) => {
         // eslint-disable-next-line no-console
@@ -116,7 +123,7 @@ gtag("config", "G-7NV4RLT1ZW");
     }
   });
 
-  // Audio state changes
+  // Audio state changes (audio element is fresh on each navigation, so no clone needed)
   audio.addEventListener("play", updatePlayButtonWrapper);
   audio.addEventListener("pause", updatePlayButtonWrapper);
   audio.addEventListener("timeupdate", updateProgressWrapper);
@@ -130,11 +137,14 @@ gtag("config", "G-7NV4RLT1ZW");
 
   // Seek slider interaction
   if (seekSlider) {
-    seekSlider.addEventListener("input", () => {
+    const newSeekSlider = seekSlider.cloneNode(true) as HTMLInputElement;
+    seekSlider.parentNode?.replaceChild(newSeekSlider, seekSlider);
+
+    newSeekSlider.addEventListener("input", () => {
       isSeeking = true;
       const duration = audio.duration || 0;
       if (duration > 0) {
-        const seekTime = (parseFloat(seekSlider.value) / 100) * duration;
+        const seekTime = (parseFloat(newSeekSlider.value) / 100) * duration;
         // Update time display while seeking
         if (timeElapsed) {
           timeElapsed.textContent = formatTime(seekTime, false);
@@ -145,10 +155,10 @@ gtag("config", "G-7NV4RLT1ZW");
       }
     });
 
-    seekSlider.addEventListener("change", () => {
+    newSeekSlider.addEventListener("change", () => {
       const duration = audio.duration || 0;
       if (duration > 0) {
-        audio.currentTime = (parseFloat(seekSlider.value) / 100) * duration;
+        audio.currentTime = (parseFloat(newSeekSlider.value) / 100) * duration;
       }
       isSeeking = false;
     });
@@ -156,8 +166,11 @@ gtag("config", "G-7NV4RLT1ZW");
 
   // Volume slider
   if (volumeSlider) {
-    volumeSlider.addEventListener("input", () => {
-      const vol = parseFloat(volumeSlider.value) / 100;
+    const newVolumeSlider = volumeSlider.cloneNode(true) as HTMLInputElement;
+    volumeSlider.parentNode?.replaceChild(newVolumeSlider, volumeSlider);
+
+    newVolumeSlider.addEventListener("input", () => {
+      const vol = parseFloat(newVolumeSlider.value) / 100;
       audio.volume = vol;
       audio.muted = vol === 0;
       if (vol > 0) {
@@ -168,7 +181,10 @@ gtag("config", "G-7NV4RLT1ZW");
 
   // Mute toggle
   if (muteBtn) {
-    muteBtn.addEventListener("click", () => {
+    const newMuteBtn = muteBtn.cloneNode(true) as HTMLButtonElement;
+    muteBtn.parentNode?.replaceChild(newMuteBtn, muteBtn);
+
+    newMuteBtn.addEventListener("click", () => {
       if (audio.muted || audio.volume === 0) {
         // Unmute
         audio.muted = false;
@@ -181,38 +197,49 @@ gtag("config", "G-7NV4RLT1ZW");
     });
   }
 
-  // Spacebar to toggle play/pause globally
-  document.addEventListener("keydown", (event: KeyboardEvent) => {
-    // Only trigger on spacebar, not when typing in inputs
-    if (event.code !== "Space" && event.key !== " ") return;
+  // Spacebar to toggle play/pause globally (only attach once)
+  if (!spacebarListenerAttached) {
+    spacebarListenerAttached = true;
 
-    // Don't intercept if user is typing in a text field
-    const activeElement = document.activeElement as HTMLElement | null;
-    const tagName = activeElement?.tagName.toLowerCase() ?? "";
-    const isTyping =
-      tagName === "input" ||
-      tagName === "textarea" ||
-      (activeElement as HTMLElement | null)?.isContentEditable;
+    document.addEventListener("keydown", (event: KeyboardEvent) => {
+      // Only trigger on spacebar, not when typing in inputs
+      if (event.code !== "Space" && event.key !== " ") return;
 
-    if (isTyping) return;
+      // Get fresh reference to audio element
+      const currentAudio = document.getElementById("myAudio") as HTMLAudioElement | null;
+      if (!currentAudio) return;
 
-    // Prevent page scroll
-    event.preventDefault();
+      // Don't intercept if user is typing in a text field
+      const activeElement = document.activeElement as HTMLElement | null;
+      const tagName = activeElement?.tagName.toLowerCase() ?? "";
+      const isTyping =
+        tagName === "input" ||
+        tagName === "textarea" ||
+        (activeElement as HTMLElement | null)?.isContentEditable;
 
-    // Toggle play/pause
-    if (audio.paused) {
-      audio.play().catch((err: Error) => {
-        // eslint-disable-next-line no-console
-        console.warn("Audio play failed:", err);
-      });
-    } else {
-      audio.pause();
-    }
-  });
+      if (isTyping) return;
 
-  // Initialize UI state
-  updatePlayButtonWrapper();
+      // Prevent page scroll
+      event.preventDefault();
+
+      // Toggle play/pause
+      if (currentAudio.paused) {
+        currentAudio.play().catch((err: Error) => {
+          // eslint-disable-next-line no-console
+          console.warn("Audio play failed:", err);
+        });
+      } else {
+        currentAudio.pause();
+      }
+    });
+  }
+
+  // Initialize UI state (use new button reference)
+  updatePlayButton(audio, newPlayBtn);
   updateProgressWrapper();
   updateMuteButtonWrapper();
   updateVolumeSliderWrapper();
-})();
+}
+
+// Run on initial load and after View Transitions navigation
+document.addEventListener("astro:page-load", initAudioPlayer);
