@@ -253,6 +253,10 @@ const posts = (await getCollection("blog"))
           /* Keep using unified width formula - it handles margins via --h-inset */
           padding: 1.25rem 1.25rem 1.5rem;
           border-radius: 16px;
+          /* More transparent on mobile so starfield shows through */
+          background: rgba(10, 10, 15, 0.5);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
         }
         .blog-panel__item {
           justify-content: flex-start;
