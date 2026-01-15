@@ -68,5 +68,8 @@
     "*.{md,json}": [
       "prettier --write"
     ]
+  },
+  "overrides": {
+    "diff": "^8.0.3"
   }
 }
