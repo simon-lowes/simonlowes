@@ -85,33 +85,61 @@ function initAudioPlayer(): void {
   // Set initial volume (75%)
   audio.volume = previousVolume;
 
-  // Wrapper functions to match existing signatures
+  // ----- Clone elements first to get fresh references -----
+  // Clone elements to remove old listeners (prevents duplicates on re-navigation)
+
+  // Play/Pause button
+  const newPlayBtn = playBtn.cloneNode(true) as HTMLButtonElement;
+  playBtn.parentNode?.replaceChild(newPlayBtn, playBtn);
+
+  // Seek slider
+  let activeSeekSlider = seekSlider;
+  if (seekSlider) {
+    const newSeekSlider = seekSlider.cloneNode(true) as HTMLInputElement;
+    seekSlider.parentNode?.replaceChild(newSeekSlider, seekSlider);
+    activeSeekSlider = newSeekSlider;
+  }
+
+  // Volume slider
+  let activeVolumeSlider = volumeSlider;
+  if (volumeSlider) {
+    const newVolumeSlider = volumeSlider.cloneNode(true) as HTMLInputElement;
+    volumeSlider.parentNode?.replaceChild(newVolumeSlider, volumeSlider);
+    activeVolumeSlider = newVolumeSlider;
+  }
+
+  // Mute button
+  let activeMuteBtn = muteBtn;
+  if (muteBtn) {
+    const newMuteBtn = muteBtn.cloneNode(true) as HTMLButtonElement;
+    muteBtn.parentNode?.replaceChild(newMuteBtn, muteBtn);
+    activeMuteBtn = newMuteBtn;
+  }
+
+  // ----- Wrapper functions using NEW element references -----
   function updatePlayButtonWrapper(): void {
-    updatePlayButton(audio, playBtn);
+    updatePlayButton(audio, newPlayBtn);
   }
 
   function updateProgressWrapper(): void {
-    updateProgress(audio, seekSlider, timeElapsed, timeRemaining, isSeeking);
+    updateProgress(audio, activeSeekSlider, timeElapsed, timeRemaining, isSeeking);
   }
 
   function updateMuteButtonWrapper(): void {
-    updateMuteButton(audio, muteBtn);
+    updateMuteButton(audio, activeMuteBtn);
   }
 
   function updateVolumeSliderWrapper(): void {
-    updateVolumeSlider(audio, volumeSlider);
+    updateVolumeSlider(audio, activeVolumeSlider);
   }
 
   function handleError(): void {
-    handleAudioError(player, playBtn, seekSlider, volumeSlider, muteBtn);
+    handleAudioError(player, newPlayBtn, activeSeekSlider, activeVolumeSlider, activeMuteBtn);
   }
 
   // ----- Event Listeners -----
-  // Clone elements to remove old listeners (prevents duplicates on re-navigation)
 
   // Play/Pause toggle
-  const newPlayBtn = playBtn.cloneNode(true) as HTMLButtonElement;
-  playBtn.parentNode?.replaceChild(newPlayBtn, playBtn);
   newPlayBtn.addEventListener("click", () => {
     if (audio.paused) {
       audio.play().catch((err: Error) => {
@@ -123,7 +151,7 @@ function initAudioPlayer(): void {
     }
   });
 
-  // Audio state changes (audio element is fresh on each navigation, so no clone needed)
+  // Audio state changes
   audio.addEventListener("play", updatePlayButtonWrapper);
   audio.addEventListener("pause", updatePlayButtonWrapper);
   audio.addEventListener("timeupdate", updateProgressWrapper);
@@ -136,15 +164,12 @@ function initAudioPlayer(): void {
   audio.addEventListener("error", handleError);
 
   // Seek slider interaction
-  if (seekSlider) {
-    const newSeekSlider = seekSlider.cloneNode(true) as HTMLInputElement;
-    seekSlider.parentNode?.replaceChild(newSeekSlider, seekSlider);
-
-    newSeekSlider.addEventListener("input", () => {
+  if (activeSeekSlider) {
+    activeSeekSlider.addEventListener("input", () => {
       isSeeking = true;
       const duration = audio.duration || 0;
       if (duration > 0) {
-        const seekTime = (parseFloat(newSeekSlider.value) / 100) * duration;
+        const seekTime = (parseFloat(activeSeekSlider!.value) / 100) * duration;
         // Update time display while seeking
         if (timeElapsed) {
           timeElapsed.textContent = formatTime(seekTime, false);
@@ -155,22 +180,19 @@ function initAudioPlayer(): void {
       }
     });
 
-    newSeekSlider.addEventListener("change", () => {
+    activeSeekSlider.addEventListener("change", () => {
       const duration = audio.duration || 0;
       if (duration > 0) {
-        audio.currentTime = (parseFloat(newSeekSlider.value) / 100) * duration;
+        audio.currentTime = (parseFloat(activeSeekSlider!.value) / 100) * duration;
       }
       isSeeking = false;
     });
   }
 
   // Volume slider
-  if (volumeSlider) {
-    const newVolumeSlider = volumeSlider.cloneNode(true) as HTMLInputElement;
-    volumeSlider.parentNode?.replaceChild(newVolumeSlider, volumeSlider);
-
-    newVolumeSlider.addEventListener("input", () => {
-      const vol = parseFloat(newVolumeSlider.value) / 100;
+  if (activeVolumeSlider) {
+    activeVolumeSlider.addEventListener("input", () => {
+      const vol = parseFloat(activeVolumeSlider!.value) / 100;
       audio.volume = vol;
       audio.muted = vol === 0;
       if (vol > 0) {
@@ -180,11 +202,8 @@ function initAudioPlayer(): void {
   }
 
   // Mute toggle
-  if (muteBtn) {
-    const newMuteBtn = muteBtn.cloneNode(true) as HTMLButtonElement;
-    muteBtn.parentNode?.replaceChild(newMuteBtn, muteBtn);
-
-    newMuteBtn.addEventListener("click", () => {
+  if (activeMuteBtn) {
+    activeMuteBtn.addEventListener("click", () => {
       if (audio.muted || audio.volume === 0) {
         // Unmute
         audio.muted = false;
