@@ -97,6 +97,8 @@ const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).hr
         height: 100%;
         overflow-y: auto;
         background: rgba(15, 15, 15, 0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 16px;
         box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
@@ -112,7 +114,10 @@ const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).hr
           padding-right: 0;
         }
         .blog-container {
-          /* Keep using unified width formula - it handles margins via --h-inset */
+          /* More transparent on mobile to show starfield */
+          background: rgba(15, 15, 15, 0.75);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
           padding: 1.25rem 1.25rem 1.5rem;
           border-radius: 12px;
         }
