@@ -40,54 +40,87 @@ export class ParallaxController {
     }
   }
 
+  /**
+   * Check if this device requires a user gesture for orientation permission (iOS 13+)
+   */
+  public static needsPermissionPrompt(): boolean {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!isMobile) return false;
+
+    const DOE = DeviceOrientationEvent as unknown as {
+      requestPermission?: () => Promise<string>;
+    };
+    return typeof DOE.requestPermission === "function";
+  }
+
   private async setupInput(): Promise<void> {
     if (this.isMobile && this.hasOrientation) {
-      // Try to use device orientation on mobile
-      await this.requestOrientationPermission();
+      // Check if iOS needs permission prompt (requires user gesture)
+      if (ParallaxController.needsPermissionPrompt()) {
+        // iOS 13+ - defer to user gesture, use auto-drift for now
+        this.useAutoDrift = true;
+      } else {
+        // Android or older iOS - try direct orientation
+        await this.tryDirectOrientation();
+      }
     } else if (!this.isMobile) {
       // Use mouse tracking on desktop
       window.addEventListener("mousemove", this.handleMouseMove);
     }
 
-    // If neither mouse nor orientation, use auto-drift
+    // If on mobile and orientation not working, ensure auto-drift is on
     if (this.isMobile && !this.orientationPermissionGranted) {
       this.useAutoDrift = true;
     }
   }
 
-  private async requestOrientationPermission(): Promise<void> {
-    // iOS 13+ requires permission request
-    // DeviceOrientationEvent.requestPermission is iOS-specific and not in TypeScript types
+  /**
+   * Try to add orientation listener directly (for Android/older iOS)
+   */
+  private async tryDirectOrientation(): Promise<void> {
+    window.addEventListener("deviceorientation", this.handleDeviceOrientation);
+    // Set a timeout to check if we're receiving events
+    setTimeout(() => {
+      if (!this.orientationPermissionGranted) {
+        window.removeEventListener("deviceorientation", this.handleDeviceOrientation);
+        this.useAutoDrift = true;
+      }
+    }, 1000);
+  }
+
+  /**
+   * Enable device orientation after user grants permission (call from click handler)
+   * Returns true if orientation is now enabled
+   */
+  public async enableOrientation(): Promise<boolean> {
+    if (!this.isMobile || !this.hasOrientation) {
+      return false;
+    }
+
     const DOE = DeviceOrientationEvent as unknown as {
       requestPermission?: () => Promise<string>;
     };
 
-    if (
-      typeof DeviceOrientationEvent !== "undefined" &&
-      typeof DOE.requestPermission === "function"
-    ) {
+    if (typeof DOE.requestPermission === "function") {
       try {
         const permission = await DOE.requestPermission();
         if (permission === "granted") {
           this.orientationPermissionGranted = true;
+          this.useAutoDrift = false;
           window.addEventListener("deviceorientation", this.handleDeviceOrientation);
-        } else {
-          this.useAutoDrift = true;
+          return true;
         }
       } catch {
-        this.useAutoDrift = true;
+        return false;
       }
     } else {
-      // Non-iOS or older iOS - try to add listener directly
+      // Non-iOS, try direct
       window.addEventListener("deviceorientation", this.handleDeviceOrientation);
-      // Set a timeout to check if we're receiving events
-      setTimeout(() => {
-        if (!this.orientationPermissionGranted) {
-          window.removeEventListener("deviceorientation", this.handleDeviceOrientation);
-          this.useAutoDrift = true;
-        }
-      }, 1000);
+      this.useAutoDrift = false;
+      return true;
     }
+
+    return false;
   }
 
   private onMouseMove(e: MouseEvent): void {

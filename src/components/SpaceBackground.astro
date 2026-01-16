@@ -3,9 +3,11 @@
  * SpaceBackground - Astro wrapper for Three.js starfield
  * Creates an immersive cosmic background with parallax star layers
  */
+import MotionPermissionPrompt from "./MotionPermissionPrompt.astro";
 ---
 
 <canvas id="starfield-canvas" aria-hidden="true" transition:persist="starfield"></canvas>
+<MotionPermissionPrompt />
 
 <style>
   #starfield-canvas {
