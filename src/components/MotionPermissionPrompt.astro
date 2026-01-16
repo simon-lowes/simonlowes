@@ -1,0 +1,248 @@
+---
+/**
+ * MotionPermissionPrompt - iOS device orientation permission prompt
+ * Displays a non-intrusive toast for iOS 13+ users to enable gyroscope controls
+ * Only visible on devices that require explicit permission
+ */
+---
+
+<div id="motion-prompt" class="motion-prompt" aria-live="polite" role="status">
+  <div class="motion-prompt-content">
+    <span class="motion-icon">🌌</span>
+    <div class="motion-text">
+      <span class="motion-title">Enable motion controls</span>
+      <span class="motion-subtitle">Tilt your device to move the stars</span>
+    </div>
+  </div>
+  <div class="motion-actions">
+    <button id="motion-enable" class="motion-btn motion-btn-primary" type="button"> Enable </button>
+    <button
+      id="motion-dismiss"
+      class="motion-btn motion-btn-secondary"
+      type="button"
+      aria-label="Dismiss"
+    >
+      ×
+    </button>
+  </div>
+</div>
+
+<style>
+  .motion-prompt {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgb(10 10 20 / 85%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgb(0 212 255 / 20%);
+    border-radius: 16px;
+    padding: 12px 16px;
+    display: none;
+    align-items: center;
+    gap: 16px;
+    z-index: 9999;
+    opacity: 0;
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease;
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 40%),
+      0 0 20px rgb(0 212 255 / 8%),
+      inset 0 1px 0 rgb(255 255 255 / 5%);
+    max-width: calc(100vw - 32px);
+  }
+
+  .motion-prompt.visible {
+    display: flex;
+    opacity: 1;
+  }
+
+  .motion-prompt.hiding {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+
+  .motion-prompt-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .motion-icon {
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  .motion-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .motion-title {
+    color: #e8e8e8;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .motion-subtitle {
+    color: #a0a0a0;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .motion-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .motion-btn {
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition:
+      background 0.2s ease,
+      transform 0.15s ease;
+  }
+
+  .motion-btn-primary {
+    background: rgb(0 212 255 / 20%);
+    color: #00d4ff;
+    padding: 8px 16px;
+    border: 1px solid rgb(0 212 255 / 30%);
+  }
+
+  .motion-btn-primary:hover {
+    background: rgb(0 212 255 / 30%);
+  }
+
+  .motion-btn-primary:active {
+    transform: scale(0.96);
+  }
+
+  .motion-btn-secondary {
+    background: transparent;
+    color: #a0a0a0;
+    padding: 6px 10px;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .motion-btn-secondary:hover {
+    color: #e8e8e8;
+    background: rgb(255 255 255 / 8%);
+  }
+
+  /* Smaller screens - stack vertically */
+  @media (max-width: 400px) {
+    .motion-prompt {
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .motion-actions {
+      margin-left: 0;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .motion-btn-primary {
+      flex: 1;
+    }
+  }
+
+  /* Reduced motion - disable animations */
+  @media (prefers-reduced-motion: reduce) {
+    .motion-prompt {
+      transition: none;
+    }
+
+    .motion-btn {
+      transition: none;
+    }
+  }
+
+  /* Backdrop filter fallback */
+  @supports not (backdrop-filter: blur(12px)) {
+    .motion-prompt {
+      background: rgb(10 10 20 / 95%);
+    }
+  }
+</style>
+
+<script>
+  import { ParallaxController, requestOrientationPermission } from "../scripts/parallax";
+
+  // Only run on client
+  if (typeof window !== "undefined") {
+    const prompt = document.getElementById("motion-prompt");
+    const enableBtn = document.getElementById("motion-enable");
+    const dismissBtn = document.getElementById("motion-dismiss");
+
+    // Check if we need to show the prompt:
+    // 1. Device requires permission prompt (iOS 13+)
+    // 2. User hasn't dismissed it before
+    // 3. User hasn't already granted permission
+    const needsPrompt =
+      ParallaxController.needsPermissionPrompt() &&
+      !localStorage.getItem("motion-permission-dismissed") &&
+      !localStorage.getItem("motion-permission-granted");
+
+    if (needsPrompt && prompt) {
+      // Show prompt with a slight delay for smoother appearance
+      setTimeout(() => {
+        prompt.classList.add("visible");
+      }, 1500);
+
+      // Auto-hide after 15 seconds
+      const autoHideTimeout = setTimeout(() => {
+        hidePrompt();
+      }, 15000);
+
+      function hidePrompt() {
+        if (prompt) {
+          prompt.classList.add("hiding");
+          setTimeout(() => {
+            prompt.classList.remove("visible", "hiding");
+          }, 300);
+        }
+        clearTimeout(autoHideTimeout);
+      }
+
+      // Enable button - request permission from user gesture
+      enableBtn?.addEventListener("click", async () => {
+        const granted = await requestOrientationPermission();
+
+        if (granted) {
+          // Remember that permission was granted
+          localStorage.setItem("motion-permission-granted", "true");
+          // Reload to reinitialize with orientation enabled
+          window.location.reload();
+        } else {
+          // Permission denied - show feedback then hide
+          if (prompt) {
+            const title = prompt.querySelector(".motion-title");
+            if (title) {
+              title.textContent = "Permission denied";
+            }
+            setTimeout(hidePrompt, 1500);
+          }
+        }
+      });
+
+      // Dismiss button
+      dismissBtn?.addEventListener("click", () => {
+        localStorage.setItem("motion-permission-dismissed", "true");
+        hidePrompt();
+      });
+    }
+  }
+</script>
