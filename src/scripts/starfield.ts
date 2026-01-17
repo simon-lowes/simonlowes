@@ -12,6 +12,8 @@ import {
   EffectPass,
   RenderPass,
   VignetteEffect,
+  ChromaticAberrationEffect,
+  NoiseEffect,
   BlendFunction,
   KernelSize,
 } from "postprocessing";
@@ -360,8 +362,30 @@ export class Starfield {
       offset: 0.35, // How far from center vignette starts
     });
 
+    // Chromatic aberration - simulates lens color fringing
+    // Very subtle offset creates that cinematic telescope look
+    const chromaticEffect = new ChromaticAberrationEffect({
+      offset: new THREE.Vector2(0.0008, 0.0008), // Subtle RGB separation
+      radialModulation: true, // Stronger effect at edges (like real lenses)
+      modulationOffset: 0.3, // Where modulation starts from center
+    });
+
+    // Film grain - organic texture that breaks digital perfectness
+    // Simulates astronomical film photography aesthetic
+    const noiseEffect = new NoiseEffect({
+      blendFunction: BlendFunction.MULTIPLY, // Blend mode for natural look
+      premultiply: true, // Apply based on luminance
+    });
+    noiseEffect.blendMode.opacity.value = 0.08; // Very subtle grain
+
     // Combine effects into a single pass for performance
-    const effectPass = new EffectPass(this.camera, this.bloomEffect, vignetteEffect);
+    const effectPass = new EffectPass(
+      this.camera,
+      this.bloomEffect,
+      vignetteEffect,
+      chromaticEffect,
+      noiseEffect
+    );
     this.composer.addPass(effectPass);
 
     // Initialize parallax controller (always full animation)
