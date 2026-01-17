@@ -6,6 +6,7 @@
 
 import * as THREE from "three";
 import { ParallaxController } from "./parallax";
+import { QualityManager, type QualityConfig } from "./quality";
 import {
   EffectComposer,
   BloomEffect,
@@ -310,7 +311,14 @@ export class Starfield {
 
   // Post-processing
   private composer: EffectComposer;
-  private bloomEffect: BloomEffect;
+  private bloomEffect: BloomEffect | null = null;
+  private chromaticEffect: ChromaticAberrationEffect | null = null;
+  private noiseEffect: NoiseEffect | null = null;
+  private effectPass: EffectPass | null = null;
+
+  // Quality management
+  private qualityManager: QualityManager;
+  private qualityConfig: QualityConfig;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -336,57 +344,40 @@ export class Starfield {
       alpha: false,
       powerPreference: "high-performance",
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Initialize quality management with GPU detection
+    const gl = this.renderer.getContext();
+    this.qualityManager = new QualityManager(gl);
+    this.qualityConfig = this.qualityManager.getConfig();
+
+    // Apply quality-based settings
+    this.targetFps = this.qualityConfig.targetFps;
+    this.frameInterval = 1000 / this.targetFps;
+    this.renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio, this.qualityConfig.pixelRatioLimit)
+    );
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // Log quality tier in dev mode
+    if (import.meta.env.DEV) {
+      const debug = this.qualityManager.getDebugInfo();
+      console.log(`[Starfield] Quality: ${debug.currentTier.toUpperCase()}`, debug);
+    }
 
     // Initialize post-processing pipeline
     this.composer = new EffectComposer(this.renderer);
 
-    // Render pass - renders the scene
+    // Render pass - renders the scene (always enabled)
     const renderPass = new RenderPass(this.scene, this.camera);
     this.composer.addPass(renderPass);
 
-    // Bloom effect - creates cinematic glow on bright stars
-    // Settings tuned for space imagery: subtle but impactful
-    this.bloomEffect = new BloomEffect({
-      intensity: 1.2, // Overall bloom strength
-      luminanceThreshold: 0.4, // Only bloom pixels brighter than this
-      luminanceSmoothing: 0.3, // Smooth transition at threshold
-      mipmapBlur: true, // Better quality blur
-      kernelSize: KernelSize.LARGE, // Wider glow spread
-    });
+    // Build effects array based on quality config
+    this.setupPostProcessing();
 
-    // Vignette effect - subtle darkening at edges for cinematic feel
-    const vignetteEffect = new VignetteEffect({
-      darkness: 0.4, // Subtle darkness
-      offset: 0.35, // How far from center vignette starts
+    // Register callback for dynamic quality changes
+    this.qualityManager.onConfigChange((newConfig) => {
+      this.handleQualityChange(newConfig);
     });
-
-    // Chromatic aberration - simulates lens color fringing
-    // Very subtle offset creates that cinematic telescope look
-    const chromaticEffect = new ChromaticAberrationEffect({
-      offset: new THREE.Vector2(0.0008, 0.0008), // Subtle RGB separation
-      radialModulation: true, // Stronger effect at edges (like real lenses)
-      modulationOffset: 0.3, // Where modulation starts from center
-    });
-
-    // Film grain - organic texture that breaks digital perfectness
-    // Simulates astronomical film photography aesthetic
-    const noiseEffect = new NoiseEffect({
-      blendFunction: BlendFunction.MULTIPLY, // Blend mode for natural look
-      premultiply: true, // Apply based on luminance
-    });
-    noiseEffect.blendMode.opacity.value = 0.08; // Very subtle grain
-
-    // Combine effects into a single pass for performance
-    const effectPass = new EffectPass(
-      this.camera,
-      this.bloomEffect,
-      vignetteEffect,
-      chromaticEffect,
-      noiseEffect
-    );
-    this.composer.addPass(effectPass);
 
     // Initialize parallax controller (always full animation)
     this.parallax = new ParallaxController(false);
@@ -403,16 +394,79 @@ export class Starfield {
     this.animate = this.animate.bind(this);
 
     window.addEventListener("resize", this.handleResize);
-    this.detectPerformance();
   }
 
-  private detectPerformance(): void {
-    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  /**
+   * Setup post-processing effects based on quality config
+   */
+  private setupPostProcessing(): void {
+    const effects: (BloomEffect | VignetteEffect | ChromaticAberrationEffect | NoiseEffect)[] = [];
 
-    if (isMobile || isTouchDevice) {
-      this.targetFps = 30;
-      this.frameInterval = 1000 / 30;
+    // Bloom effect (HIGH+ quality)
+    if (this.qualityConfig.bloomEnabled) {
+      this.bloomEffect = new BloomEffect({
+        intensity: this.qualityConfig.bloomIntensity,
+        luminanceThreshold: 0.4,
+        luminanceSmoothing: 0.3,
+        mipmapBlur: true,
+        kernelSize: KernelSize.LARGE,
+      });
+      effects.push(this.bloomEffect);
+    }
+
+    // Vignette effect (always enabled - very cheap)
+    if (this.qualityConfig.vignetteEnabled) {
+      const vignetteEffect = new VignetteEffect({
+        darkness: 0.4,
+        offset: 0.35,
+      });
+      effects.push(vignetteEffect);
+    }
+
+    // Chromatic aberration (HIGH+ quality)
+    if (this.qualityConfig.chromaticEnabled) {
+      this.chromaticEffect = new ChromaticAberrationEffect({
+        offset: new THREE.Vector2(0.0008, 0.0008),
+        radialModulation: true,
+        modulationOffset: 0.3,
+      });
+      effects.push(this.chromaticEffect);
+    }
+
+    // Film grain (HIGH+ quality)
+    if (this.qualityConfig.grainEnabled) {
+      this.noiseEffect = new NoiseEffect({
+        blendFunction: BlendFunction.MULTIPLY,
+        premultiply: true,
+      });
+      this.noiseEffect.blendMode.opacity.value = 0.08;
+      effects.push(this.noiseEffect);
+    }
+
+    // Only create effect pass if we have effects
+    if (effects.length > 0) {
+      this.effectPass = new EffectPass(this.camera, ...effects);
+      this.composer.addPass(this.effectPass);
+    }
+  }
+
+  /**
+   * Handle dynamic quality change (from adaptive FPS monitoring)
+   */
+  private handleQualityChange(newConfig: QualityConfig): void {
+    this.qualityConfig = newConfig;
+    this.targetFps = newConfig.targetFps;
+    this.frameInterval = 1000 / this.targetFps;
+
+    // Update bloom intensity if it exists
+    if (this.bloomEffect && newConfig.bloomEnabled) {
+      this.bloomEffect.intensity = newConfig.bloomIntensity;
+    }
+
+    // Note: Full effect rebuilding would require recreating the composer
+    // For now, we just adjust parameters that can be changed dynamically
+    if (import.meta.env.DEV) {
+      console.log(`[Starfield] Quality changed to: ${this.qualityManager.getTier()}`);
     }
   }
 
@@ -493,16 +547,14 @@ export class Starfield {
   }
 
   private createLayers(): void {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const multiplier = isMobile ? 0.4 : 1;
-
+    // Particle counts are now driven by quality tier
     const spreadX = 2500;
     const spreadY = 2500;
 
     // ===========================================================
     // FAR LAYER - Dense backdrop of distant stars (2% parallax)
     // ===========================================================
-    const farCount = Math.floor(15000 * multiplier);
+    const farCount = this.qualityConfig.farStarCount;
     const farZMin = -1500;
     const farZMax = -600;
 
@@ -561,7 +613,7 @@ export class Starfield {
     // ===========================================================
     // MID LAYER - Medium density stars (5% parallax)
     // ===========================================================
-    const midCount = Math.floor(6000 * multiplier);
+    const midCount = this.qualityConfig.midStarCount;
     const midZMin = -600;
     const midZMax = -150;
 
@@ -621,7 +673,7 @@ export class Starfield {
     // ===========================================================
     // NEAR LAYER - Bright foreground stars (10% parallax)
     // ===========================================================
-    const nearCount = Math.floor(2500 * multiplier);
+    const nearCount = this.qualityConfig.nearStarCount;
     const nearZMin = -150;
     const nearZMax = 20;
 
@@ -2004,8 +2056,9 @@ export class Starfield {
    * These appear as tiny colored smudges, with the farthest appearing reddish (redshift)
    */
   private createBackgroundGalaxyField(): void {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const galaxyCount = isMobile ? 200 : 500;
+    // Scale galaxy count based on quality tier (galaxyCount in config is scaled 1-60)
+    // Multiply by factor to get hundreds of background galaxies
+    const galaxyCount = this.qualityConfig.galaxyCount * 8;
 
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(galaxyCount * 3);
@@ -2295,6 +2348,9 @@ export class Starfield {
 
     // Skip rendering when tab is hidden
     if (document.hidden) return;
+
+    // Record frame time for adaptive quality (adjusts tier if FPS drops)
+    this.qualityManager.recordFrame(currentTime);
 
     // Update time uniform for twinkling
     const elapsedTime = (currentTime - this.startTime) * 0.001;
