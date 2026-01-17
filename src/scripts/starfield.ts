@@ -15,6 +15,8 @@ import {
   VignetteEffect,
   ChromaticAberrationEffect,
   NoiseEffect,
+  ToneMappingEffect,
+  ToneMappingMode,
   BlendFunction,
   KernelSize,
 } from "postprocessing";
@@ -315,6 +317,7 @@ export class Starfield {
   private chromaticEffect: ChromaticAberrationEffect | null = null;
   private noiseEffect: NoiseEffect | null = null;
   private effectPass: EffectPass | null = null;
+  private toneMappingEffect: ToneMappingEffect | null = null;
 
   // Quality management
   private qualityManager: QualityManager;
@@ -400,7 +403,13 @@ export class Starfield {
    * Setup post-processing effects based on quality config
    */
   private setupPostProcessing(): void {
-    const effects: (BloomEffect | VignetteEffect | ChromaticAberrationEffect | NoiseEffect)[] = [];
+    const effects: (
+      | BloomEffect
+      | VignetteEffect
+      | ChromaticAberrationEffect
+      | NoiseEffect
+      | ToneMappingEffect
+    )[] = [];
 
     // Bloom effect (HIGH+ quality)
     if (this.qualityConfig.bloomEnabled) {
@@ -441,6 +450,22 @@ export class Starfield {
       });
       this.noiseEffect.blendMode.opacity.value = 0.08;
       effects.push(this.noiseEffect);
+    }
+
+    // Adaptive exposure / tone mapping (MEDIUM+ quality)
+    // Dynamically adjusts brightness based on scene luminance
+    // Creates cinematic eye-adaptation effect when panning
+    if (this.qualityConfig.adaptiveExposureEnabled) {
+      this.toneMappingEffect = new ToneMappingEffect({
+        mode: ToneMappingMode.REINHARD2_ADAPTIVE,
+        resolution: 256, // Luminance texture resolution
+        adaptationRate: 0.5, // How fast exposure adapts (lower = smoother)
+        middleGrey: 0.5, // Target middle grey (affects overall brightness)
+        whitePoint: 5.0, // Maximum luminance before clipping
+        minLuminance: 0.01, // Minimum luminance to prevent over-brightening in dark areas
+        averageLuminance: 1.0, // Initial average luminance
+      });
+      effects.push(this.toneMappingEffect);
     }
 
     // Only create effect pass if we have effects

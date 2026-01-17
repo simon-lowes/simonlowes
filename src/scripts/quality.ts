@@ -27,6 +27,7 @@ export interface QualityConfig {
   chromaticEnabled: boolean;
   grainEnabled: boolean;
   vignetteEnabled: boolean;
+  adaptiveExposureEnabled: boolean;
 
   // Performance
   targetFps: number;
@@ -44,6 +45,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     chromaticEnabled: false,
     grainEnabled: false,
     vignetteEnabled: true, // Vignette is cheap, keep it
+    adaptiveExposureEnabled: false,
     targetFps: 30,
     pixelRatioLimit: 1,
   },
@@ -57,6 +59,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     chromaticEnabled: false,
     grainEnabled: false,
     vignetteEnabled: true,
+    adaptiveExposureEnabled: true, // Low cost, enable at MEDIUM+
     targetFps: 30,
     pixelRatioLimit: 1.5,
   },
@@ -70,6 +73,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     chromaticEnabled: true,
     grainEnabled: true,
     vignetteEnabled: true,
+    adaptiveExposureEnabled: true,
     targetFps: 60,
     pixelRatioLimit: 2,
   },
@@ -83,6 +87,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     chromaticEnabled: true,
     grainEnabled: true,
     vignetteEnabled: true,
+    adaptiveExposureEnabled: true,
     targetFps: 60,
     pixelRatioLimit: 2,
   },
