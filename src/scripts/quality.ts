@@ -42,9 +42,9 @@ export interface QualityConfig {
 
 const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
   [QualityTier.LOW]: {
-    farStarCount: 2000,
-    midStarCount: 400,
-    nearStarCount: 80,
+    farStarCount: 2600, // +30% density
+    midStarCount: 520,
+    nearStarCount: 104,
     galaxyCount: 15,
     bloomEnabled: false,
     bloomIntensity: 0,
@@ -58,9 +58,9 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     pixelRatioLimit: 1,
   },
   [QualityTier.MEDIUM]: {
-    farStarCount: 4000,
-    midStarCount: 600,
-    nearStarCount: 120,
+    farStarCount: 5200, // +30% density
+    midStarCount: 780,
+    nearStarCount: 156,
     galaxyCount: 25,
     bloomEnabled: true,
     bloomIntensity: 0.8,
@@ -74,9 +74,9 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     pixelRatioLimit: 1.5,
   },
   [QualityTier.HIGH]: {
-    farStarCount: 8000,
-    midStarCount: 1000,
-    nearStarCount: 200,
+    farStarCount: 10400, // +30% density
+    midStarCount: 1300,
+    nearStarCount: 260,
     galaxyCount: 40,
     bloomEnabled: true,
     bloomIntensity: 1.2,
@@ -90,9 +90,9 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     pixelRatioLimit: 2,
   },
   [QualityTier.ULTRA]: {
-    farStarCount: 12000,
-    midStarCount: 1500,
-    nearStarCount: 300,
+    farStarCount: 15600, // +30% density
+    midStarCount: 1950,
+    nearStarCount: 390,
     galaxyCount: 60,
     bloomEnabled: true,
     bloomIntensity: 1.4,
