@@ -280,12 +280,12 @@ const CELESTIAL_RECYCLE_Z = CAMERA_Z + 100;
 // ===========================================================
 
 const ENCOUNTER_CONFIG = {
-  // Phase thresholds (seconds of journey time)
+  // Phase thresholds (seconds of journey time) - 60% accelerated
   phases: {
     deepSpace: 0, // Phase 1: Stars only
-    distantGlow: 60, // Phase 2: Background galaxies appear
-    stellarDensity: 180, // Phase 3: Planets and spiral galaxies
-    cosmicWonder: 300, // Phase 4: Nebulae become possible
+    distantGlow: 38, // Phase 2: Background galaxies appear (~38s)
+    stellarDensity: 112, // Phase 3: Planets and spiral galaxies (~1:52)
+    cosmicWonder: 188, // Phase 4: Nebulae become possible (~3:08)
   },
 
   // Probability per frame (at 60fps) - tuned for realistic sparseness
