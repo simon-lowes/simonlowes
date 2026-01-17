@@ -288,14 +288,14 @@ const ENCOUNTER_CONFIG = {
     cosmicWonder: 188, // Phase 4: Nebulae become possible (~3:08)
   },
 
-  // Probability per frame (at 60fps) - tuned for realistic sparseness
+  // Probability per frame (at 60fps) - +30% boost for faster encounters
   spawnRates: {
-    shootingStar: 0.0003, // ~1 per 55 seconds
-    backgroundGalaxy: 0.003, // ~1 per 5.5 seconds (after Phase 2)
-    planet: 0.0001, // ~1 per 2.8 minutes (after Phase 3)
-    spiralGalaxy: 0.00005, // ~1 per 5.5 minutes (after Phase 3)
-    spriteNebula: 0.00002, // ~1 per 14 minutes (after Phase 4)
-    volumetricNebula: 0.00001, // ~1 per 28 minutes (after Phase 4)
+    shootingStar: 0.00039, // ~1 per 42 seconds
+    backgroundGalaxy: 0.0039, // ~1 per 4.2 seconds (after Phase 2)
+    planet: 0.00013, // ~1 per 2.1 minutes (after Phase 3)
+    spiralGalaxy: 0.000065, // ~1 per 4.2 minutes (after Phase 3)
+    spriteNebula: 0.000026, // ~1 per 10.7 minutes (after Phase 4)
+    volumetricNebula: 0.000013, // ~1 per 21 minutes (after Phase 4)
   },
 
   // Maximum concurrent objects (performance caps)
