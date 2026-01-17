@@ -274,6 +274,40 @@ const STAR_RECYCLE_Z = CAMERA_Z + 50;
 const CELESTIAL_SPAWN_Z = -2000;
 const CELESTIAL_RECYCLE_Z = CAMERA_Z + 100;
 
+// ===========================================================
+// REALISTIC ENCOUNTER SYSTEM
+// Phase-based probabilistic spawning for authentic space journey
+// ===========================================================
+
+const ENCOUNTER_CONFIG = {
+  // Phase thresholds (seconds of journey time)
+  phases: {
+    deepSpace: 0, // Phase 1: Stars only
+    distantGlow: 60, // Phase 2: Background galaxies appear
+    stellarDensity: 180, // Phase 3: Planets and spiral galaxies
+    cosmicWonder: 300, // Phase 4: Nebulae become possible
+  },
+
+  // Probability per frame (at 60fps) - tuned for realistic sparseness
+  spawnRates: {
+    shootingStar: 0.0003, // ~1 per 55 seconds
+    backgroundGalaxy: 0.003, // ~1 per 5.5 seconds (after Phase 2)
+    planet: 0.0001, // ~1 per 2.8 minutes (after Phase 3)
+    spiralGalaxy: 0.00005, // ~1 per 5.5 minutes (after Phase 3)
+    spriteNebula: 0.00002, // ~1 per 14 minutes (after Phase 4)
+    volumetricNebula: 0.00001, // ~1 per 28 minutes (after Phase 4)
+  },
+
+  // Maximum concurrent objects (performance caps)
+  maxActive: {
+    planets: 4,
+    spiralGalaxies: 3,
+    spriteNebulae: 4,
+    volumetricNebulae: 2,
+    backgroundGalaxies: 200,
+  },
+};
+
 // Interface for tracking bright stars that get diffraction spikes
 interface BrightStar {
   index: number;
@@ -322,6 +356,16 @@ export class Starfield {
   // Quality management
   private qualityManager: QualityManager;
   private qualityConfig: QualityConfig;
+
+  // Journey state for realistic encounter system
+  private journeyTime = 0; // Seconds since start
+  private activeEncounters = {
+    planets: 0,
+    spiralGalaxies: 0,
+    spriteNebulae: 0,
+    volumetricNebulae: 0,
+    backgroundGalaxies: 0,
+  };
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -385,15 +429,12 @@ export class Starfield {
     // Initialize parallax controller (always full animation)
     this.parallax = new ParallaxController(false);
 
-    // Create all visual elements
+    // Create star layers (the base experience - always present)
     this.createLayers();
     this.createDiffractionSpikes(); // JWST-style spikes on brightest stars
-    this.createNebulae();
-    if (this.qualityConfig.volumetricNebulaEnabled) {
-      this.createVolumetricNebulae(); // Raymarched 3D gas clouds (ULTRA only)
-    }
-    this.createCelestialBodies();
-    this.createBackgroundGalaxyField(); // Hubble Deep Field style distant galaxies
+
+    // NOTE: Nebulae, planets, galaxies now spawn probabilistically via checkEncounters()
+    // This creates a more realistic space journey where interesting objects are rare encounters
 
     // Bind event handlers
     this.handleResize = this.handleResize.bind(this);
@@ -2727,9 +2768,13 @@ export class Starfield {
 
     // Update time uniform for twinkling
     const elapsedTime = (currentTime - this.startTime) * 0.001;
+    this.journeyTime = elapsedTime; // Track journey time for encounter system
     this.layers.forEach((layer) => {
       layer.material.uniforms.uTime.value = elapsedTime;
     });
+
+    // Check for probabilistic celestial encounters based on journey phase
+    this.checkEncounters();
 
     // Update volumetric nebula uniforms (ULTRA quality only)
     if (this.qualityConfig.volumetricNebulaEnabled) {
@@ -2794,8 +2839,11 @@ export class Starfield {
       layer.geometry.attributes.position.needsUpdate = true;
     });
 
-    // Update celestial bodies
-    this.celestialBodies.forEach((body) => {
+    // Update celestial bodies - remove when passed rather than recycling
+    // This allows the probabilistic encounter system to control spawn rates
+    const bodiesToRemove: number[] = [];
+
+    this.celestialBodies.forEach((body, index) => {
       body.mesh.position.z += FORWARD_SPEED * body.speed;
 
       // Rotate galaxies slowly
@@ -2803,13 +2851,303 @@ export class Starfield {
         body.mesh.rotation.z += body.rotationSpeed;
       }
 
-      // Recycle if passed camera
+      // Mark for removal if passed camera (don't recycle - let encounter system spawn new ones)
       if (body.mesh.position.z > CELESTIAL_RECYCLE_Z) {
-        body.mesh.position.z = CELESTIAL_SPAWN_Z + Math.random() * 500;
-        body.mesh.position.x = (Math.random() - 0.5) * 1200;
-        body.mesh.position.y = (Math.random() - 0.5) * 600;
+        bodiesToRemove.push(index);
       }
     });
+
+    // Remove passed objects in reverse order to maintain indices
+    for (let i = bodiesToRemove.length - 1; i >= 0; i--) {
+      const index = bodiesToRemove[i];
+      const body = this.celestialBodies[index];
+
+      // Decrement encounter counter based on type
+      switch (body.type) {
+        case "planet":
+          this.activeEncounters.planets = Math.max(0, this.activeEncounters.planets - 1);
+          break;
+        case "galaxy":
+          this.activeEncounters.spiralGalaxies = Math.max(
+            0,
+            this.activeEncounters.spiralGalaxies - 1
+          );
+          break;
+        case "nebula":
+          this.activeEncounters.spriteNebulae = Math.max(
+            0,
+            this.activeEncounters.spriteNebulae - 1
+          );
+          break;
+        case "volumetricNebula":
+          this.activeEncounters.volumetricNebulae = Math.max(
+            0,
+            this.activeEncounters.volumetricNebulae - 1
+          );
+          break;
+        case "backgroundGalaxy":
+          this.activeEncounters.backgroundGalaxies = Math.max(
+            0,
+            this.activeEncounters.backgroundGalaxies - 1
+          );
+          break;
+      }
+
+      // Dispose and remove from scene
+      this.disposeObject(body.mesh);
+      this.scene.remove(body.mesh);
+
+      // Remove from array
+      this.celestialBodies.splice(index, 1);
+    }
+  }
+
+  // ===========================================================
+  // ENCOUNTER SYSTEM - Probabilistic celestial object spawning
+  // ===========================================================
+
+  /**
+   * Get current journey phase based on elapsed time
+   * Phase 1: Deep Space (stars only)
+   * Phase 2: Distant Glow (background galaxies appear)
+   * Phase 3: Stellar Density (planets and spiral galaxies)
+   * Phase 4: Cosmic Wonder (nebulae become possible)
+   */
+  private getCurrentPhase(): number {
+    const { phases } = ENCOUNTER_CONFIG;
+    if (this.journeyTime >= phases.cosmicWonder) return 4;
+    if (this.journeyTime >= phases.stellarDensity) return 3;
+    if (this.journeyTime >= phases.distantGlow) return 2;
+    return 1;
+  }
+
+  /**
+   * Check for probabilistic celestial encounters each frame
+   * Objects spawn based on journey phase and random chance
+   */
+  private checkEncounters(): void {
+    const phase = this.getCurrentPhase();
+    const rates = ENCOUNTER_CONFIG.spawnRates;
+    const max = ENCOUNTER_CONFIG.maxActive;
+
+    // Phase 2+: Background galaxies (builds the Hubble Deep Field look)
+    if (phase >= 2 && this.activeEncounters.backgroundGalaxies < max.backgroundGalaxies) {
+      if (Math.random() < rates.backgroundGalaxy) {
+        this.spawnBackgroundGalaxy();
+      }
+    }
+
+    // Phase 3+: Planets and spiral galaxies
+    if (phase >= 3) {
+      if (this.activeEncounters.planets < max.planets && Math.random() < rates.planet) {
+        this.spawnPlanet();
+      }
+      if (
+        this.activeEncounters.spiralGalaxies < max.spiralGalaxies &&
+        Math.random() < rates.spiralGalaxy
+      ) {
+        this.spawnSpiralGalaxy();
+      }
+    }
+
+    // Phase 4+: Nebulae (the rarest encounters - true cosmic wonder)
+    if (phase >= 4) {
+      if (
+        this.activeEncounters.spriteNebulae < max.spriteNebulae &&
+        Math.random() < rates.spriteNebula
+      ) {
+        this.spawnSpriteNebula();
+      }
+      if (this.qualityConfig.volumetricNebulaEnabled) {
+        if (
+          this.activeEncounters.volumetricNebulae < max.volumetricNebulae &&
+          Math.random() < rates.volumetricNebula
+        ) {
+          this.spawnVolumetricNebula();
+        }
+      }
+    }
+  }
+
+  /**
+   * Spawn a single planet at a random far position
+   */
+  private spawnPlanet(): void {
+    const planet = this.createPlanet();
+    planet.position.set(
+      (Math.random() - 0.5) * 1200,
+      (Math.random() - 0.5) * 600,
+      CELESTIAL_SPAWN_Z + Math.random() * 1800
+    );
+    this.scene.add(planet);
+    this.celestialBodies.push({
+      mesh: planet,
+      type: "planet",
+      speed: 0.5 + Math.random() * 0.3,
+    });
+    this.activeEncounters.planets++;
+  }
+
+  /**
+   * Spawn a single spiral galaxy at a random far position
+   */
+  private spawnSpiralGalaxy(): void {
+    const galaxyType = this.getRandomGalaxyType();
+    let galaxy: THREE.Group;
+
+    switch (galaxyType) {
+      case "spiral":
+        galaxy = this.createSpiralGalaxy();
+        break;
+      case "elliptical":
+        galaxy = this.createEllipticalGalaxy();
+        break;
+      case "edgeOn":
+        galaxy = this.createEdgeOnGalaxy();
+        break;
+      case "irregular":
+        galaxy = this.createIrregularGalaxy();
+        break;
+    }
+
+    galaxy.position.set(
+      (Math.random() - 0.5) * 1500,
+      (Math.random() - 0.5) * 800,
+      CELESTIAL_SPAWN_Z - 500 + Math.random() * 1200
+    );
+    this.scene.add(galaxy);
+    this.celestialBodies.push({
+      mesh: galaxy,
+      type: "galaxy",
+      speed: 0.25 + Math.random() * 0.15,
+      rotationSpeed: galaxyType === "elliptical" ? 0.0001 : 0.0005 + Math.random() * 0.0005,
+    });
+    this.activeEncounters.spiralGalaxies++;
+  }
+
+  /**
+   * Spawn a single sprite nebula (JWST-style image) at a random far position
+   */
+  private spawnSpriteNebula(): void {
+    const nebulaType = this.getRandomNebulaType();
+    const nebula = this.createJWSTNebulaSprite(nebulaType);
+    nebula.position.set(
+      (Math.random() - 0.5) * 1800,
+      (Math.random() - 0.5) * 1000,
+      CELESTIAL_SPAWN_Z + Math.random() * 1500
+    );
+    this.scene.add(nebula);
+    this.celestialBodies.push({
+      mesh: nebula,
+      type: "nebula",
+      speed: 0.3 + Math.random() * 0.2,
+    });
+    this.activeEncounters.spriteNebulae++;
+  }
+
+  /**
+   * Spawn a single volumetric nebula (raymarched 3D cloud) - ULTRA quality only
+   */
+  private spawnVolumetricNebula(): void {
+    // JWST-inspired color palettes
+    const nebulaPalettes = [
+      // Carina Nebula style - warm emission
+      {
+        primary: new THREE.Color(0xff6b4a),
+        secondary: new THREE.Color(0x4a9eff),
+        tertiary: new THREE.Color(0xffb347),
+      },
+      // Eagle Nebula style - cool pillars
+      {
+        primary: new THREE.Color(0x7b68ee),
+        secondary: new THREE.Color(0x00ced1),
+        tertiary: new THREE.Color(0xffa07a),
+      },
+      // Orion Nebula style - classic emission
+      {
+        primary: new THREE.Color(0xff69b4),
+        secondary: new THREE.Color(0x87ceeb),
+        tertiary: new THREE.Color(0xdda0dd),
+      },
+    ];
+
+    const palette = nebulaPalettes[Math.floor(Math.random() * nebulaPalettes.length)];
+    const nebula = this.createVolumetricNebulaMesh(palette, Math.random() * 1000);
+
+    nebula.position.set(
+      (Math.random() - 0.5) * 1600,
+      (Math.random() - 0.5) * 800,
+      CELESTIAL_SPAWN_Z + 800 + Math.random() * 1000
+    );
+
+    nebula.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+
+    this.scene.add(nebula);
+    this.celestialBodies.push({
+      mesh: nebula,
+      type: "volumetricNebula",
+      speed: 0.15 + Math.random() * 0.1,
+    });
+    this.activeEncounters.volumetricNebulae++;
+  }
+
+  /**
+   * Spawn a single background galaxy (tiny distant point)
+   * These create the Hubble Deep Field effect of countless distant galaxies
+   */
+  private spawnBackgroundGalaxy(): void {
+    // Create a single sprite for the distant galaxy
+    const canvas = document.createElement("canvas");
+    canvas.width = 16;
+    canvas.height = 16;
+    const ctx = canvas.getContext("2d")!;
+
+    // Galaxy colors with cosmological redshift
+    const galaxyColors = [
+      "#ffeedd", // Nearby - warm white
+      "#ffddcc", // Slightly shifted
+      "#ffccaa", // More shifted
+      "#ffaa88", // Distant - orange tint
+      "#ff8866", // Very distant - red
+    ];
+
+    const colorIndex = Math.floor(Math.random() * galaxyColors.length);
+    const color = galaxyColors[colorIndex];
+
+    // Soft elliptical glow
+    const gradient = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(0.3, color + "88");
+    gradient.addColorStop(1, "transparent");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 16, 16);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.4,
+    });
+
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(0.8 + Math.random() * 0.6, 0.8 + Math.random() * 0.6, 1);
+
+    // Position in far background
+    sprite.position.set(
+      (Math.random() - 0.5) * 3000,
+      (Math.random() - 0.5) * 2000,
+      -2500 - Math.random() * 1000
+    );
+
+    this.scene.add(sprite);
+    this.celestialBodies.push({
+      mesh: sprite,
+      type: "backgroundGalaxy",
+      speed: 0.05 + Math.random() * 0.03, // Very slow - they're incredibly far
+    });
+    this.activeEncounters.backgroundGalaxies++;
   }
 
   public start(): void {
