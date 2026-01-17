@@ -6,6 +6,15 @@
 
 import * as THREE from "three";
 import { ParallaxController } from "./parallax";
+import {
+  EffectComposer,
+  BloomEffect,
+  EffectPass,
+  RenderPass,
+  VignetteEffect,
+  BlendFunction,
+  KernelSize,
+} from "postprocessing";
 
 // ===========================================================
 // REALISTIC STELLAR CLASSIFICATION - Based on astronomy research
@@ -297,6 +306,10 @@ export class Starfield {
   private lastShootingStarTime = 0;
   private nextShootingStarInterval = 30000 + Math.random() * 30000; // 30-60 seconds
 
+  // Post-processing
+  private composer: EffectComposer;
+  private bloomEffect: BloomEffect;
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.startTime = performance.now();
@@ -323,6 +336,33 @@ export class Starfield {
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // Initialize post-processing pipeline
+    this.composer = new EffectComposer(this.renderer);
+
+    // Render pass - renders the scene
+    const renderPass = new RenderPass(this.scene, this.camera);
+    this.composer.addPass(renderPass);
+
+    // Bloom effect - creates cinematic glow on bright stars
+    // Settings tuned for space imagery: subtle but impactful
+    this.bloomEffect = new BloomEffect({
+      intensity: 1.2, // Overall bloom strength
+      luminanceThreshold: 0.4, // Only bloom pixels brighter than this
+      luminanceSmoothing: 0.3, // Smooth transition at threshold
+      mipmapBlur: true, // Better quality blur
+      kernelSize: KernelSize.LARGE, // Wider glow spread
+    });
+
+    // Vignette effect - subtle darkening at edges for cinematic feel
+    const vignetteEffect = new VignetteEffect({
+      darkness: 0.4, // Subtle darkness
+      offset: 0.35, // How far from center vignette starts
+    });
+
+    // Combine effects into a single pass for performance
+    const effectPass = new EffectPass(this.camera, this.bloomEffect, vignetteEffect);
+    this.composer.addPass(effectPass);
 
     // Initialize parallax controller (always full animation)
     this.parallax = new ParallaxController(false);
@@ -2213,6 +2253,9 @@ export class Starfield {
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+    // Resize the post-processing composer
+    this.composer.setSize(width, height);
+
     this.layers.forEach((layer) => {
       layer.material.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
     });
@@ -2255,8 +2298,8 @@ export class Starfield {
     // Update shooting stars (probabilistic spawning every 30-60 seconds)
     this.updateShootingStars(currentTime);
 
-    // Render
-    this.renderer.render(this.scene, this.camera);
+    // Render with post-processing (bloom + vignette)
+    this.composer.render();
   }
 
   /**
@@ -2388,9 +2431,10 @@ export class Starfield {
   }
 
   /**
-   * Clean up renderer - called at end of destroy()
+   * Clean up renderer and post-processing - called at end of destroy()
    */
   private disposeRenderer(): void {
+    this.composer.dispose();
     this.renderer.dispose();
   }
 }
