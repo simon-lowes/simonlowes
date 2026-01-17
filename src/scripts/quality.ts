@@ -32,6 +32,9 @@ export interface QualityConfig {
   // Star rendering
   realisticPsfEnabled: boolean; // Airy disk + diffraction spikes
 
+  // Volumetric effects
+  volumetricNebulaEnabled: boolean; // Raymarched 3D gas clouds (expensive)
+
   // Performance
   targetFps: number;
   pixelRatioLimit: number;
@@ -50,6 +53,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     vignetteEnabled: true, // Vignette is cheap, keep it
     adaptiveExposureEnabled: false,
     realisticPsfEnabled: false,
+    volumetricNebulaEnabled: false,
     targetFps: 30,
     pixelRatioLimit: 1,
   },
@@ -65,6 +69,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     vignetteEnabled: true,
     adaptiveExposureEnabled: true, // Low cost, enable at MEDIUM+
     realisticPsfEnabled: false, // Keep simple stars for performance
+    volumetricNebulaEnabled: false,
     targetFps: 30,
     pixelRatioLimit: 1.5,
   },
@@ -80,6 +85,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     vignetteEnabled: true,
     adaptiveExposureEnabled: true,
     realisticPsfEnabled: true, // Airy disk + diffraction spikes
+    volumetricNebulaEnabled: false, // Save for ULTRA tier
     targetFps: 60,
     pixelRatioLimit: 2,
   },
@@ -95,6 +101,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     vignetteEnabled: true,
     adaptiveExposureEnabled: true,
     realisticPsfEnabled: true, // Airy disk + diffraction spikes
+    volumetricNebulaEnabled: true, // Raymarched 3D gas clouds
     targetFps: 60,
     pixelRatioLimit: 2,
   },

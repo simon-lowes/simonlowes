@@ -389,6 +389,9 @@ export class Starfield {
     this.createLayers();
     this.createDiffractionSpikes(); // JWST-style spikes on brightest stars
     this.createNebulae();
+    if (this.qualityConfig.volumetricNebulaEnabled) {
+      this.createVolumetricNebulae(); // Raymarched 3D gas clouds (ULTRA only)
+    }
     this.createCelestialBodies();
     this.createBackgroundGalaxyField(); // Hubble Deep Field style distant galaxies
 
@@ -826,6 +829,249 @@ export class Starfield {
         speed: 0.3 + Math.random() * 0.2,
       });
     }
+  }
+
+  /**
+   * Create volumetric raymarched nebulae for ULTRA quality tier
+   * Uses sphere meshes with raymarching shaders to render 3D gas clouds
+   */
+  private createVolumetricNebulae(): void {
+    const nebulaCount = 3; // Fewer but more impressive volumetric clouds
+
+    // JWST-inspired color palettes for different nebula regions
+    const nebulaPalettes = [
+      // Carina Nebula style - warm emission
+      {
+        primary: new THREE.Color(0xff6b4a), // Hydrogen-alpha red/orange
+        secondary: new THREE.Color(0x4a9eff), // Oxygen blue
+        tertiary: new THREE.Color(0xffb347), // Sulfur orange
+      },
+      // Eagle Nebula style - cool pillars
+      {
+        primary: new THREE.Color(0x7b68ee), // Dusty purple
+        secondary: new THREE.Color(0x00ced1), // Cyan emission
+        tertiary: new THREE.Color(0xffa07a), // Light salmon highlights
+      },
+      // Orion Nebula style - classic emission
+      {
+        primary: new THREE.Color(0xff69b4), // Hot pink hydrogen
+        secondary: new THREE.Color(0x87ceeb), // Sky blue oxygen
+        tertiary: new THREE.Color(0xdda0dd), // Plum ionization
+      },
+    ];
+
+    for (let i = 0; i < nebulaCount; i++) {
+      const palette = nebulaPalettes[i % nebulaPalettes.length];
+      const nebula = this.createVolumetricNebulaMesh(palette, i);
+
+      // Position in the far background
+      nebula.position.set(
+        (Math.random() - 0.5) * 1600,
+        (Math.random() - 0.5) * 800,
+        CELESTIAL_SPAWN_Z + 800 + Math.random() * 1000
+      );
+
+      // Random rotation for variety
+      nebula.rotation.set(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
+
+      this.scene.add(nebula);
+      this.celestialBodies.push({
+        mesh: nebula,
+        type: "nebula",
+        speed: 0.15 + Math.random() * 0.1, // Slow, majestic movement
+      });
+    }
+  }
+
+  /**
+   * Create a single volumetric nebula mesh with raymarching shader
+   */
+  private createVolumetricNebulaMesh(
+    palette: { primary: THREE.Color; secondary: THREE.Color; tertiary: THREE.Color },
+    seed: number
+  ): THREE.Mesh {
+    // Large sphere geometry for the nebula bounds
+    const geometry = new THREE.SphereGeometry(400, 32, 32);
+
+    // Volumetric raymarching shader
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uPrimaryColor: { value: palette.primary },
+        uSecondaryColor: { value: palette.secondary },
+        uTertiaryColor: { value: palette.tertiary },
+        uSeed: { value: seed * 123.456 },
+        uDensity: { value: 0.4 + Math.random() * 0.3 },
+        uCameraPos: { value: new THREE.Vector3() },
+      },
+      vertexShader: `
+        varying vec3 vWorldPos;
+        varying vec3 vLocalPos;
+
+        void main() {
+          vLocalPos = position;
+          vec4 worldPos = modelMatrix * vec4(position, 1.0);
+          vWorldPos = worldPos.xyz;
+          gl_Position = projectionMatrix * viewMatrix * worldPos;
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec3 uPrimaryColor;
+        uniform vec3 uSecondaryColor;
+        uniform vec3 uTertiaryColor;
+        uniform float uSeed;
+        uniform float uDensity;
+        uniform vec3 uCameraPos;
+
+        varying vec3 vWorldPos;
+        varying vec3 vLocalPos;
+
+        // === 3D NOISE FUNCTIONS ===
+        // Hash function for pseudo-random values
+        vec3 hash33(vec3 p) {
+          p = vec3(
+            dot(p, vec3(127.1, 311.7, 74.7)),
+            dot(p, vec3(269.5, 183.3, 246.1)),
+            dot(p, vec3(113.5, 271.9, 124.6))
+          );
+          return -1.0 + 2.0 * fract(sin(p + uSeed) * 43758.5453123);
+        }
+
+        // Gradient noise (smoother than value noise)
+        float gnoise(vec3 p) {
+          vec3 i = floor(p);
+          vec3 f = fract(p);
+          vec3 u = f * f * (3.0 - 2.0 * f);
+
+          return mix(
+            mix(
+              mix(dot(hash33(i + vec3(0,0,0)), f - vec3(0,0,0)),
+                  dot(hash33(i + vec3(1,0,0)), f - vec3(1,0,0)), u.x),
+              mix(dot(hash33(i + vec3(0,1,0)), f - vec3(0,1,0)),
+                  dot(hash33(i + vec3(1,1,0)), f - vec3(1,1,0)), u.x), u.y),
+            mix(
+              mix(dot(hash33(i + vec3(0,0,1)), f - vec3(0,0,1)),
+                  dot(hash33(i + vec3(1,0,1)), f - vec3(1,0,1)), u.x),
+              mix(dot(hash33(i + vec3(0,1,1)), f - vec3(0,1,1)),
+                  dot(hash33(i + vec3(1,1,1)), f - vec3(1,1,1)), u.x), u.y), u.z);
+        }
+
+        // Fractal Brownian Motion for cloud-like structures
+        float fbm(vec3 p) {
+          float value = 0.0;
+          float amplitude = 0.5;
+          float frequency = 1.0;
+          // 4 octaves for detail without killing performance
+          for (int i = 0; i < 4; i++) {
+            value += amplitude * gnoise(p * frequency);
+            amplitude *= 0.5;
+            frequency *= 2.0;
+          }
+          return value;
+        }
+
+        // === NEBULA DENSITY FUNCTION ===
+        float nebulaDensity(vec3 p) {
+          // Normalize position to unit sphere
+          vec3 np = p / 400.0;
+
+          // Base spherical falloff
+          float sphereFalloff = 1.0 - length(np);
+          if (sphereFalloff < 0.0) return 0.0;
+
+          // Large-scale structure (wisps and filaments)
+          float largeNoise = fbm(np * 2.0 + uTime * 0.02);
+
+          // Medium detail
+          float medNoise = fbm(np * 4.0 - uTime * 0.03) * 0.5;
+
+          // Fine turbulence
+          float fineNoise = gnoise(np * 8.0 + uTime * 0.05) * 0.25;
+
+          // Combine noise layers
+          float totalNoise = largeNoise + medNoise + fineNoise;
+
+          // Create wispy, non-uniform structure
+          float density = sphereFalloff * (0.5 + totalNoise * 0.8);
+          density = pow(max(density, 0.0), 1.5); // Sharpen edges
+
+          return density * uDensity;
+        }
+
+        // === MAIN RAYMARCHING ===
+        void main() {
+          // Ray direction from camera through fragment
+          vec3 rayDir = normalize(vWorldPos - uCameraPos);
+          vec3 rayOrigin = vLocalPos;
+
+          // Raymarch parameters
+          const int MAX_STEPS = 32;
+          const float STEP_SIZE = 25.0;
+
+          vec3 accumulatedColor = vec3(0.0);
+          float accumulatedAlpha = 0.0;
+
+          vec3 currentPos = rayOrigin;
+
+          for (int i = 0; i < MAX_STEPS; i++) {
+            float density = nebulaDensity(currentPos);
+
+            if (density > 0.01) {
+              // Sample position for color variation
+              vec3 sampleP = currentPos / 400.0;
+              float colorNoise = gnoise(sampleP * 3.0 + uSeed);
+
+              // Blend between three colors based on noise and position
+              vec3 nebulaColor;
+              if (colorNoise < -0.2) {
+                nebulaColor = uPrimaryColor;
+              } else if (colorNoise < 0.2) {
+                nebulaColor = mix(uPrimaryColor, uSecondaryColor, (colorNoise + 0.2) / 0.4);
+              } else {
+                nebulaColor = mix(uSecondaryColor, uTertiaryColor, (colorNoise - 0.2) / 0.8);
+              }
+
+              // Add subtle emission glow at high density
+              float emission = smoothstep(0.3, 0.6, density) * 0.3;
+              nebulaColor += emission;
+
+              // Front-to-back compositing
+              float stepAlpha = density * 0.15;
+              accumulatedColor += nebulaColor * stepAlpha * (1.0 - accumulatedAlpha);
+              accumulatedAlpha += stepAlpha * (1.0 - accumulatedAlpha);
+
+              // Early exit if opaque enough
+              if (accumulatedAlpha > 0.95) break;
+            }
+
+            currentPos += rayDir * STEP_SIZE;
+
+            // Exit if we've left the sphere bounds
+            if (length(currentPos) > 420.0) break;
+          }
+
+          // Edge fade for smooth blending with scene
+          float edgeFade = smoothstep(0.0, 0.15, accumulatedAlpha);
+
+          gl_FragColor = vec4(accumulatedColor, accumulatedAlpha * edgeFade * 0.7);
+        }
+      `,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.BackSide, // Render inside of sphere
+    });
+
+    // Store material reference for animation updates
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.userData.volumetricMaterial = material;
+
+    return mesh;
   }
 
   /**
@@ -2484,6 +2730,17 @@ export class Starfield {
     this.layers.forEach((layer) => {
       layer.material.uniforms.uTime.value = elapsedTime;
     });
+
+    // Update volumetric nebula uniforms (ULTRA quality only)
+    if (this.qualityConfig.volumetricNebulaEnabled) {
+      this.celestialBodies.forEach((body) => {
+        if (body.mesh.userData.volumetricMaterial) {
+          const mat = body.mesh.userData.volumetricMaterial as THREE.ShaderMaterial;
+          mat.uniforms.uTime.value = elapsedTime;
+          mat.uniforms.uCameraPos.value.copy(this.camera.position);
+        }
+      });
+    }
 
     // Update parallax input
     const parallaxOffset = this.parallax.update();
