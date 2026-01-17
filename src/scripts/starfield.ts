@@ -2291,14 +2291,127 @@ export class Starfield {
 
   /**
    * Create star material with twinkling shader
+   * Uses realistic PSF (Point Spread Function) on HIGH+ quality tiers
    */
   private createStarMaterial(): THREE.ShaderMaterial {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-        uTime: { value: 0 },
-      },
-      vertexShader: `
+    const useRealisticPsf = this.qualityConfig.realisticPsfEnabled;
+
+    // Simple shader for LOW/MEDIUM tiers - fast and efficient
+    const simpleFragmentShader = `
+      varying vec3 vColor;
+      varying float vTwinkle;
+
+      void main() {
+        // Create soft circular point with glow
+        float dist = length(gl_PointCoord - vec2(0.5));
+        if (dist > 0.5) discard;
+
+        // Core brightness with soft glow falloff
+        float core = 1.0 - smoothstep(0.0, 0.15, dist);
+        float glow = 1.0 - smoothstep(0.0, 0.5, dist);
+
+        float alpha = mix(glow * 0.6, 1.0, core) * vTwinkle;
+        vec3 finalColor = vColor * (0.8 + core * 0.4);
+
+        gl_FragColor = vec4(finalColor, alpha);
+      }
+    `;
+
+    // Realistic PSF shader for HIGH/ULTRA tiers
+    // Simulates Airy disk pattern + 4-pointed diffraction spikes
+    const realisticPsfFragmentShader = `
+      varying vec3 vColor;
+      varying float vTwinkle;
+      varying float vBrightness;
+
+      void main() {
+        vec2 uv = gl_PointCoord - vec2(0.5);
+        float dist = length(uv);
+        if (dist > 0.5) discard;
+
+        // === AIRY DISK PATTERN ===
+        // Central core - Gaussian approximation of Airy disk center
+        float core = exp(-dist * dist * 80.0);
+
+        // First diffraction ring (at ~22% of radius)
+        float ring1Dist = abs(dist - 0.11);
+        float ring1 = exp(-ring1Dist * ring1Dist * 800.0) * 0.12;
+
+        // Second diffraction ring (at ~40% of radius, very faint)
+        float ring2Dist = abs(dist - 0.22);
+        float ring2 = exp(-ring2Dist * ring2Dist * 1200.0) * 0.04;
+
+        // Soft outer glow
+        float glow = exp(-dist * dist * 8.0) * 0.3;
+
+        float airyPattern = core + ring1 + ring2 + glow;
+
+        // === DIFFRACTION SPIKES ===
+        // 4-pointed spikes at 45° angles (like reflecting telescope)
+        float angle = atan(uv.y, uv.x);
+        float spikes = 0.0;
+
+        // Calculate spike contribution for each of 4 directions
+        for (int i = 0; i < 4; i++) {
+          // Spikes at 45°, 135°, 225°, 315° (diagonal)
+          float targetAngle = float(i) * 1.5708 + 0.7854; // i * PI/2 + PI/4
+          float angleDiff = abs(angle - targetAngle);
+          // Wrap angle difference
+          angleDiff = min(angleDiff, 6.2832 - angleDiff);
+
+          // Spike shape: narrow angle, fades with distance from center
+          float spikeWidth = 0.08 + dist * 0.15; // Wider at edges
+          float angularFalloff = exp(-angleDiff * angleDiff / (spikeWidth * spikeWidth * 0.02));
+          float radialFalloff = exp(-dist * 2.0) * (1.0 - smoothstep(0.0, 0.45, dist));
+
+          spikes += angularFalloff * radialFalloff;
+        }
+        spikes *= 0.25 * vBrightness; // Scale by star brightness
+
+        // === COMBINE ===
+        float intensity = airyPattern + spikes;
+
+        // Color: brighter core, subtle color in spikes
+        vec3 coreColor = vColor * (0.9 + core * 0.3);
+        vec3 spikeColor = mix(vColor, vec3(1.0), 0.3); // Slightly whiter spikes
+        vec3 finalColor = mix(coreColor, spikeColor, spikes / (intensity + 0.001));
+
+        float alpha = intensity * vTwinkle;
+
+        gl_FragColor = vec4(finalColor * intensity, alpha);
+      }
+    `;
+
+    // Vertex shader - slightly different for PSF (larger stars, brightness varying)
+    const vertexShader = useRealisticPsf
+      ? `
+        attribute float size;
+        attribute vec3 color;
+        attribute float twinklePhase;
+        varying vec3 vColor;
+        varying float vTwinkle;
+        varying float vBrightness;
+        uniform float uPixelRatio;
+        uniform float uTime;
+
+        void main() {
+          vColor = color;
+
+          // Store normalized brightness for spike intensity
+          vBrightness = size / 5.0; // Normalize assuming max size ~5
+
+          // Twinkling effect - subtle brightness variation
+          float twinkle = sin(uTime * 2.0 + twinklePhase) * 0.15 + 0.85;
+          vTwinkle = twinkle;
+
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          // Slightly larger points for PSF to show diffraction detail
+          float finalSize = size * uPixelRatio * (350.0 / -mvPosition.z) * twinkle * 1.2;
+          gl_PointSize = finalSize;
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `
+      : `
         attribute float size;
         attribute vec3 color;
         attribute float twinklePhase;
@@ -2319,26 +2432,15 @@ export class Starfield {
           gl_PointSize = finalSize;
           gl_Position = projectionMatrix * mvPosition;
         }
-      `,
-      fragmentShader: `
-        varying vec3 vColor;
-        varying float vTwinkle;
+      `;
 
-        void main() {
-          // Create soft circular point with glow
-          float dist = length(gl_PointCoord - vec2(0.5));
-          if (dist > 0.5) discard;
-
-          // Core brightness with soft glow falloff
-          float core = 1.0 - smoothstep(0.0, 0.15, dist);
-          float glow = 1.0 - smoothstep(0.0, 0.5, dist);
-
-          float alpha = mix(glow * 0.6, 1.0, core) * vTwinkle;
-          vec3 finalColor = vColor * (0.8 + core * 0.4);
-
-          gl_FragColor = vec4(finalColor, alpha);
-        }
-      `,
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+        uTime: { value: 0 },
+      },
+      vertexShader,
+      fragmentShader: useRealisticPsf ? realisticPsfFragmentShader : simpleFragmentShader,
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,

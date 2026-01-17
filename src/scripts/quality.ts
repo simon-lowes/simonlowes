@@ -29,6 +29,9 @@ export interface QualityConfig {
   vignetteEnabled: boolean;
   adaptiveExposureEnabled: boolean;
 
+  // Star rendering
+  realisticPsfEnabled: boolean; // Airy disk + diffraction spikes
+
   // Performance
   targetFps: number;
   pixelRatioLimit: number;
@@ -46,6 +49,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     grainEnabled: false,
     vignetteEnabled: true, // Vignette is cheap, keep it
     adaptiveExposureEnabled: false,
+    realisticPsfEnabled: false,
     targetFps: 30,
     pixelRatioLimit: 1,
   },
@@ -60,6 +64,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     grainEnabled: false,
     vignetteEnabled: true,
     adaptiveExposureEnabled: true, // Low cost, enable at MEDIUM+
+    realisticPsfEnabled: false, // Keep simple stars for performance
     targetFps: 30,
     pixelRatioLimit: 1.5,
   },
@@ -74,6 +79,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     grainEnabled: true,
     vignetteEnabled: true,
     adaptiveExposureEnabled: true,
+    realisticPsfEnabled: true, // Airy disk + diffraction spikes
     targetFps: 60,
     pixelRatioLimit: 2,
   },
@@ -88,6 +94,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     grainEnabled: true,
     vignetteEnabled: true,
     adaptiveExposureEnabled: true,
+    realisticPsfEnabled: true, // Airy disk + diffraction spikes
     targetFps: 60,
     pixelRatioLimit: 2,
   },
