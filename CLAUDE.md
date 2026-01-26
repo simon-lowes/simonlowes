@@ -83,11 +83,15 @@ npm run preview  # Preview production build
 
 ## GitHub Repository Configuration
 
-**Dependabot auto-merge**: Enabled (Jan 2026). Patch and minor version PRs auto-approve and auto-merge after CI passes.
+**Branch protection on `main`** (configured Jan 2026):
 
-**CI checks required**: Lint, Unit Tests, Build, E2E Tests, Lighthouse (see `.github/workflows/test.yml`)
+- Required status checks: Lint & Format, Unit Tests, Build, E2E Tests
+- Strict mode: branches must be up-to-date before merging
+- No required PR reviews (solo project - automated checks are the safety net)
 
-**Security rationale**: CI runs full test suite including Lighthouse audits. For a solo project, automated checks are the safety net. Major version bumps from dependabot still require manual review.
+**Dependabot auto-merge**: Enabled. Patch and minor version PRs auto-approve and auto-merge after CI passes. Major version bumps still require manual review.
+
+**Security rationale**: CI runs full test suite including Lighthouse audits. Automated checks gate all merges.
 
 ## Notes
 
