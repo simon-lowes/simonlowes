@@ -81,6 +81,14 @@ npm run build    # Production build
 npm run preview  # Preview production build
 ```
 
+## GitHub Repository Configuration
+
+**Dependabot auto-merge**: Enabled (Jan 2026). Patch and minor version PRs auto-approve and auto-merge after CI passes.
+
+**CI checks required**: Lint, Unit Tests, Build, E2E Tests, Lighthouse (see `.github/workflows/test.yml`)
+
+**Security rationale**: CI runs full test suite including Lighthouse audits. For a solo project, automated checks are the safety net. Major version bumps from dependabot still require manual review.
+
 ## Notes
 
 - Pushing to `main` triggers Vercel auto-deploy
