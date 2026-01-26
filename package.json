@@ -31,10 +31,10 @@
   "devDependencies": {
     "@astrojs/mdx": "^4.0.0",
     "@astrojs/sitemap": "^3.7.0",
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "^1.58.0",
     "@types/three": "^0.182.0",
     "@typescript-eslint/parser": "^8.53.0",
-    "@vitest/ui": "^4.0.17",
+    "@vitest/ui": "^4.0.18",
     "astro": "^5.16.11",
     "axe-core": "^4.11.1",
     "eslint": "^9.39.2",
