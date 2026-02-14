@@ -12,22 +12,23 @@ Official website for Simon Lowes, an alternative rock musician, singer-songwrite
 - **Framework:** Astro (static site generator)
 - **3D Graphics:** Three.js (starfield background with parallax)
 - **Animations:** GSAP
-- **Hosting:** Dokploy on VPS (self-hosted)
-- **Domain:** GoDaddy (DNS managed there)
+- **Hosting:** Dokploy on VPS (self-hosted), IP 76.13.255.213
+- **Domain:** Cloudflare (DNS managed there)
+- **Internal domain:** simonlowes.simonlowes.cloud
 
 ## Hosting & Domain Setup (Completed Jan 2026)
 
 ### Dokploy (VPS)
 
 - Domain `simonlowes.com` and `www.simonlowes.com` connected
-- Self-hosted on Dokploy VPS
+- Self-hosted on Dokploy VPS at 76.13.255.213
 
-### GoDaddy DNS Records
+### Cloudflare DNS Records
 
 | Type  | Name | Value                                |
 | ----- | ---- | ------------------------------------ |
-| A     | @    | 216.150.1.1                          |
-| CNAME | www  | 0fb12ad6a4c28e43.vercel-dns-016.com  |
+| A     | @    | 76.13.255.213 (proxied)              |
+| CNAME | www  | simonlowes.com (proxied)             |
 | MX    | @    | mx1.simplelogin.co (priority 10)     |
 | MX    | @    | mx2.simplelogin.co (priority 20)     |
 | TXT   | @    | google-site-verification=...         |
