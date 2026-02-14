@@ -17,7 +17,7 @@ Official website for Simon Lowes, an alternative rock musician, singer-songwrite
 - [Astro](https://astro.build/) - Static site generator
 - [Three.js](https://threejs.org/) - 3D graphics
 - [GSAP](https://greensock.com/gsap/) - Animations
-- [Vercel](https://vercel.com/) - Hosting
+- [Dokploy](https://dokploy.com/) - Hosting (self-hosted VPS)
 
 ## Music
 

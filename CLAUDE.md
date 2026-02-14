@@ -12,15 +12,15 @@ Official website for Simon Lowes, an alternative rock musician, singer-songwrite
 - **Framework:** Astro (static site generator)
 - **3D Graphics:** Three.js (starfield background with parallax)
 - **Animations:** GSAP
-- **Hosting:** Vercel (auto-deploys from main branch)
+- **Hosting:** Dokploy on VPS (self-hosted)
 - **Domain:** GoDaddy (DNS managed there)
 
 ## Hosting & Domain Setup (Completed Jan 2026)
 
-### Vercel
+### Dokploy (VPS)
 
 - Domain `simonlowes.com` and `www.simonlowes.com` connected
-- Auto-deploys on push to `main`
+- Self-hosted on Dokploy VPS
 
 ### GoDaddy DNS Records
 
@@ -95,6 +95,6 @@ npm run preview  # Preview production build
 
 ## Notes
 
-- Pushing to `main` triggers Vercel auto-deploy
+- Pushing to `main` triggers Dokploy auto-deploy
 - The starfield uses reduced particle count on mobile for performance
 - Respects `prefers-reduced-motion` accessibility setting

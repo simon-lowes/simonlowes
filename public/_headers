@@ -1,5 +1,5 @@
 # Legacy Netlify Headers (kept for reference)
-# Vercel uses vercel.json instead - this file is ignored by Vercel
+# Previously used by Vercel, now hosted on Dokploy VPS
 
 /*
   # Prevent clickjacking attacks
