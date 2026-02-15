@@ -94,6 +94,14 @@ npm run preview  # Preview production build
 
 **Security rationale**: CI runs full test suite including Lighthouse audits. Automated checks gate all merges.
 
+## Future: Free Music Downloads (not yet started)
+
+- **Concept:** Host free music downloads (tracks not destined for streaming platforms) via the VPS
+- **Approach:** Cloudflare Tunnel pointing at a file server on the VPS, subdomain like `music.simonlowes.cloud`
+- **Why Cloudflare Tunnel:** Already on Cloudflare, no extra ports to open, free, handles bandwidth/caching
+- **Scope:** Free downloads only — paid music stays on streaming platforms (Spotify, Apple Music, Bandcamp etc.)
+- **Prerequisites:** `cloudflared` on VPS, simple file server or download page, tunnel config
+
 ## Notes
 
 - Pushing to `main` triggers Dokploy auto-deploy
