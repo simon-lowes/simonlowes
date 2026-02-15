@@ -100,6 +100,8 @@ npm run preview  # Preview production build
 - **Approach:** Cloudflare Tunnel pointing at a file server on the VPS, subdomain like `music.simonlowes.cloud`
 - **Why Cloudflare Tunnel:** Already on Cloudflare, no extra ports to open, free, handles bandwidth/caching
 - **Scope:** Free downloads only — paid music stays on streaming platforms (Spotify, Apple Music, Bandcamp etc.)
+- **Paid downloads (future option):** Cloudflare Zero Trust Access policies can gate a tunnel behind authentication. Combine with Stripe payment flow → generate time-limited signed URLs for paid tracks. Note: DRM-free files are inherently copyable once downloaded — the gate only controls initial access, not redistribution.
+- **Cloudflare dashboard location:** Zero Trust > Networks > Tunnels (tunnels live under the "Zero Trust" / "Cloudflare One" branding — it's just where they put them, the zero trust access policies are optional)
 - **Prerequisites:** `cloudflared` on VPS, simple file server or download page, tunnel config
 
 ## Notes
