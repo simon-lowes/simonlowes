@@ -48,55 +48,53 @@ import MotionPermissionPrompt from "./MotionPermissionPrompt.astro";
 </style>
 
 <script>
-  import { initStarfield, updateParallax, cleanup } from "../scripts/starfield";
+  const CSS_FALLBACK = `
+    radial-gradient(ellipse at 20% 30%, rgba(45, 27, 78, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(13, 27, 42, 0.4) 0%, transparent 50%),
+    linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 50%, #0a0a0f 100%)
+  `;
 
   const canvas = document.getElementById("starfield-canvas") as HTMLCanvasElement;
 
   if (canvas) {
     // Check WebGL support without consuming the context
-    // (creating a context on the actual canvas would prevent Three.js from using it)
     const testCanvas = document.createElement("canvas");
     const hasWebGL = !!(
       testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl")
     );
 
     if (!hasWebGL) {
-      // WebGL not supported - CSS fallback
-      canvas.style.background = `
-        radial-gradient(ellipse at 20% 30%, rgba(45, 27, 78, 0.4) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 70%, rgba(13, 27, 42, 0.4) 0%, transparent 50%),
-        linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 50%, #0a0a0f 100%)
-      `;
+      canvas.style.background = CSS_FALLBACK;
     } else {
-      // Initialize Three.js starfield
-      try {
-        initStarfield(canvas);
+      // Defer Three.js loading to after first paint for better LCP
+      const loadStarfield = async () => {
+        try {
+          const { initStarfield, updateParallax, cleanup } = await import("../scripts/starfield");
 
-        // Add mousemove listener for parallax effect
-        document.addEventListener("mousemove", (e) => {
-          const normalizedX = (e.clientX / window.innerWidth) * 2 - 1;
-          const normalizedY = (e.clientY / window.innerHeight) * 2 - 1;
-          updateParallax(normalizedX, normalizedY);
-        });
-      } catch (error) {
-        // If Three.js fails, set CSS fallback
-        canvas.style.background = `
-          radial-gradient(ellipse at 20% 30%, rgba(45, 27, 78, 0.4) 0%, transparent 50%),
-          radial-gradient(ellipse at 80% 70%, rgba(13, 27, 42, 0.4) 0%, transparent 50%),
-          linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 50%, #0a0a0f 100%)
-        `;
-        void error;
+          initStarfield(canvas);
+
+          document.addEventListener("mousemove", (e) => {
+            const normalizedX = (e.clientX / window.innerWidth) * 2 - 1;
+            const normalizedY = (e.clientY / window.innerHeight) * 2 - 1;
+            updateParallax(normalizedX, normalizedY);
+          });
+
+          window.addEventListener("beforeunload", cleanup);
+        } catch {
+          canvas.style.background = CSS_FALLBACK;
+        }
+      };
+
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(loadStarfield, { timeout: 200 });
+      } else {
+        setTimeout(loadStarfield, 0);
       }
     }
   }
 
-  // With transition:persist, the canvas survives navigation
-  // Only cleanup on actual page unload (closing tab/browser)
-  window.addEventListener("beforeunload", cleanup);
-
   // Handle View Transitions - ensure animation continues after swap
   document.addEventListener("astro:after-swap", () => {
-    // Canvas persists, but we may need to ensure render loop continues
-    // The starfield instance remains alive, so no action needed
+    // Canvas persists, starfield instance remains alive
   });
 </script>
