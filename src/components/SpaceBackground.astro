@@ -57,38 +57,46 @@ import MotionPermissionPrompt from "./MotionPermissionPrompt.astro";
   const canvas = document.getElementById("starfield-canvas") as HTMLCanvasElement;
 
   if (canvas) {
-    // Check WebGL support without consuming the context
-    const testCanvas = document.createElement("canvas");
-    const hasWebGL = !!(
-      testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl")
-    );
+    // Skip Three.js entirely for users who prefer reduced motion —
+    // show a static CSS gradient instead (saves ~600KB of JS)
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (!hasWebGL) {
+    if (prefersReducedMotion) {
       canvas.style.background = CSS_FALLBACK;
     } else {
-      // Defer Three.js loading to after first paint for better LCP
-      const loadStarfield = async () => {
-        try {
-          const { initStarfield, updateParallax, cleanup } = await import("../scripts/starfield");
+      // Check WebGL support without consuming the context
+      const testCanvas = document.createElement("canvas");
+      const hasWebGL = !!(
+        testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl")
+      );
 
-          initStarfield(canvas);
-
-          document.addEventListener("mousemove", (e) => {
-            const normalizedX = (e.clientX / window.innerWidth) * 2 - 1;
-            const normalizedY = (e.clientY / window.innerHeight) * 2 - 1;
-            updateParallax(normalizedX, normalizedY);
-          });
-
-          window.addEventListener("beforeunload", cleanup);
-        } catch {
-          canvas.style.background = CSS_FALLBACK;
-        }
-      };
-
-      if ("requestIdleCallback" in window) {
-        requestIdleCallback(loadStarfield, { timeout: 200 });
+      if (!hasWebGL) {
+        canvas.style.background = CSS_FALLBACK;
       } else {
-        setTimeout(loadStarfield, 0);
+        // Defer Three.js loading to after first paint for better LCP
+        const loadStarfield = async () => {
+          try {
+            const { initStarfield, updateParallax, cleanup } = await import("../scripts/starfield");
+
+            initStarfield(canvas);
+
+            document.addEventListener("mousemove", (e) => {
+              const normalizedX = (e.clientX / window.innerWidth) * 2 - 1;
+              const normalizedY = (e.clientY / window.innerHeight) * 2 - 1;
+              updateParallax(normalizedX, normalizedY);
+            });
+
+            window.addEventListener("beforeunload", cleanup);
+          } catch {
+            canvas.style.background = CSS_FALLBACK;
+          }
+        };
+
+        if ("requestIdleCallback" in window) {
+          requestIdleCallback(loadStarfield, { timeout: 200 });
+        } else {
+          setTimeout(loadStarfield, 0);
+        }
       }
     }
   }
