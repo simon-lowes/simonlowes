@@ -33,19 +33,6 @@ export default defineConfig({
       workbox: {
         navigateFallback: "/404",
         globPatterns: ["**/*.{css,js,html,svg,png,webp,ico}"],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/img\.icons8\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "external-icons",
-              expiration: {
-                maxEntries: 20,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-            },
-          },
-        ],
       },
     }),
   ],
