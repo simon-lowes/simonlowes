@@ -92,12 +92,16 @@ import MotionPermissionPrompt from "./MotionPermissionPrompt.astro";
           }
         };
 
-        // Defer Three.js (602KB) well past Lighthouse's TTI measurement window.
-        // TTI = 5s without a long task after FCP. A 4s post-load delay ensures
-        // the heavy parse happens outside that window. On real devices the
-        // canvas shows #0a0a0f (nearly black) so the ~4s gap is invisible.
+        // Defer Three.js (602KB) until after page is fully loaded and idle.
+        // Note: TBT is inherently high (~8s under 4x throttle) because
+        // 602KB JS parsing is a single long task. Only OffscreenCanvas
+        // would eliminate it. This deferral at least keeps FCP/LCP clean.
         window.addEventListener("load", () => {
-          setTimeout(loadStarfield, 4000);
+          if ("requestIdleCallback" in window) {
+            requestIdleCallback(loadStarfield);
+          } else {
+            setTimeout(loadStarfield, 100);
+          }
         });
       }
     }
