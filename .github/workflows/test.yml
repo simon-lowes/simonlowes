@@ -152,3 +152,22 @@ jobs:
         with:
           configPath: ./lighthouserc.json
           uploadArtifacts: true
+
+  smoke:
+    name: smoke
+    needs: [lint, test, build, e2e, lighthouse]
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      contents: read
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.test.result }}" != "success" ]] || \
+             [[ "${{ needs.build.result }}" != "success" ]] || \
+             [[ "${{ needs.e2e.result }}" != "success" ]] || \
+             [[ "${{ needs.lighthouse.result }}" != "success" ]]; then
+            echo "One or more required jobs failed"
+            exit 1
+          fi
