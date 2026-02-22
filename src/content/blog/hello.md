@@ -1,6 +1,6 @@
 ---
 title: Hello
-date: 2025-12-24
+date: "2025-12-24"
 description: First Astro post.
 ---
 
