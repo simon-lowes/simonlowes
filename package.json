@@ -76,6 +76,10 @@
     ]
   },
   "overrides": {
-    "diff": "^8.0.3"
+    "diff": "^8.0.3",
+    "dompurify": "^3.3.1",
+    "react-router": "^6.30.3",
+    "esbuild": "^0.25.0",
+    "minimatch": "^10.2.2"
   }
 }
