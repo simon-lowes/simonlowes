@@ -19,6 +19,10 @@ test-results/
 .DS_Store
 *.log
 
+# TinaCMS generated
+tina/__generated__/
+public/admin/
+
 # Environment
 .env
 .env.*

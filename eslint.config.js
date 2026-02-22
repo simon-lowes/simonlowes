@@ -22,6 +22,6 @@ export default [
     },
   },
   {
-    ignores: ["dist/", "node_modules/", ".astro/"],
+    ignores: ["dist/", "node_modules/", ".astro/", "tina/__generated__/", "public/admin/"],
   },
 ];

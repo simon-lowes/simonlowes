@@ -54,6 +54,19 @@ const structuredData = {
     <a href="/">Home</a>
   </nav>
 
+  {
+    post.data.heroImage && (
+      <div class="blog-hero">
+        <img
+          src={post.data.heroImage}
+          alt={post.data.heroImageAlt || post.data.title}
+          class="blog-hero__img"
+          loading="eager"
+        />
+      </div>
+    )
+  }
+
   <header class="blog-header">
     <h1 class="blog-header__title">{post.data.title}</h1>
     <p class="blog-header__meta">
@@ -73,8 +86,131 @@ const structuredData = {
     <Content />
   </div>
 
+  {
+    post.data.media && post.data.media.length > 0 && (
+      <section class="blog-media" aria-label="Media">
+        {post.data.media.filter((m) => m.type === "video").length > 0 && (
+          <div class="blog-media__group">
+            <h2 class="blog-media__heading">Video</h2>
+            {post.data.media
+              .filter((m) => m.type === "video")
+              .map((item) => (
+                <figure class="blog-media__item">
+                  <video controls preload="metadata" class="blog-media__video">
+                    <source src={item.url} type={item.mimeType || "video/mp4"} />
+                  </video>
+                  {item.title && <figcaption>{item.title}</figcaption>}
+                </figure>
+              ))}
+          </div>
+        )}
+
+        {post.data.media.filter((m) => m.type === "audio").length > 0 && (
+          <div class="blog-media__group">
+            <h2 class="blog-media__heading">Audio</h2>
+            {post.data.media
+              .filter((m) => m.type === "audio")
+              .map((item) => (
+                <figure class="blog-media__item">
+                  <audio controls preload="metadata" class="blog-media__audio">
+                    <source src={item.url} type={item.mimeType || "audio/mpeg"} />
+                  </audio>
+                  {item.title && <figcaption>{item.title}</figcaption>}
+                </figure>
+              ))}
+          </div>
+        )}
+
+        {post.data.media.filter((m) => m.type === "image").length > 0 && (
+          <div class="blog-media__group">
+            <h2 class="blog-media__heading">Gallery</h2>
+            <div class="blog-media__gallery">
+              {post.data.media
+                .filter((m) => m.type === "image")
+                .map((item) => (
+                  <figure class="blog-media__item">
+                    <img
+                      src={item.url}
+                      alt={item.alt || item.title || ""}
+                      class="blog-media__image"
+                      loading="lazy"
+                    />
+                    {item.title && <figcaption>{item.title}</figcaption>}
+                  </figure>
+                ))}
+            </div>
+          </div>
+        )}
+      </section>
+    )
+  }
+
   <nav class="blog-nav blog-nav--footer" aria-label="Post navigation">
     <a href="/blog/">&larr; All posts</a>
     <a href="/">Home</a>
   </nav>
 </BlogLayout>
+
+<style>
+  .blog-hero {
+    margin: 0 -2rem 1.5rem;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .blog-hero__img {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 400px;
+    object-fit: cover;
+  }
+  .blog-media {
+    margin-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: 1.5rem;
+  }
+  .blog-media__heading {
+    font-size: 1.25rem;
+    margin: 0 0 1rem;
+    color: #00d4ff;
+  }
+  .blog-media__group {
+    margin-bottom: 2rem;
+  }
+  .blog-media__item {
+    margin: 0 0 1.5rem;
+    padding: 0;
+  }
+  .blog-media__item figcaption {
+    font-size: 0.875rem;
+    opacity: 0.7;
+    margin-top: 0.5rem;
+  }
+  .blog-media__video {
+    width: 100%;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+  }
+  .blog-media__audio {
+    width: 100%;
+  }
+  .blog-media__gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .blog-media__image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+  }
+  @media (max-width: 600px) {
+    .blog-hero {
+      margin: 0 -1.25rem 1.25rem;
+    }
+    .blog-media__gallery {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -31,17 +31,27 @@ const description = "Updates, notes, and thoughts from Simon Lowes.";
         {posts.map((post) => (
           <li class="blog-list__item">
             <a href={`/blog/${post.slug}/`} class="blog-list__link">
-              <h2 class="blog-list__title">{post.data.title}</h2>
-              <span class="blog-list__date">
-                {post.data.date.toLocaleDateString("en-GB", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </span>
-              {post.data.description && (
-                <p class="blog-list__description">{post.data.description}</p>
+              {post.data.heroImage && (
+                <img
+                  src={post.data.heroImage}
+                  alt={post.data.heroImageAlt || post.data.title}
+                  class="blog-list__thumb"
+                  loading="lazy"
+                />
               )}
+              <div class="blog-list__content">
+                <h2 class="blog-list__title">{post.data.title}</h2>
+                <span class="blog-list__date">
+                  {post.data.date.toLocaleDateString("en-GB", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+                {post.data.description && (
+                  <p class="blog-list__description">{post.data.description}</p>
+                )}
+              </div>
             </a>
           </li>
         ))}
@@ -53,3 +63,31 @@ const description = "Updates, notes, and thoughts from Simon Lowes.";
     )
   }
 </BlogLayout>
+
+<style>
+  .blog-list__link {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .blog-list__thumb {
+    width: 120px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .blog-list__content {
+    flex: 1;
+    min-width: 0;
+  }
+  @media (max-width: 600px) {
+    .blog-list__link {
+      flex-direction: column;
+    }
+    .blog-list__thumb {
+      width: 100%;
+      height: 160px;
+    }
+  }
+</style>

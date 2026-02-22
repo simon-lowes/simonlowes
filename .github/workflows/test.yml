@@ -75,6 +75,9 @@ jobs:
 
       - name: Build site
         run: npm run build
+        env:
+          TINA_CLIENT_ID: ${{ secrets.TINA_CLIENT_ID }}
+          TINA_TOKEN: ${{ secrets.TINA_TOKEN }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v6

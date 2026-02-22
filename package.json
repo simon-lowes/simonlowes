@@ -8,8 +8,9 @@
     "doc": "docs"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
+    "dev": "tinacms dev -c \"astro dev\"",
+    "dev:astro": "astro dev",
+    "build": "tinacms build && astro build",
     "preview": "astro preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -32,11 +33,13 @@
     "@astrojs/mdx": "^4.0.0",
     "@astrojs/sitemap": "^3.7.0",
     "@playwright/test": "^1.58.2",
+    "@tinacms/cli": "^2.1.6",
     "@types/three": "^0.182.0",
     "@typescript-eslint/parser": "^8.55.0",
     "@vitest/ui": "^4.0.18",
     "astro": "^5.17.2",
     "axe-core": "^4.11.1",
+    "dotenv": "^17.3.1",
     "eslint": "^9.39.2",
     "eslint-plugin-astro": "^1.6.0",
     "happy-dom": "^20.6.1",
@@ -55,7 +58,8 @@
     "@vite-pwa/astro": "^1.2.0",
     "gsap": "^3.14.2",
     "postprocessing": "^6.38.2",
-    "three": "^0.182.0"
+    "three": "^0.182.0",
+    "tinacms": "^3.5.0"
   },
   "lint-staged": {
     "*.{js,ts,astro}": [
