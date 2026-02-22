@@ -43,10 +43,11 @@ export default defineConfig({
             required: true,
           },
           {
-            type: "datetime",
+            type: "string",
             name: "date",
             label: "Date",
             required: true,
+            description: "YYYY-MM-DD format (e.g. 2026-02-22)",
           },
           {
             type: "string",
