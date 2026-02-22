@@ -1,8 +1,9 @@
-import { config as dotenvConfig } from "dotenv";
 import { defineConfig } from "tinacms";
 
-// Load .env.local for local builds (tinacms CLI doesn't have Vite's auto-loading)
-dotenvConfig({ path: ".env.local" });
+// Load .env.local for Node.js builds only (not in the browser admin SPA)
+if (typeof globalThis.process?.cwd === "function") {
+  require("dotenv").config({ path: ".env.local" });
+}
 
 const branch =
   process.env.GITHUB_BRANCH || process.env.VERCEL_GIT_COMMIT_REF || process.env.HEAD || "main";
