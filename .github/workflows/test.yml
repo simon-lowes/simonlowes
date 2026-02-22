@@ -73,8 +73,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build Tina admin
+        run: npx tinacms build || echo "::warning::TinaCMS build failed (branch may not be indexed yet)"
+        env:
+          TINA_CLIENT_ID: ${{ secrets.TINA_CLIENT_ID }}
+          TINA_TOKEN: ${{ secrets.TINA_TOKEN }}
+
       - name: Build site
-        run: npm run build
+        run: npx astro build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v6
