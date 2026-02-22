@@ -11,6 +11,7 @@
     "dev": "tinacms dev -c \"astro dev\"",
     "dev:astro": "astro dev",
     "build": "tinacms build && astro build",
+    "build:astro": "astro build",
     "preview": "astro preview",
     "test": "vitest run",
     "test:watch": "vitest",
