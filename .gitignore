@@ -19,8 +19,7 @@ test-results/
 .DS_Store
 *.log
 
-# TinaCMS generated
-tina/__generated__/
+# TinaCMS build output (admin SPA is generated at build time)
 public/admin/
 
 # Environment

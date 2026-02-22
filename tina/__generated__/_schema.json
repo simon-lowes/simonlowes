@@ -1,0 +1,130 @@
+{
+  "version": { "fullVersion": "2.1.2", "major": "2", "minor": "1", "patch": "2" },
+  "meta": { "flags": ["experimentalData"] },
+  "collections": [
+    {
+      "name": "blog",
+      "label": "Blog Posts",
+      "path": "src/content/blog",
+      "format": "md",
+      "fields": [
+        {
+          "type": "string",
+          "name": "title",
+          "label": "Title",
+          "isTitle": true,
+          "required": true,
+          "namespace": ["blog", "title"],
+          "searchable": true,
+          "uid": false
+        },
+        {
+          "type": "datetime",
+          "name": "date",
+          "label": "Date",
+          "required": true,
+          "namespace": ["blog", "date"],
+          "searchable": true,
+          "uid": false
+        },
+        {
+          "type": "string",
+          "name": "description",
+          "label": "Description",
+          "ui": { "component": "textarea" },
+          "namespace": ["blog", "description"],
+          "searchable": true,
+          "uid": false
+        },
+        {
+          "type": "boolean",
+          "name": "draft",
+          "label": "Draft",
+          "namespace": ["blog", "draft"],
+          "searchable": true,
+          "uid": false
+        },
+        {
+          "type": "image",
+          "name": "heroImage",
+          "label": "Hero Image",
+          "description": "Main image displayed at the top of the post",
+          "namespace": ["blog", "heroImage"],
+          "searchable": false,
+          "uid": false
+        },
+        {
+          "type": "string",
+          "name": "heroImageAlt",
+          "label": "Hero Image Alt Text",
+          "description": "Accessible description of the hero image",
+          "namespace": ["blog", "heroImageAlt"],
+          "searchable": true,
+          "uid": false
+        },
+        {
+          "type": "object",
+          "name": "media",
+          "label": "Media",
+          "list": true,
+          "fields": [
+            {
+              "type": "string",
+              "name": "type",
+              "label": "Type",
+              "required": true,
+              "options": [
+                { "value": "video", "label": "Video" },
+                { "value": "audio", "label": "Audio" },
+                { "value": "image", "label": "Image" }
+              ],
+              "namespace": ["blog", "media", "type"],
+              "searchable": true,
+              "uid": false
+            },
+            {
+              "type": "string",
+              "name": "url",
+              "label": "URL",
+              "required": true,
+              "description": "External URL (R2, VPS, or any CDN)",
+              "namespace": ["blog", "media", "url"],
+              "searchable": true,
+              "uid": false
+            },
+            {
+              "type": "string",
+              "name": "title",
+              "label": "Title",
+              "namespace": ["blog", "media", "title"],
+              "searchable": true,
+              "uid": false
+            },
+            {
+              "type": "string",
+              "name": "alt",
+              "label": "Alt Text",
+              "namespace": ["blog", "media", "alt"],
+              "searchable": true,
+              "uid": false
+            },
+            {
+              "type": "string",
+              "name": "mimeType",
+              "label": "MIME Type",
+              "description": "e.g. video/mp4, audio/mpeg, image/webp",
+              "namespace": ["blog", "media", "mimeType"],
+              "searchable": true,
+              "uid": false
+            }
+          ],
+          "namespace": ["blog", "media"],
+          "searchable": true,
+          "uid": false
+        }
+      ],
+      "namespace": ["blog"]
+    }
+  ],
+  "config": { "media": { "tina": { "publicFolder": "public", "mediaRoot": "blog-images" } } }
+}

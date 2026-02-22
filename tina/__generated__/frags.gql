@@ -1,0 +1,17 @@
+fragment BlogParts on Blog {
+  __typename
+  title
+  date
+  description
+  draft
+  heroImage
+  heroImageAlt
+  media {
+    __typename
+    type
+    url
+    title
+    alt
+    mimeType
+  }
+}
