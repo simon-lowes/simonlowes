@@ -20,10 +20,11 @@
             "uid": false
           },
           {
-            "type": "datetime",
+            "type": "string",
             "name": "date",
             "label": "Date",
             "required": true,
+            "description": "YYYY-MM-DD format (e.g. 2026-02-22)",
             "namespace": ["blog", "date"],
             "searchable": true,
             "uid": false
@@ -938,40 +939,6 @@
       },
       {
         "kind": "InputObjectTypeDefinition",
-        "name": { "kind": "Name", "value": "DatetimeFilter" },
-        "fields": [
-          {
-            "kind": "InputValueDefinition",
-            "name": { "kind": "Name", "value": "after" },
-            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
-          },
-          {
-            "kind": "InputValueDefinition",
-            "name": { "kind": "Name", "value": "before" },
-            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
-          },
-          {
-            "kind": "InputValueDefinition",
-            "name": { "kind": "Name", "value": "eq" },
-            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
-          },
-          {
-            "kind": "InputValueDefinition",
-            "name": { "kind": "Name", "value": "exists" },
-            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "Boolean" } }
-          },
-          {
-            "kind": "InputValueDefinition",
-            "name": { "kind": "Name", "value": "in" },
-            "type": {
-              "kind": "ListType",
-              "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
-            }
-          }
-        ]
-      },
-      {
-        "kind": "InputObjectTypeDefinition",
         "name": { "kind": "Name", "value": "BooleanFilter" },
         "fields": [
           {
@@ -1058,7 +1025,7 @@
           {
             "kind": "InputValueDefinition",
             "name": { "kind": "Name", "value": "date" },
-            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "DatetimeFilter" } }
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "StringFilter" } }
           },
           {
             "kind": "InputValueDefinition",
