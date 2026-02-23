@@ -85,13 +85,13 @@
                 "uid": false
               },
               {
-                "type": "string",
+                "type": "image",
                 "name": "url",
-                "label": "URL",
+                "label": "File",
                 "required": true,
-                "description": "External URL (R2, VPS, or any CDN)",
+                "description": "Upload or select from R2 media library",
                 "namespace": ["blog", "media", "url"],
-                "searchable": true,
+                "searchable": false,
                 "uid": false
               },
               {
@@ -994,7 +994,7 @@
           {
             "kind": "InputValueDefinition",
             "name": { "kind": "Name", "value": "url" },
-            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "StringFilter" } }
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "ImageFilter" } }
           },
           {
             "kind": "InputValueDefinition",
