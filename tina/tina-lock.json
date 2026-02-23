@@ -128,7 +128,7 @@
         "namespace": ["blog"]
       }
     ],
-    "config": { "media": { "tina": { "publicFolder": "public", "mediaRoot": "blog-images" } } }
+    "config": { "media": {} }
   },
   "lookup": {
     "DocumentConnection": {

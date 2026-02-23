@@ -1,0 +1,16 @@
+name = "simonlowes-media-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+routes = [
+  { pattern = "media-api.simonlowes.com", custom_domain = true }
+]
+
+[vars]
+TINA_CLIENT_ID = "bfeec02e-0883-4bc0-967d-e067b84813b0"
+ALLOWED_ORIGIN = "https://simonlowes.com"
+PUBLIC_MEDIA_URL = "https://media.simonlowes.com"
+
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "simonlowes-media"
