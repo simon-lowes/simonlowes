@@ -29,7 +29,8 @@ const MAX_SIZE = 100 * 1024 * 1024; // 100MB
 export async function handleUpload(c: Context<{ Bindings: Env }>) {
   const formData = await c.req.formData();
   const file = formData.get("file") as File | null;
-  const directory = (formData.get("directory") as string) || "";
+  const rawDir = (formData.get("directory") as string) || "";
+  const directory = rawDir.replace(/^\/+|\/+$/g, ""); // strip leading/trailing slashes
 
   if (!file) {
     return c.json({ error: "No file provided" }, 400);
