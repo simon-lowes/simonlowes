@@ -7,5 +7,7 @@ description: |+
 heroImageAlt: test
 media:
   - {}
+  - {}
+  - {}
 ---
 
