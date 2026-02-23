@@ -21,9 +21,9 @@ export default defineConfig({
   },
 
   media: {
-    tina: {
-      mediaRoot: "blog-images",
-      publicFolder: "public",
+    loadCustomStore: async () => {
+      const pack = await import("./media-store");
+      return pack.default;
     },
   },
 
