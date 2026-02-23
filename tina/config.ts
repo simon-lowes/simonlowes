@@ -92,11 +92,11 @@ export default defineConfig({
                 ],
               },
               {
-                type: "string",
+                type: "image",
                 name: "url",
-                label: "URL",
+                label: "File",
                 required: true,
-                description: "External URL (R2, VPS, or any CDN)",
+                description: "Upload or select from R2 media library",
               },
               {
                 type: "string",
