@@ -20,11 +20,11 @@
             "uid": false
           },
           {
-            "type": "string",
+            "type": "datetime",
             "name": "date",
             "label": "Date",
             "required": true,
-            "description": "YYYY-MM-DD format (e.g. 2026-02-22)",
+            "ui": { "dateFormat": "YYYY-MM-DD" },
             "namespace": ["blog", "date"],
             "searchable": true,
             "uid": false
@@ -53,6 +53,16 @@
             "description": "Main image displayed at the top of the post",
             "namespace": ["blog", "heroImage"],
             "searchable": false,
+            "uid": false
+          },
+          {
+            "type": "rich-text",
+            "name": "body",
+            "label": "Body",
+            "isBody": true,
+            "namespace": ["blog", "body"],
+            "searchable": true,
+            "parser": { "type": "markdown" },
             "uid": false
           },
           {
@@ -866,6 +876,12 @@
           },
           {
             "kind": "FieldDefinition",
+            "name": { "kind": "Name", "value": "body" },
+            "arguments": [],
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "JSON" } }
+          },
+          {
+            "kind": "FieldDefinition",
             "name": { "kind": "Name", "value": "heroImageAlt" },
             "arguments": [],
             "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
@@ -939,6 +955,40 @@
       },
       {
         "kind": "InputObjectTypeDefinition",
+        "name": { "kind": "Name", "value": "DatetimeFilter" },
+        "fields": [
+          {
+            "kind": "InputValueDefinition",
+            "name": { "kind": "Name", "value": "after" },
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
+          },
+          {
+            "kind": "InputValueDefinition",
+            "name": { "kind": "Name", "value": "before" },
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
+          },
+          {
+            "kind": "InputValueDefinition",
+            "name": { "kind": "Name", "value": "eq" },
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
+          },
+          {
+            "kind": "InputValueDefinition",
+            "name": { "kind": "Name", "value": "exists" },
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "Boolean" } }
+          },
+          {
+            "kind": "InputValueDefinition",
+            "name": { "kind": "Name", "value": "in" },
+            "type": {
+              "kind": "ListType",
+              "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "InputObjectTypeDefinition",
         "name": { "kind": "Name", "value": "BooleanFilter" },
         "fields": [
           {
@@ -979,6 +1029,27 @@
               "kind": "ListType",
               "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
             }
+          }
+        ]
+      },
+      {
+        "kind": "InputObjectTypeDefinition",
+        "name": { "kind": "Name", "value": "RichTextFilter" },
+        "fields": [
+          {
+            "kind": "InputValueDefinition",
+            "name": { "kind": "Name", "value": "startsWith" },
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
+          },
+          {
+            "kind": "InputValueDefinition",
+            "name": { "kind": "Name", "value": "eq" },
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
+          },
+          {
+            "kind": "InputValueDefinition",
+            "name": { "kind": "Name", "value": "exists" },
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "Boolean" } }
           }
         ]
       },
@@ -1025,7 +1096,7 @@
           {
             "kind": "InputValueDefinition",
             "name": { "kind": "Name", "value": "date" },
-            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "StringFilter" } }
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "DatetimeFilter" } }
           },
           {
             "kind": "InputValueDefinition",
@@ -1041,6 +1112,11 @@
             "kind": "InputValueDefinition",
             "name": { "kind": "Name", "value": "heroImage" },
             "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "ImageFilter" } }
+          },
+          {
+            "kind": "InputValueDefinition",
+            "name": { "kind": "Name", "value": "body" },
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "RichTextFilter" } }
           },
           {
             "kind": "InputValueDefinition",
@@ -1412,6 +1488,11 @@
             "kind": "InputValueDefinition",
             "name": { "kind": "Name", "value": "heroImage" },
             "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "String" } }
+          },
+          {
+            "kind": "InputValueDefinition",
+            "name": { "kind": "Name", "value": "body" },
+            "type": { "kind": "NamedType", "name": { "kind": "Name", "value": "JSON" } }
           },
           {
             "kind": "InputValueDefinition",

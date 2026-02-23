@@ -43,11 +43,13 @@ export default defineConfig({
             required: true,
           },
           {
-            type: "string",
+            type: "datetime",
             name: "date",
             label: "Date",
             required: true,
-            description: "YYYY-MM-DD format (e.g. 2026-02-22)",
+            ui: {
+              dateFormat: "YYYY-MM-DD",
+            },
           },
           {
             type: "string",
@@ -67,6 +69,12 @@ export default defineConfig({
             name: "heroImage",
             label: "Hero Image",
             description: "Main image displayed at the top of the post",
+          },
+          {
+            type: "rich-text",
+            name: "body",
+            label: "Body",
+            isBody: true,
           },
           {
             type: "string",
