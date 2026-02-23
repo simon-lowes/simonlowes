@@ -2,7 +2,8 @@ import type { Context } from "hono";
 import type { Env } from "../index";
 
 export async function handleList(c: Context<{ Bindings: Env }>) {
-  const directory = c.req.query("directory") || "";
+  const rawDir = c.req.query("directory") || "";
+  const directory = rawDir.replace(/^\/+|\/+$/g, ""); // strip leading/trailing slashes
   const limit = parseInt(c.req.query("limit") || "50", 10);
   const offset = c.req.query("offset") || undefined;
 
