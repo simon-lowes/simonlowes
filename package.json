@@ -79,6 +79,7 @@
     "diff": "^8.0.3",
     "dompurify": "^3.3.1",
     "react-router": "^6.30.3",
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.0",
+    "serialize-javascript": "^7.0.3"
   }
 }
