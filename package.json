@@ -36,7 +36,7 @@
     "@playwright/test": "^1.58.2",
     "@tinacms/cli": "^2.1.6",
     "@types/three": "^0.183.1",
-    "@typescript-eslint/parser": "^8.55.0",
+    "@typescript-eslint/parser": "^8.56.1",
     "@vitest/ui": "^4.0.18",
     "astro": "^5.18.0",
     "axe-core": "^4.11.1",
@@ -49,7 +49,7 @@
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "prettier-plugin-astro": "^0.14.1",
-    "stylelint": "^17.3.0",
+    "stylelint": "^17.4.0",
     "stylelint-config-standard": "^40.0.0",
     "vitest": "^4.0.16",
     "vitest-axe": "^0.1.0"
