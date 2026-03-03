@@ -10,50 +10,26 @@ Official website for Simon Lowes, an alternative rock musician, singer-songwrite
 ## Tech Stack
 
 - **Framework:** Astro (static site generator)
+- **CMS:** TinaCMS (Git-backed headless CMS)
 - **3D Graphics:** Three.js (starfield background with parallax)
 - **Animations:** GSAP
+- **Unit Testing:** Vitest
+- **E2E Testing:** Playwright
+- **Accessibility Testing:** axe-core + vitest-axe
+- **Linting:** ESLint + Stylelint
+- **Formatting:** Prettier (with prettier-plugin-astro)
+- **Pre-commit:** Husky + lint-staged
 - **Hosting:** Dokploy on VPS (self-hosted), IP 76.13.255.213
 - **Domain:** Cloudflare (DNS managed there)
 - **Internal domain:** simonlowes.simonlowes.cloud
 
-## Hosting & Domain Setup (Completed Jan 2026)
+## Hosting & Deployment
 
-### Dokploy (VPS)
-
-- Domain `simonlowes.com` and `www.simonlowes.com` connected
 - Self-hosted on Dokploy VPS at 76.13.255.213
-
-### Cloudflare DNS Records
-
-| Type  | Name | Value                                |
-| ----- | ---- | ------------------------------------ |
-| A     | @    | 76.13.255.213 (proxied)              |
-| CNAME | www  | simonlowes.com (proxied)             |
-| MX    | @    | mx1.simplelogin.co (priority 10)     |
-| MX    | @    | mx2.simplelogin.co (priority 20)     |
-| TXT   | @    | google-site-verification=...         |
-| TXT   | @    | sl-verification=... (SimpleLogin)    |
-| TXT   | @    | openai-domain-verification=... (AEO) |
-
-### Email
-
-- SimpleLogin for email forwarding (MX records preserved)
-
-## SEO & AEO (Answer Engine Optimization)
-
-### Verified/Claimed
-
-- **Google Search Console** - verified with new Google account (Jan 2026)
-- **Bing Webmaster Tools** - imported from Google Search Console
-- **OpenAI** - domain verification TXT record in place
-
-### AEO Files
-
-- `/public/llms.txt` - structured site info for AI crawlers
-
-### Pending
-
-- **Google Knowledge Panel** - someone else managing (likely old Google account), needs to be reclaimed later
+- Domains: `simonlowes.com` and `www.simonlowes.com`
+- DNS managed via Cloudflare (A record + CNAME, proxied)
+- Email forwarding via SimpleLogin (MX records)
+- AEO: `/public/llms.txt` for AI crawlers, OpenAI domain verification in place
 
 ## Site Features
 
@@ -66,21 +42,40 @@ Official website for Simon Lowes, an alternative rock musician, singer-songwrite
 
 ## Music Platforms
 
-- Spotify: https://open.spotify.com/artist/1E8slBJPNvUSPpRIh3xtkI
-- Apple Music: https://music.apple.com/gb/artist/simon-lowes/1351008298
-- YouTube Music: https://music.youtube.com/channel/UCI4xshiWQrOu_27TPmW9A2g
-- Bandcamp: https://simonlowes.bandcamp.com
-- YouTube: https://www.youtube.com/simonlowesmusic
-- Instagram: https://www.instagram.com/simonlowesmusic/
+Spotify, Apple Music, YouTube Music, Bandcamp, YouTube, Instagram (links in site footer and `/public/llms.txt`)
 
-## Development
+## Key Commands
 
 ```bash
-npm install      # Install dependencies
-npm run dev      # Start dev server
-npm run build    # Production build
-npm run preview  # Preview production build
+# Development (TinaCMS wraps Astro dev/build)
+npm run dev           # tinacms dev -c "astro dev" (starts TinaCMS + Astro)
+npm run dev:astro     # astro dev only (no TinaCMS)
+npm run build         # tinacms build && astro build
+npm run build:astro   # astro build only (no TinaCMS)
+npm run preview       # Preview production build
+
+# Testing
+npm test              # Run unit tests (vitest run)
+npm run test:watch    # Run unit tests in watch mode
+npm run test:coverage # Run unit tests with coverage
+npm run test:e2e      # Run Playwright E2E tests
+npm run test:e2e:ui   # Run E2E tests with Playwright UI
+
+# Linting & Formatting
+npm run lint          # ESLint check
+npm run lint:fix      # ESLint auto-fix
+npm run lint:css      # Stylelint CSS check
+npm run lint:css:fix  # Stylelint auto-fix
+npm run format        # Prettier format all files
+npm run format:check  # Prettier check (no write)
 ```
+
+## Pre-commit Pipeline
+
+Husky runs `lint-staged` on every commit. lint-staged config (from package.json):
+- `*.{js,ts,astro}` -- ESLint fix + Prettier
+- `*.css` -- Stylelint fix + Prettier
+- `*.{md,json}` -- Prettier
 
 ## GitHub Repository Configuration
 
@@ -94,15 +89,26 @@ npm run preview  # Preview production build
 
 **Security rationale**: CI runs full test suite including Lighthouse audits. Automated checks gate all merges.
 
-## Future: Free Music Downloads (not yet started)
+## Directory Structure
 
-- **Concept:** Host free music downloads (tracks not destined for streaming platforms) via the VPS
-- **Approach:** Cloudflare Tunnel pointing at a file server on the VPS, subdomain like `music.simonlowes.cloud`
-- **Why Cloudflare Tunnel:** Already on Cloudflare, no extra ports to open, free, handles bandwidth/caching
-- **Scope:** Free downloads only — paid music stays on streaming platforms (Spotify, Apple Music, Bandcamp etc.)
-- **Paid downloads (future option):** Cloudflare Zero Trust Access policies can gate a tunnel behind authentication. Combine with Stripe payment flow → generate time-limited signed URLs for paid tracks. Note: DRM-free files are inherently copyable once downloaded — the gate only controls initial access, not redistribution.
-- **Cloudflare dashboard location:** Zero Trust > Networks > Tunnels (tunnels live under the "Zero Trust" / "Cloudflare One" branding — it's just where they put them, the zero trust access policies are optional)
-- **Prerequisites:** `cloudflared` on VPS, simple file server or download page, tunnel config
+```
+src/
+  components/       # Astro components (SpaceBackground, MotionPermissionPrompt)
+  content/          # Content collections (blog posts in Markdown)
+  content.config.ts # Content collection schemas
+  layouts/          # Page layouts (BaseLayout, BlogLayout)
+  pages/            # Route pages (index, blog, 404)
+  scripts/          # Client-side TypeScript (starfield, parallax, audio)
+  styles/           # CSS (glass-effects, etc.)
+tests/
+  *.test.js         # Unit tests (a11y, animation, dom, utils)
+  e2e/              # Playwright E2E tests (audio-player, blog, homepage, visual)
+public/
+  css/              # Global stylesheet
+  icons/            # Platform icons
+  images/           # Site images
+  llms.txt          # AEO file for AI crawlers
+```
 
 ## Notes
 
