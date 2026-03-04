@@ -3,7 +3,7 @@ import type { Client, Media, MediaList, MediaStore, MediaUploadOptions } from "t
 const MEDIA_API_URL = "https://media-api.simonlowes.com";
 
 export default class R2MediaStore implements MediaStore {
-  private fetchWithToken: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+  private fetchWithToken: (_input: RequestInfo, _init?: RequestInit) => Promise<Response>;
 
   accept = "image/*,audio/*,video/*,application/pdf";
   maxSize = 100 * 1024 * 1024; // 100MB — matches Worker validation

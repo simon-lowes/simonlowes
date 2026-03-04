@@ -8,10 +8,10 @@
 // ============================================================
 
 export enum QualityTier {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
-  ULTRA = "ultra",
+  _LOW = "low",
+  _MEDIUM = "medium",
+  _HIGH = "high",
+  _ULTRA = "ultra",
 }
 
 export interface QualityConfig {
@@ -41,7 +41,7 @@ export interface QualityConfig {
 }
 
 const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
-  [QualityTier.LOW]: {
+  [QualityTier._LOW]: {
     farStarCount: 2600, // +30% density
     midStarCount: 520,
     nearStarCount: 104,
@@ -57,7 +57,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     targetFps: 30,
     pixelRatioLimit: 1,
   },
-  [QualityTier.MEDIUM]: {
+  [QualityTier._MEDIUM]: {
     farStarCount: 5200, // +30% density
     midStarCount: 780,
     nearStarCount: 156,
@@ -73,7 +73,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     targetFps: 30,
     pixelRatioLimit: 1.5,
   },
-  [QualityTier.HIGH]: {
+  [QualityTier._HIGH]: {
     farStarCount: 10400, // +30% density
     midStarCount: 1300,
     nearStarCount: 260,
@@ -89,7 +89,7 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     targetFps: 60,
     pixelRatioLimit: 2,
   },
-  [QualityTier.ULTRA]: {
+  [QualityTier._ULTRA]: {
     farStarCount: 15600, // +30% density
     midStarCount: 1950,
     nearStarCount: 390,
@@ -126,7 +126,7 @@ const GPU_CLASSIFICATIONS: GPUMatch[] = [
       /Radeon\s*Pro\s*(W[67]|VII)/i, // AMD Pro workstation
       /Quadro\s*RTX/i, // NVIDIA Quadro RTX
     ],
-    tier: QualityTier.ULTRA,
+    tier: QualityTier._ULTRA,
   },
   // HIGH tier - Mid-range dedicated GPUs and Apple Silicon
   {
@@ -138,7 +138,7 @@ const GPU_CLASSIFICATIONS: GPUMatch[] = [
       /Apple\s*GPU/i, // Generic Apple GPU
       /AMD\s*Radeon\s*Pro\s*5/i, // MacBook Pro AMD GPUs
     ],
-    tier: QualityTier.HIGH,
+    tier: QualityTier._HIGH,
   },
   // MEDIUM tier - Entry dedicated GPUs and good integrated
   {
@@ -148,7 +148,7 @@ const GPU_CLASSIFICATIONS: GPUMatch[] = [
       /Iris\s*(Plus|Pro|Xe)/i, // Intel Iris integrated
       /UHD\s*(6[2-9]0|7[0-9]0)/i, // Intel UHD 620+
     ],
-    tier: QualityTier.MEDIUM,
+    tier: QualityTier._MEDIUM,
   },
   // LOW tier - Old/weak GPUs and mobile
   {
@@ -163,7 +163,7 @@ const GPU_CLASSIFICATIONS: GPUMatch[] = [
       /llvmpipe/i, // Software renderer
       /ANGLE/i, // DirectX translation layer (often weaker)
     ],
-    tier: QualityTier.LOW,
+    tier: QualityTier._LOW,
   },
 ];
 
@@ -222,7 +222,7 @@ function detectMobile(): boolean {
 /**
  * Detect if touch device
  */
-function detectTouch(): boolean {
+function _detectTouch(): boolean {
   return "ontouchstart" in window || navigator.maxTouchPoints > 0;
 }
 
@@ -256,7 +256,7 @@ export class QualityManager {
   private fpsHistory: number[] = [];
   private lastFrameTime = 0;
   private adaptiveEnabled = true;
-  private onQualityChange?: (config: QualityConfig) => void;
+  private onQualityChange?: (_config: QualityConfig) => void;
 
   constructor(gl: WebGLRenderingContext | null) {
     // Detect device characteristics
@@ -273,10 +273,15 @@ export class QualityManager {
 
     // Log detection results (dev only)
     if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
       console.log("[Quality] GPU:", this.gpuString);
+      // eslint-disable-next-line no-console
       console.log("[Quality] Memory:", this.deviceMemory, "GB");
+      // eslint-disable-next-line no-console
       console.log("[Quality] Mobile:", this.isMobile);
+      // eslint-disable-next-line no-console
       console.log("[Quality] Detected tier:", this.detectedTier);
+      // eslint-disable-next-line no-console
       console.log("[Quality] Current tier:", this.currentTier);
     }
   }
@@ -291,8 +296,8 @@ export class QualityManager {
     // If we got a confident GPU match, use it
     if (gpuTier !== null) {
       // Downgrade mobile even with good GPU (thermal/battery)
-      if (this.isMobile && gpuTier === QualityTier.ULTRA) {
-        return QualityTier.HIGH;
+      if (this.isMobile && gpuTier === QualityTier._ULTRA) {
+        return QualityTier._HIGH;
       }
       return gpuTier;
     }
@@ -304,20 +309,20 @@ export class QualityManager {
     if (this.isMobile) {
       // Check if it's a capable mobile (high memory, large textures)
       if (this.deviceMemory && this.deviceMemory >= 4 && caps && caps.maxTextureSize >= 8192) {
-        return QualityTier.MEDIUM;
+        return QualityTier._MEDIUM;
       }
-      return QualityTier.LOW;
+      return QualityTier._LOW;
     }
 
     // Desktop fallback based on memory
     if (this.deviceMemory) {
-      if (this.deviceMemory >= 8) return QualityTier.HIGH;
-      if (this.deviceMemory >= 4) return QualityTier.MEDIUM;
-      return QualityTier.LOW;
+      if (this.deviceMemory >= 8) return QualityTier._HIGH;
+      if (this.deviceMemory >= 4) return QualityTier._MEDIUM;
+      return QualityTier._LOW;
     }
 
     // Complete unknown - assume MEDIUM for desktop
-    return QualityTier.MEDIUM;
+    return QualityTier._MEDIUM;
   }
 
   /**
@@ -407,7 +412,7 @@ export class QualityManager {
   /**
    * Register callback for quality changes
    */
-  onConfigChange(callback: (config: QualityConfig) => void): void {
+  onConfigChange(callback: (_config: QualityConfig) => void): void {
     this.onQualityChange = callback;
   }
 
@@ -451,6 +456,7 @@ export class QualityManager {
       const newTier = this.lowerTier(this.currentTier);
       if (newTier !== this.currentTier) {
         if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
           console.log(
             `[Quality] Adaptive downgrade: ${this.currentTier} -> ${newTier} (avg FPS: ${avgFps.toFixed(1)})`
           );
@@ -467,6 +473,7 @@ export class QualityManager {
       // Only upgrade if we're below detected tier
       if (this.tierValue(newTier) <= this.tierValue(this.detectedTier)) {
         if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
           console.log(
             `[Quality] Adaptive upgrade: ${this.currentTier} -> ${newTier} (avg FPS: ${avgFps.toFixed(1)})`
           );
@@ -479,18 +486,18 @@ export class QualityManager {
   }
 
   private tierValue(tier: QualityTier): number {
-    const order = [QualityTier.LOW, QualityTier.MEDIUM, QualityTier.HIGH, QualityTier.ULTRA];
+    const order = [QualityTier._LOW, QualityTier._MEDIUM, QualityTier._HIGH, QualityTier._ULTRA];
     return order.indexOf(tier);
   }
 
   private lowerTier(tier: QualityTier): QualityTier {
-    const order = [QualityTier.LOW, QualityTier.MEDIUM, QualityTier.HIGH, QualityTier.ULTRA];
+    const order = [QualityTier._LOW, QualityTier._MEDIUM, QualityTier._HIGH, QualityTier._ULTRA];
     const idx = order.indexOf(tier);
     return idx > 0 ? order[idx - 1] : tier;
   }
 
   private higherTier(tier: QualityTier): QualityTier {
-    const order = [QualityTier.LOW, QualityTier.MEDIUM, QualityTier.HIGH, QualityTier.ULTRA];
+    const order = [QualityTier._LOW, QualityTier._MEDIUM, QualityTier._HIGH, QualityTier._ULTRA];
     const idx = order.indexOf(tier);
     return idx < order.length - 1 ? order[idx + 1] : tier;
   }
@@ -528,5 +535,5 @@ export function getQualityPreset(tier: QualityTier): QualityConfig {
  * Get all available quality tiers
  */
 export function getAvailableTiers(): QualityTier[] {
-  return [QualityTier.LOW, QualityTier.MEDIUM, QualityTier.HIGH, QualityTier.ULTRA];
+  return [QualityTier._LOW, QualityTier._MEDIUM, QualityTier._HIGH, QualityTier._ULTRA];
 }

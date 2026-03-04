@@ -103,7 +103,7 @@ const RARE_PHENOMENA = {
 };
 
 // Legacy color arrays for backwards compatibility
-const STAR_COLORS = {
+const _STAR_COLORS = {
   blueWhite: STELLAR_CLASSIFICATION.O.colors.concat(STELLAR_CLASSIFICATION.B.colors),
   white: STELLAR_CLASSIFICATION.A.colors.concat(STELLAR_CLASSIFICATION.F.colors),
   orange: STELLAR_CLASSIFICATION.G.colors.concat(STELLAR_CLASSIFICATION.K.colors),
@@ -261,7 +261,7 @@ class SimplexNoise {
 }
 
 // Planet colors
-const PLANET_COLORS = [
+const _PLANET_COLORS = [
   0x4a6741, 0x6b4423, 0x3d5a80, 0x8b4513, 0x2f4f4f, 0x704214, 0x1e3a5f, 0x5d4e6d,
 ];
 
@@ -408,6 +408,7 @@ export class Starfield {
     // Log quality tier in dev mode
     if (import.meta.env.DEV) {
       const debug = this.qualityManager.getDebugInfo();
+      // eslint-disable-next-line no-console
       console.log(`[Starfield] Quality: ${debug.currentTier.toUpperCase()}`, debug);
     }
 
@@ -535,6 +536,7 @@ export class Starfield {
     // Note: Full effect rebuilding would require recreating the composer
     // For now, we just adjust parameters that can be changed dynamically
     if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
       console.log(`[Starfield] Quality changed to: ${this.qualityManager.getTier()}`);
     }
   }
