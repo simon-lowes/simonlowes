@@ -73,6 +73,7 @@ npm run format:check  # Prettier check (no write)
 ## Pre-commit Pipeline
 
 Husky runs `lint-staged` on every commit. lint-staged config (from package.json):
+
 - `*.{js,ts,astro}` -- ESLint fix + Prettier
 - `*.css` -- Stylelint fix + Prettier
 - `*.{md,json}` -- Prettier
