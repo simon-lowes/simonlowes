@@ -41,7 +41,7 @@
     "astro": "^5.18.0",
     "axe-core": "^4.11.1",
     "dotenv": "^17.3.1",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.4",
     "eslint-plugin-astro": "^1.6.0",
     "happy-dom": "^20.6.1",
     "husky": "^9.1.7",
