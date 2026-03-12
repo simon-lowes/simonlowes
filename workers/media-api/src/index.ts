@@ -20,8 +20,11 @@ app.use(
   cors({
     origin: (origin, c) => {
       const allowed = c.env.ALLOWED_ORIGIN;
-      // Also allow localhost for dev
-      if (origin === allowed || origin?.startsWith("http://localhost")) {
+      if (origin === allowed) {
+        return origin;
+      }
+      // Allow localhost only when ALLOWED_ORIGIN is also localhost (dev)
+      if (allowed?.startsWith("http://localhost") && origin?.startsWith("http://localhost")) {
         return origin;
       }
       return "";
