@@ -1,5 +1,8 @@
-# Legacy Netlify Headers (kept for reference)
-# Now hosted on Dokploy VPS
+# Security Headers Reference
+# NOT automatically applied — this file is only parsed by Cloudflare Pages / Netlify.
+# Site is hosted on Dokploy VPS behind Cloudflare proxy (orange cloud).
+# To apply: set these via Cloudflare Transform Rules (Response Headers) or
+# Traefik middleware labels in Dokploy.
 
 /*
   # Prevent clickjacking attacks
@@ -8,9 +11,6 @@
   # Prevent MIME type sniffing
   X-Content-Type-Options: nosniff
 
-  # Enable XSS protection in older browsers
-  X-XSS-Protection: 1; mode=block
-
   # Control referrer information
   Referrer-Policy: strict-origin-when-cross-origin
 
@@ -18,8 +18,12 @@
   Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
 
   # Content Security Policy
-  # Note: Adjust as needed for your specific requirements
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://*.sentry.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.icons8.com https://www.google-analytics.com; font-src 'self'; connect-src 'self' https://www.google-analytics.com https://*.sentry.io https://*.ingest.sentry.io; media-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  # - 'unsafe-inline' for scripts: required by Astro View Transitions and inline <script> tags
+  # - 'unsafe-inline' for styles: required by inline <style> blocks in Astro components
+  # - img.icons8.com: social media icons loaded from Icons8 CDN
+  # - media-src 'self': audio player (neverthere.mp3)
+  # - worker-src 'self': PWA service worker
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.icons8.com; font-src 'self'; connect-src 'self'; media-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 # Cache static assets for 1 year
 /favicons/*
