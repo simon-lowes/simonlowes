@@ -11,6 +11,9 @@ updates:
       prefix: "chore(deps):"
     labels:
       - "dependencies"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       astro:
         patterns:
@@ -40,6 +43,9 @@ updates:
       prefix: "chore(deps):"
     labels:
       - "dependencies"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
@@ -50,3 +56,6 @@ updates:
       prefix: "chore(ci):"
     labels:
       - "ci"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
