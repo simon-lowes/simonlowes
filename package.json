@@ -36,7 +36,7 @@
     "@playwright/test": "^1.58.2",
     "@tinacms/cli": "^2.1.9",
     "@types/three": "^0.183.1",
-    "@typescript-eslint/parser": "^8.56.1",
+    "@typescript-eslint/parser": "^8.57.0",
     "@vitest/ui": "^4.1.0",
     "astro": "^5.18.0",
     "axe-core": "^4.11.1",
