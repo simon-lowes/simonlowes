@@ -29,6 +29,18 @@ updates:
           - "stylelint*"
           - "@typescript-eslint/*"
 
+  # workers/media-api npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/workers/media-api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps):"
+    labels:
+      - "dependencies"
+
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
