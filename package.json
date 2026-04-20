@@ -31,8 +31,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@astrojs/mdx": "^4.0.0",
-    "@astrojs/sitemap": "^3.7.0",
+    "@astrojs/mdx": "^4.3.14",
+    "@astrojs/sitemap": "^3.7.2",
     "@playwright/test": "^1.59.1",
     "@tinacms/cli": "^2.2.2",
     "@types/three": "^0.183.1",
@@ -55,7 +55,7 @@
     "vitest-axe": "^0.1.0"
   },
   "dependencies": {
-    "@astrojs/rss": "^4.0.15",
+    "@astrojs/rss": "^4.0.18",
     "@vite-pwa/astro": "^1.2.0",
     "gsap": "^3.14.2",
     "postprocessing": "^6.39.0",
