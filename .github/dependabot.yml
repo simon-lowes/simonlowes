@@ -11,6 +11,13 @@ updates:
       prefix: "chore(deps):"
     labels:
       - "dependencies"
+    ignore:
+      # astro 6 is blocked by @vite-pwa/astro peer range (caps at astro 5).
+      # Revisit when @vite-pwa/astro publishes astro 6 support.
+      - dependency-name: "astro"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@astrojs/*"
+        update-types: ["version-update:semver-major"]
     groups:
       astro:
         patterns:
