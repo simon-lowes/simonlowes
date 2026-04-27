@@ -60,7 +60,7 @@
     "gsap": "^3.15.0",
     "postprocessing": "^6.39.1",
     "three": "^0.183.2",
-    "tinacms": "^3.6.1"
+    "tinacms": "^3.7.3"
   },
   "lint-staged": {
     "*.{js,ts,astro}": [
