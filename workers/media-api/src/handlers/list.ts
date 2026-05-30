@@ -4,7 +4,8 @@ import type { Env } from "../index";
 export async function handleList(c: Context<{ Bindings: Env }>) {
   const rawDir = c.req.query("directory") || "";
   const directory = rawDir.replace(/^\/+|\/+$/g, ""); // strip leading/trailing slashes
-  const limit = parseInt(c.req.query("limit") || "50", 10);
+  const parsedLimit = parseInt(c.req.query("limit") || "50", 10);
+  const limit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 1000) : 50;
   const offset = c.req.query("offset") || undefined;
 
   // Use delimiter to get virtual directories (folder browsing)
