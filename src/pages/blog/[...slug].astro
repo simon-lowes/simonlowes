@@ -47,7 +47,11 @@ const structuredData = {
   ogType="article"
   publishedTime={publishDate}
 >
-  <script slot="head" type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  <script
+    slot="head"
+    type="application/ld+json"
+    set:html={JSON.stringify(structuredData).replace(/</g, "\\u003c")}
+  />
 
   <nav class="blog-nav">
     <a href="/blog/">&larr; All posts</a>

@@ -30,7 +30,12 @@ export async function handleUpload(c: Context<{ Bindings: Env }>) {
   const formData = await c.req.formData();
   const file = formData.get("file") as File | null;
   const rawDir = (formData.get("directory") as string) || "";
-  const directory = rawDir.replace(/^\/+|\/+$/g, ""); // strip leading/trailing slashes
+  // Sanitize directory: strip leading/trailing slashes and drop any ".." segments.
+  const directory = rawDir
+    .replace(/^\/+|\/+$/g, "")
+    .split("/")
+    .filter((seg) => seg && seg !== "." && seg !== "..")
+    .join("/");
 
   if (!file) {
     return c.json({ error: "No file provided" }, 400);
@@ -44,8 +49,13 @@ export async function handleUpload(c: Context<{ Bindings: Env }>) {
     return c.json({ error: `File too large (max ${MAX_SIZE / 1024 / 1024}MB)` }, 400);
   }
 
+  // Sanitize filename to a safe basename: strip path separators, reject "..",
+  // and restrict to [A-Za-z0-9._-] (other chars replaced with "_").
+  const baseName = file.name.split(/[\\/]/).pop() || "";
+  const safeName = baseName.replace(/[^A-Za-z0-9._-]/g, "_").replace(/^\.+$/, "_") || "file";
+
   // Build the R2 key: directory/filename (no leading slash)
-  const key = directory ? `${directory}/${file.name}` : file.name;
+  const key = directory ? `${directory}/${safeName}` : safeName;
 
   await c.env.MEDIA_BUCKET.put(key, file.stream(), {
     httpMetadata: { contentType: file.type },
