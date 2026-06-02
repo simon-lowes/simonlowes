@@ -3,7 +3,10 @@ import { getCollection, render } from "astro:content";
 import BlogLayout from "../../layouts/BlogLayout.astro";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("blog");
+  // Exclude drafts from production builds so unpublished posts are neither
+  // reachable by URL nor indexed (matches the filter on the listing pages).
+  // Drafts remain viewable during `astro dev` for previewing.
+  const posts = (await getCollection("blog")).filter((p) => import.meta.env.DEV || !p.data.draft);
   return posts.map((post) => ({
     params: { slug: post.slug },
     props: { post },
