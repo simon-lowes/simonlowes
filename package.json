@@ -34,10 +34,10 @@
     "@astrojs/mdx": "^4.3.14",
     "@astrojs/sitemap": "^3.7.3",
     "@playwright/test": "^1.60.0",
-    "@tinacms/cli": "^2.3.1",
+    "@tinacms/cli": "^2.4.3",
     "@types/three": "^0.183.1",
-    "@typescript-eslint/parser": "^8.60.0",
-    "@vitest/ui": "^4.1.7",
+    "@typescript-eslint/parser": "^8.60.1",
+    "@vitest/ui": "^4.1.8",
     "astro": "^5.18.2",
     "axe-core": "^4.11.4",
     "dotenv": "^17.4.2",
@@ -46,7 +46,7 @@
     "happy-dom": "^20.9.0",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
-    "lint-staged": "^17.0.5",
+    "lint-staged": "^17.0.7",
     "prettier": "^3.8.3",
     "prettier-plugin-astro": "^0.14.1",
     "stylelint": "^17.12.0",
@@ -60,7 +60,7 @@
     "gsap": "^3.15.0",
     "postprocessing": "^6.39.1",
     "three": "^0.183.2",
-    "tinacms": "^3.8.2"
+    "tinacms": "^3.8.3"
   },
   "lint-staged": {
     "*.{js,ts,astro}": [
@@ -78,7 +78,7 @@
   "overrides": {
     "diff": "^8.0.3",
     "dompurify": "^3.3.1",
-    "react-router": "^6.30.3",
+    "react-router": "^6.30.4",
     "esbuild": "^0.25.0",
     "serialize-javascript": "^7.0.3",
     "fast-xml-parser": "^5.5.7",
