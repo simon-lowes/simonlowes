@@ -57,20 +57,43 @@ export class ParallaxController {
     if (this.isMobile && this.hasOrientation) {
       // Check if iOS needs permission prompt (requires user gesture)
       if (ParallaxController.needsPermissionPrompt()) {
-        // iOS 13+ - defer to user gesture, use auto-drift for now
-        this.useAutoDrift = true;
+        // iOS 13+ requires an explicit user gesture to grant orientation
+        // permission. If the user already granted it (persisted across the
+        // page reload triggered by the prompt), the permission survives for
+        // the session, so we can re-attach the listener directly without
+        // re-prompting (requestPermission would reject without a gesture).
+        // tryDirectOrientation handles the auto-drift fallback if no events
+        // actually arrive.
+        if (this.hasStoredPermission()) {
+          await this.tryDirectOrientation();
+        } else {
+          // Defer to user gesture; use auto-drift until permission is granted.
+          this.useAutoDrift = true;
+        }
       } else {
-        // Android or older iOS - try direct orientation
+        // Android or older iOS - try direct orientation. tryDirectOrientation
+        // enables auto-drift itself via its timeout if no events arrive, so we
+        // must NOT unconditionally enable auto-drift here.
         await this.tryDirectOrientation();
       }
     } else if (!this.isMobile) {
       // Use mouse tracking on desktop
       window.addEventListener("mousemove", this.handleMouseMove);
-    }
-
-    // If on mobile and orientation not working, ensure auto-drift is on
-    if (this.isMobile && !this.orientationPermissionGranted) {
+    } else {
+      // Mobile device without DeviceOrientationEvent support.
       this.useAutoDrift = true;
+    }
+  }
+
+  /**
+   * Whether the user previously granted orientation permission (persisted by
+   * MotionPermissionPrompt before reloading the page).
+   */
+  private hasStoredPermission(): boolean {
+    try {
+      return localStorage.getItem("motion-permission-granted") === "true";
+    } catch {
+      return false;
     }
   }
 
@@ -132,6 +155,9 @@ export class ParallaxController {
   private onDeviceOrientation(e: DeviceOrientationEvent): void {
     if (e.gamma !== null && e.beta !== null) {
       this.orientationPermissionGranted = true;
+      // Real gyro input has arrived: stop overwriting targetX/targetY with the
+      // auto-drift pattern so the device tilt actually drives the parallax.
+      this.useAutoDrift = false;
 
       // gamma is left-right tilt (-90 to 90)
       // beta is front-back tilt (-180 to 180)
