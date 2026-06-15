@@ -34,7 +34,7 @@
     "@astrojs/mdx": "^4.3.14",
     "@astrojs/sitemap": "^3.7.3",
     "@playwright/test": "^1.60.0",
-    "@tinacms/cli": "^2.4.3",
+    "@tinacms/cli": "^2.4.4",
     "@types/three": "^0.183.1",
     "@typescript-eslint/parser": "^8.60.1",
     "@vitest/ui": "^4.1.8",
