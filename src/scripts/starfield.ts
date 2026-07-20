@@ -449,11 +449,7 @@ export class Starfield {
    */
   private setupPostProcessing(): void {
     const effects: (
-      | BloomEffect
-      | VignetteEffect
-      | ChromaticAberrationEffect
-      | NoiseEffect
-      | ToneMappingEffect
+      BloomEffect | VignetteEffect | ChromaticAberrationEffect | NoiseEffect | ToneMappingEffect
     )[] = [];
 
     // Bloom effect (HIGH+ quality)
