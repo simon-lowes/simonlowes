@@ -91,6 +91,9 @@
       "vite": "^6.4.3"
     },
     "markdown-it": "^14.3.0",
-    "linkify-it": "^6.0.0"
+    "linkify-it": "^6.0.0",
+    "@vite-pwa/astro": {
+      "astro": "$astro"
+    }
   }
 }
