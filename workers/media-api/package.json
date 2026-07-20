@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260715.1",
-    "wrangler": "^4.107.1"
+    "wrangler": "^4.110.0"
   },
   "overrides": {
     "undici": "^7.24.0"
