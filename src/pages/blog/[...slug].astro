@@ -8,7 +8,7 @@ export async function getStaticPaths() {
   // Drafts remain viewable during `astro dev` for previewing.
   const posts = (await getCollection("blog")).filter((p) => import.meta.env.DEV || !p.data.draft);
   return posts.map((post) => ({
-    params: { slug: post.slug },
+    params: { slug: post.id },
     props: { post },
   }));
 }
@@ -19,7 +19,7 @@ const { Content } = await render(post);
 const title = `${post.data.title} - Simon Lowes`;
 const description = post.data.description || `Blog post by Simon Lowes: ${post.data.title}`;
 const publishDate = post.data.date.toISOString();
-const url = `https://simonlowes.com/blog/${post.slug}/`;
+const url = `https://simonlowes.com/blog/${post.id}/`;
 
 const structuredData = {
   "@context": "https://schema.org",

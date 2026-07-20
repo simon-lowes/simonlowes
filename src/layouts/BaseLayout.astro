@@ -1,5 +1,5 @@
 ---
-import { ViewTransitions } from "astro:transitions";
+import { ClientRouter } from "astro:transitions";
 
 interface Props {
   title: string;
@@ -73,7 +73,7 @@ const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).hr
     <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
 
     <!-- View Transitions for seamless navigation -->
-    <ViewTransitions />
+    <ClientRouter />
 
     <!-- Styles -->
     <link rel="stylesheet" type="text/css" href="/css/style.css" />

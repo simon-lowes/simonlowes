@@ -1,6 +1,6 @@
 ---
 import { getCollection } from "astro:content";
-import { ViewTransitions } from "astro:transitions";
+import { ClientRouter } from "astro:transitions";
 import SpaceBackground from "../components/SpaceBackground.astro";
 import "../styles/glass-effects.css";
 
@@ -71,7 +71,7 @@ const posts = (await getCollection("blog"))
     <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
 
     <!-- View Transitions for seamless navigation -->
-    <ViewTransitions />
+    <ClientRouter />
 
     <meta name="google-site-verification" content="gwurdptI6ejhc1SisVjfxFNaGX2lU19i646cuMxbK20" />
     <meta
@@ -383,7 +383,7 @@ const posts = (await getCollection("blog"))
               <ul class="blog-panel__list">
                 {posts.map((p) => (
                   <li class="blog-panel__item">
-                    <a href={`/blog/${p.slug}/`}>{p.data.title}</a>
+                    <a href={`/blog/${p.id}/`}>{p.data.title}</a>
                     <small class="blog-panel__date">{p.data.date.toISOString().slice(0, 10)}</small>
                   </li>
                 ))}
