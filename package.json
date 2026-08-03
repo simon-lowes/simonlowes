@@ -33,7 +33,7 @@
   "devDependencies": {
     "@astrojs/mdx": "^7.0.3",
     "@astrojs/sitemap": "^3.7.3",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.0",
     "@tinacms/cli": "^2.5.3",
     "@types/three": "^0.183.1",
     "@typescript-eslint/parser": "^8.65.0",
