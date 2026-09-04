@@ -1,0 +1,186 @@
+name: Repo Sweep Report
+
+# Cloud-scheduled counterpart to the local /repo-sweep skill.
+#
+# This job DETECTS and REPORTS only. It never merges, closes, dismisses, pushes
+# or deletes anything, because an unattended run has nobody to ask before a
+# judgment call — and dismissing a security alert or deleting a branch are
+# exactly the decisions that need a human. It opens (or updates) a single issue
+# in this repo; act on it by running /repo-sweep locally.
+#
+# Requires a secret named SWEEP_TOKEN: a fine-grained or classic PAT with read
+# access to all repos (repo scope, plus security_events to read Dependabot
+# alerts). The built-in GITHUB_TOKEN cannot see other repositories.
+
+on:
+  schedule:
+    # Mondays 08:17 UTC. Off the hour on purpose: scheduled jobs across GitHub
+    # pile onto :00 and get queued, which delays or drops runs.
+    - cron: "17 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sweep-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect state across all repos
+        env:
+          # Untrusted values (PR titles, package names) are never interpolated
+          # into shell. They are read from gh JSON by jq and written to a file.
+          GH_TOKEN: ${{ secrets.SWEEP_TOKEN }}
+          OWNER: simon-lowes
+        run: |
+          set -euo pipefail
+
+          # gh writes API errors to STDOUT and exits non-zero (e.g. archived repos
+          # 403 on the alerts endpoint). A bare `|| echo 0` therefore captures the
+          # error JSON *and* the 0, producing a value that breaks arithmetic under
+          # set -e. Force anything non-numeric to 0.
+          as_int() {
+            v=$(printf '%s' "${1:-}" | tr -d '[:space:]')
+            case "$v" in
+              ''|*[!0-9]*) printf '0' ;;
+              *) printf '%s' "$v" ;;
+            esac
+          }
+
+          REPORT=$(mktemp)
+          DETAIL=$(mktemp)
+          NEEDS_ATTENTION=0
+          TOTAL_PRS=0
+          TOTAL_ALERTS=0
+
+          {
+            echo "Automated weekly sweep. **Detect-only** — nothing was changed."
+            echo
+            echo "| Repo | Open PRs | Open alerts | Default branch |"
+            echo "| --- | ---: | ---: | --- |"
+          } >> "$REPORT"
+
+          for repo in $(gh repo list "$OWNER" --limit 100 --json name --jq '.[].name' | sort); do
+            default=$(gh repo view "$OWNER/$repo" --json defaultBranchRef --jq '.defaultBranchRef.name' 2>/dev/null || echo "?")
+
+            prs=$(as_int "$(gh pr list --repo "$OWNER/$repo" --state open \
+              --json number --jq 'length' 2>/dev/null || true)")
+
+            # Archived repos 403 here, and gh prints that JSON to stdout, so this
+            # must go through as_int rather than a bare `|| echo 0`.
+            alerts=$(as_int "$(gh api "repos/$OWNER/$repo/dependabot/alerts" \
+              --jq '[.[]|select(.state=="open")]|length' 2>/dev/null || true)")
+
+            sha=$(gh api "repos/$OWNER/$repo/commits/$default" --jq '.sha' 2>/dev/null || echo "")
+            failing=""
+            if [ -n "$sha" ]; then
+              failing=$(gh api "repos/$OWNER/$repo/commits/$sha/check-runs" \
+                --jq '[.check_runs[]|select(.conclusion=="failure")|.name]|unique|join(", ")' 2>/dev/null || echo "")
+            fi
+
+            branch_cell="$default"
+            if [ -n "$failing" ]; then
+              branch_cell="$default ⚠️"
+            fi
+
+            printf '| %s | %s | %s | %s |\n' "$repo" "$prs" "$alerts" "$branch_cell" >> "$REPORT"
+
+            TOTAL_PRS=$((TOTAL_PRS + prs))
+            TOTAL_ALERTS=$((TOTAL_ALERTS + alerts))
+
+            if [ "$prs" != "0" ] || [ "$alerts" != "0" ] || [ -n "$failing" ]; then
+              NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
+
+              printf '\n### %s\n\n' "$repo" >> "$DETAIL"
+
+              if [ -n "$failing" ]; then
+                printf 'Failing on `%s`: %s\n\n' "$default" "$failing" >> "$DETAIL"
+              fi
+
+              if [ "$alerts" != "0" ]; then
+                echo "**Security alerts**" >> "$DETAIL"
+                echo >> "$DETAIL"
+                # NONE in the patched column means no fix exists anywhere -> needs
+                # a human decision, not a bump.
+                gh api "repos/$OWNER/$repo/dependabot/alerts" --jq '
+                  [.[]|select(.state=="open")]
+                  | unique_by([.security_advisory.ghsa_id, .dependency.package.name])
+                  | .[]
+                  | "- `\(.dependency.package.name)` (\(.security_advisory.severity)) → patched: \(.security_vulnerability.first_patched_version.identifier // "**NONE — needs a decision**") [\(.dependency.scope // "?")]"
+                ' >> "$DETAIL" 2>/dev/null || true
+                echo >> "$DETAIL"
+              fi
+
+              if [ "$prs" != "0" ]; then
+                echo "**Open PRs**" >> "$DETAIL"
+                echo >> "$DETAIL"
+                gh pr list --repo "$OWNER/$repo" --state open \
+                  --json number,title,mergeStateStatus,statusCheckRollup --jq '
+                  .[]
+                  | . as $pr
+                  | ([$pr.statusCheckRollup[]?|select(.conclusion=="FAILURE")|.name]|unique|join(", ")) as $fail
+                  | "- #\($pr.number) `\($pr.mergeStateStatus)` \($pr.title)"
+                    + (if $fail == "" then "" else "\n  - failing: \($fail)" end)
+                ' >> "$DETAIL" 2>/dev/null || true
+                echo >> "$DETAIL"
+              fi
+            fi
+          done
+
+          {
+            echo
+            echo "**Totals:** $TOTAL_PRS open PRs, $TOTAL_ALERTS open alerts, $NEEDS_ATTENTION repo(s) needing attention."
+          } >> "$REPORT"
+
+          if [ "$NEEDS_ATTENTION" != "0" ]; then
+            {
+              echo
+              echo "---"
+              cat "$DETAIL"
+              echo
+              echo "---"
+              echo
+              echo "Run \`/repo-sweep\` locally to act on this. It diagnoses shared root causes"
+              echo "before touching individual PRs, and will ask before dismissing any alert or"
+              echo "deleting any branch."
+              echo
+              echo "Note: \`claude-review\` failures are expected and block nothing — upstream"
+              echo "[claude-code-action#1568](https://github.com/anthropics/claude-code-action/issues/1568)."
+            } >> "$REPORT"
+          fi
+
+          echo "NEEDS_ATTENTION=$NEEDS_ATTENTION" >> "$GITHUB_ENV"
+          echo "REPORT_FILE=$REPORT" >> "$GITHUB_ENV"
+
+      - name: Open or update the report issue
+        env:
+          GH_TOKEN: ${{ secrets.SWEEP_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          TITLE="Repo sweep report"
+
+          existing=$(gh issue list --repo "$REPO" --state open --label repo-sweep \
+            --json number --jq '.[0].number // empty' 2>/dev/null || echo "")
+
+          if [ "$NEEDS_ATTENTION" = "0" ]; then
+            if [ -n "$existing" ]; then
+              gh issue comment "$existing" --repo "$REPO" \
+                --body "All repos clean: no open PRs, no open alerts, no failing default-branch checks. Closing."
+              gh issue close "$existing" --repo "$REPO"
+            fi
+            echo "Everything clean; nothing to report."
+            exit 0
+          fi
+
+          # --body-file keeps untrusted PR titles out of the shell command line.
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --repo "$REPO" --body-file "$REPORT_FILE"
+            echo "Updated issue #$existing"
+          else
+            gh label create repo-sweep --repo "$REPO" \
+              --description "Automated repo maintenance sweep" --color FBCA04 2>/dev/null || true
+            gh issue create --repo "$REPO" --title "$TITLE" \
+              --label repo-sweep --body-file "$REPORT_FILE"
+          fi
