@@ -16,7 +16,7 @@ on:
   schedule:
     # Mondays 08:17 UTC. Off the hour on purpose: scheduled jobs across GitHub
     # pile onto :00 and get queued, which delays or drops runs.
-    - cron: '17 8 * * 1'
+    - cron: "17 8 * * 1"
   workflow_dispatch:
 
 permissions:
