@@ -8,11 +8,11 @@
     "tail": "wrangler tail"
   },
   "dependencies": {
-    "hono": "^4.13.0"
+    "hono": "^4.13.5"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260729.1",
-    "wrangler": "^4.118.0"
+    "@cloudflare/workers-types": "^5.20260826.1",
+    "wrangler": "^4.126.0"
   },
   "overrides": {
     "undici": "^7.24.0"
