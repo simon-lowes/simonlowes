@@ -60,7 +60,7 @@
     "@astrojs/rss": "^4.0.19",
     "@vite-pwa/astro": "^1.2.0",
     "gsap": "^3.15.0",
-    "postprocessing": "^6.39.4",
+    "postprocessing": "^6.39.5",
     "three": "^0.185.1",
     "tinacms": "^3.12.1"
   },
