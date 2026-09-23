@@ -86,7 +86,7 @@ Husky runs `lint-staged` on every commit. lint-staged config (from package.json)
 - Strict mode: branches must be up-to-date before merging
 - No required PR reviews (solo project - automated checks are the safety net)
 
-**Dependabot auto-merge**: Enabled. Patch and minor version PRs auto-approve and auto-merge after CI passes. Major version bumps still require manual review.
+**Dependabot auto-merge**: Enabled. Patch and minor version PRs auto-approve and auto-merge after CI passes. Major version bumps still require manual review. There is no AI review step (see "Claude GitHub Actions" below).
 
 **Security rationale**: CI runs full test suite including Lighthouse audits. Automated checks gate all merges.
 
@@ -116,3 +116,7 @@ public/
 - Pushing to `main` triggers Dokploy auto-deploy
 - The starfield uses reduced particle count on mobile for performance
 - Respects `prefers-reduced-motion` accessibility setting
+
+## Claude GitHub Actions (removed September 2026)
+
+This repo previously ran `anthropics/claude-code-action` as a `claude-review` job inside the Dependabot auto-merge workflow. It was removed because the job had failed on every PR since July 2026 (expired `CLAUDE_CODE_OAUTH_TOKEN`, plus upstream bugs) and nothing depended on it. Merges are gated by branch protection and the required status checks, not by an AI review. The `CLAUDE_CODE_OAUTH_TOKEN` repository secret can be deleted. To bring it back, see https://code.claude.com/docs/en/github-actions.
