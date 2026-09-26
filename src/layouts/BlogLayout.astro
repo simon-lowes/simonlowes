@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from "astro:transitions";
 import SpaceBackground from "../components/SpaceBackground.astro";
+import BandcampDock from "../components/BandcampDock.astro";
 
 interface Props {
   title: string;
@@ -295,6 +296,8 @@ const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).hr
         </ul>
       </nav>
     </footer>
+
+    <BandcampDock />
 
     <script>
       import "../scripts/main";

@@ -111,6 +111,16 @@ public/
   llms.txt          # AEO file for AI crawlers
 ```
 
+## Design System
+
+The site's design system lives as a Claude artifact: https://claude.ai/artifact/VijWfTF3Kb58BGQqC7jteS (built from this repo at 4ec3968, September 2026). It holds every colour, type, spacing, radius, shadow, blur and duration value the CSS uses, a brand book of usage rules, static renditions of the glass surfaces, audio player, footer, blog panel, prose, cookie notice and motion prompt, and the icon and photo assets. Read its `project/README.md` before any visual change so new work matches the existing values. When the CSS changes, ask for a re-sync from the repo rather than editing the system by hand.
+
+Known gaps recorded there: `freight-sans-pro` is named in the font stack but never loaded (visitors see Helvetica Neue or Arial); the footer icons load from img.icons8.com rather than the copies in `public/icons/`.
+
+## Bandcamp Dock
+
+`src/components/BandcampDock.astro` is the floating Bandcamp player: a pill anchored bottom-right on the footer baseline that opens a glass card with Bandcamp's embedded player. Mounted on the homepage and `BlogLayout`. The release, its URL and the numeric `albumId` live in `src/data/bandcamp.ts`; until `albumId` is set the card shows a link to Bandcamp instead of the embed (how to find the ID is in that file). The iframe is created on first open only, and opening the dock pauses the site's own audio player. Under 768px the pill is icon-only. The CSP reference in `public/_headers` allows `frame-src https://bandcamp.com`.
+
 ## Notes
 
 - Pushing to `main` triggers Dokploy auto-deploy

@@ -23,7 +23,8 @@
   # - img.icons8.com: social media icons loaded from Icons8 CDN
   # - media-src 'self': audio player (neverthere.mp3)
   # - worker-src 'self': PWA service worker
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.icons8.com; font-src 'self'; connect-src 'self'; media-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  # - frame-src https://bandcamp.com: embedded Bandcamp player in the floating dock
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.icons8.com; font-src 'self'; connect-src 'self'; media-src 'self'; worker-src 'self'; frame-src https://bandcamp.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 # Cache static assets for 1 year
 /favicons/*

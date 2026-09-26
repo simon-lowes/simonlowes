@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import { ClientRouter } from "astro:transitions";
 import SpaceBackground from "../components/SpaceBackground.astro";
+import BandcampDock from "../components/BandcampDock.astro";
 import "../styles/glass-effects.css";
 
 const posts = (await getCollection("blog"))
@@ -602,6 +603,8 @@ const posts = (await getCollection("blog"))
         </ul>
       </nav>
     </footer>
+
+    <BandcampDock />
 
     <script>
       // Cookie notice - must work with View Transitions
