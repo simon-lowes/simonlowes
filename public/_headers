@@ -21,9 +21,9 @@
   # - 'unsafe-inline' for scripts: required by Astro View Transitions and inline <script> tags
   # - 'unsafe-inline' for styles: required by inline <style> blocks in Astro components
   # - img.icons8.com: social media icons loaded from Icons8 CDN
-  # - media-src 'self': audio player (neverthere.mp3)
+  # - frame-src https://bandcamp.com: the embedded Bandcamp player in the top bar
   # - worker-src 'self': PWA service worker
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.icons8.com; font-src 'self'; connect-src 'self'; media-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.icons8.com; font-src 'self'; connect-src 'self'; worker-src 'self'; frame-src https://bandcamp.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 # Cache static assets for 1 year
 /favicons/*
@@ -36,7 +36,4 @@
   Cache-Control: public, max-age=31536000, immutable
 
 /JS/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.mp3
   Cache-Control: public, max-age=31536000, immutable

@@ -15,14 +15,6 @@ describe("Canvas Animation Control Tests", () => {
         <head></head>
         <body>
           <canvas id="canvas"></canvas>
-          <audio id="myAudio" src="test.mp3"></audio>
-          <button id="audio-play-btn"></button>
-          <input id="audio-seek" type="range" />
-          <span id="audio-time-elapsed"></span>
-          <span id="audio-time-remaining"></span>
-          <button id="audio-mute-btn"></button>
-          <input id="audio-volume" type="range" />
-          <div id="audio-player"></div>
         </body>
       </html>
     `;

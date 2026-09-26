@@ -13,18 +13,6 @@ export interface CellData {
   targetColor: RGBColor;
 }
 
-/** HTML elements for the audio player */
-export interface AudioPlayerElements {
-  audio: HTMLAudioElement | null;
-  player: HTMLElement | null;
-  playBtn: HTMLButtonElement | null;
-  seekSlider: HTMLInputElement | null;
-  timeElapsed: HTMLElement | null;
-  timeRemaining: HTMLElement | null;
-  volumeSlider: HTMLInputElement | null;
-  muteBtn: HTMLButtonElement | null;
-}
-
 // =============================================
 // Math Utility Functions
 // =============================================
@@ -81,118 +69,6 @@ export function debounce<T extends (...args: unknown[]) => void>(
       fn.apply(this, args);
     }, delay);
   };
-}
-
-// =============================================
-// Audio Player Utilities
-// =============================================
-
-/**
- * Format seconds as m:ss or -m:ss
- * @param seconds - Time in seconds
- * @param showNegative - Whether to prefix with minus sign
- */
-export function formatTime(seconds: number, showNegative: boolean = false): string {
-  if (!isFinite(seconds) || isNaN(seconds)) {
-    return showNegative ? "-0:00" : "0:00";
-  }
-
-  const absSeconds = Math.abs(Math.floor(seconds));
-  const mins = Math.floor(absSeconds / 60);
-  const secs = absSeconds % 60;
-  const formatted = `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-
-  return showNegative ? `-${formatted}` : formatted;
-}
-
-/**
- * Update play button state based on audio playback
- */
-export function updatePlayButton(
-  audio: HTMLAudioElement | null,
-  playBtn: HTMLButtonElement | null
-): void {
-  if (!audio || !playBtn) return;
-
-  const isPlaying = !audio.paused;
-  playBtn.setAttribute("aria-pressed", isPlaying ? "true" : "false");
-  playBtn.setAttribute("aria-label", isPlaying ? "Pause Never There" : "Play Never There");
-}
-
-/**
- * Update time displays and seek slider position
- */
-export function updateProgress(
-  audio: HTMLAudioElement | null,
-  seekSlider: HTMLInputElement | null,
-  timeElapsed: HTMLElement | null,
-  timeRemaining: HTMLElement | null,
-  isSeeking: boolean
-): void {
-  if (isSeeking || !audio) return;
-
-  const current = audio.currentTime || 0;
-  const duration = audio.duration || 0;
-
-  // Update seek slider
-  if (seekSlider && duration > 0) {
-    const percent = (current / duration) * 100;
-    seekSlider.value = String(percent);
-  }
-
-  // Update time displays
-  if (timeElapsed) {
-    timeElapsed.textContent = formatTime(current, false);
-  }
-  if (timeRemaining) {
-    const remaining = duration - current;
-    timeRemaining.textContent = formatTime(remaining, true);
-  }
-}
-
-/**
- * Update mute button state based on audio mute/volume
- */
-export function updateMuteButton(
-  audio: HTMLAudioElement | null,
-  muteBtn: HTMLButtonElement | null
-): void {
-  if (!audio || !muteBtn) return;
-
-  const isMuted = audio.muted || audio.volume === 0;
-  muteBtn.setAttribute("aria-pressed", isMuted ? "true" : "false");
-  muteBtn.setAttribute("aria-label", isMuted ? "Unmute audio" : "Mute audio");
-}
-
-/**
- * Update volume slider to match audio volume
- */
-export function updateVolumeSlider(
-  audio: HTMLAudioElement | null,
-  volumeSlider: HTMLInputElement | null
-): void {
-  if (!audio || !volumeSlider) return;
-  volumeSlider.value = String(audio.muted ? 0 : audio.volume * 100);
-}
-
-/**
- * Handle audio load error by disabling controls
- */
-export function handleAudioError(
-  player: HTMLElement | null,
-  playBtn: HTMLButtonElement | null,
-  seekSlider: HTMLInputElement | null,
-  volumeSlider: HTMLInputElement | null,
-  muteBtn: HTMLButtonElement | null
-): void {
-  if (!player) return;
-
-  player.classList.add("audio-player--error");
-
-  if (playBtn) playBtn.disabled = true;
-  if (seekSlider) seekSlider.disabled = true;
-  if (volumeSlider) volumeSlider.disabled = true;
-  if (muteBtn) muteBtn.disabled = true;
 }
 
 // =============================================
@@ -266,7 +142,7 @@ let lastFooterHeight: number | null = null;
  * Update CSS custom properties for fixed element heights
  */
 export function updateFixedElementHeights(): void {
-  const player = document.getElementById("audio-player");
+  const player = document.getElementById("bandcamp-player");
   const footer = document.querySelector("footer");
   const root = document.documentElement;
 
