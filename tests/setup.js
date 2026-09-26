@@ -9,7 +9,10 @@ beforeEach(() => {
     removeItem: vi.fn(),
     clear: vi.fn(),
   };
-  global.localStorage = localStorageMock;
+  // In vitest 5 the jsdom window exposes localStorage as a getter-only accessor,
+  // so plain assignment throws. vi.stubGlobal defines the property instead and
+  // is restored automatically between tests.
+  vi.stubGlobal("localStorage", localStorageMock);
 
   // Mock fetch
   global.fetch = vi.fn(() =>

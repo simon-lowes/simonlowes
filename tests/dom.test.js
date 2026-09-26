@@ -40,8 +40,10 @@ describe("DOM Integration Tests", () => {
     window = dom.window;
 
     // Make them globally available
-    global.document = document;
-    global.window = window;
+    // vitest 5 exposes window and document as getter-only globals, so define
+    // them with vi.stubGlobal instead of assigning.
+    vi.stubGlobal("document", document);
+    vi.stubGlobal("window", window);
   });
 
   describe("Audio Player DOM Manipulation", () => {
