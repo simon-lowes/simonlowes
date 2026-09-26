@@ -144,9 +144,6 @@ jobs:
               echo "Run \`/repo-sweep\` locally to act on this. It diagnoses shared root causes"
               echo "before touching individual PRs, and will ask before dismissing any alert or"
               echo "deleting any branch."
-              echo
-              echo "Note: \`claude-review\` failures are expected and block nothing — upstream"
-              echo "[claude-code-action#1568](https://github.com/anthropics/claude-code-action/issues/1568)."
             } >> "$REPORT"
           fi
 
