@@ -54,37 +54,32 @@ const structuredData = {
     slot="head"
     type="application/ld+json"
     set:html={JSON.stringify(structuredData).replace(/</g, "\\u003c")}
-  />
-
+  ></script>
   <nav class="blog-nav">
     <a href="/blog/">&larr; All posts</a>
     <a href="/">Home</a>
   </nav>
 
-  {
-    post.data.heroImage && (
-      <div class="blog-hero">
-        <img
-          src={post.data.heroImage}
-          alt={post.data.heroImageAlt || post.data.title}
-          class="blog-hero__img"
-          loading="eager"
-        />
-      </div>
-    )
-  }
+  {post.data.heroImage && (
+    <div class="blog-hero">
+      <img
+        src={post.data.heroImage}
+        alt={post.data.heroImageAlt || post.data.title}
+        class="blog-hero__img"
+        loading="eager"
+      />
+    </div>
+  )}
 
   <header class="blog-header">
     <h1 class="blog-header__title">{post.data.title}</h1>
     <p class="blog-header__meta">
       <time datetime={publishDate}>
-        {
-          post.data.date.toLocaleDateString("en-GB", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
-        }
+        {post.data.date.toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
       </time>
     </p>
   </header>
@@ -93,64 +88,62 @@ const structuredData = {
     <Content />
   </div>
 
-  {
-    post.data.media && post.data.media.length > 0 && (
-      <section class="blog-media" aria-label="Media">
-        {post.data.media.filter((m) => m.type === "video").length > 0 && (
-          <div class="blog-media__group">
-            <h2 class="blog-media__heading">Video</h2>
+  {post.data.media && post.data.media.length > 0 && (
+    <section class="blog-media" aria-label="Media">
+      {post.data.media.filter((m) => m.type === "video").length > 0 && (
+        <div class="blog-media__group">
+          <h2 class="blog-media__heading">Video</h2>
+          {post.data.media
+            .filter((m) => m.type === "video")
+            .map((item) => (
+              <figure class="blog-media__item">
+                <video controls preload="metadata" class="blog-media__video">
+                  <source src={item.url} type={item.mimeType || "video/mp4"} />
+                </video>
+                {item.title && <figcaption>{item.title}</figcaption>}
+              </figure>
+            ))}
+        </div>
+      )}
+
+      {post.data.media.filter((m) => m.type === "audio").length > 0 && (
+        <div class="blog-media__group">
+          <h2 class="blog-media__heading">Audio</h2>
+          {post.data.media
+            .filter((m) => m.type === "audio")
+            .map((item) => (
+              <figure class="blog-media__item">
+                <audio controls preload="metadata" class="blog-media__audio">
+                  <source src={item.url} type={item.mimeType || "audio/mpeg"} />
+                </audio>
+                {item.title && <figcaption>{item.title}</figcaption>}
+              </figure>
+            ))}
+        </div>
+      )}
+
+      {post.data.media.filter((m) => m.type === "image").length > 0 && (
+        <div class="blog-media__group">
+          <h2 class="blog-media__heading">Gallery</h2>
+          <div class="blog-media__gallery">
             {post.data.media
-              .filter((m) => m.type === "video")
+              .filter((m) => m.type === "image")
               .map((item) => (
                 <figure class="blog-media__item">
-                  <video controls preload="metadata" class="blog-media__video">
-                    <source src={item.url} type={item.mimeType || "video/mp4"} />
-                  </video>
+                  <img
+                    src={item.url}
+                    alt={item.alt || item.title || ""}
+                    class="blog-media__image"
+                    loading="lazy"
+                  />
                   {item.title && <figcaption>{item.title}</figcaption>}
                 </figure>
               ))}
           </div>
-        )}
-
-        {post.data.media.filter((m) => m.type === "audio").length > 0 && (
-          <div class="blog-media__group">
-            <h2 class="blog-media__heading">Audio</h2>
-            {post.data.media
-              .filter((m) => m.type === "audio")
-              .map((item) => (
-                <figure class="blog-media__item">
-                  <audio controls preload="metadata" class="blog-media__audio">
-                    <source src={item.url} type={item.mimeType || "audio/mpeg"} />
-                  </audio>
-                  {item.title && <figcaption>{item.title}</figcaption>}
-                </figure>
-              ))}
-          </div>
-        )}
-
-        {post.data.media.filter((m) => m.type === "image").length > 0 && (
-          <div class="blog-media__group">
-            <h2 class="blog-media__heading">Gallery</h2>
-            <div class="blog-media__gallery">
-              {post.data.media
-                .filter((m) => m.type === "image")
-                .map((item) => (
-                  <figure class="blog-media__item">
-                    <img
-                      src={item.url}
-                      alt={item.alt || item.title || ""}
-                      class="blog-media__image"
-                      loading="lazy"
-                    />
-                    {item.title && <figcaption>{item.title}</figcaption>}
-                  </figure>
-                ))}
-            </div>
-          </div>
-        )}
-      </section>
-    )
-  }
+        </div>
+      )}
+    </section>
+  )}
 
   <nav class="blog-nav blog-nav--footer" aria-label="Post navigation">
     <a href="/blog/">&larr; All posts</a>
