@@ -25,43 +25,39 @@ const description = "Updates, notes, and thoughts from Simon Lowes.";
     <p class="blog-header__meta">Updates, notes, and thoughts.</p>
   </header>
 
-  {
-    posts.length > 0 ? (
-      <ul class="blog-list">
-        {posts.map((post) => (
-          <li class="blog-list__item">
-            <a href={`/blog/${post.id}/`} class="blog-list__link">
-              {post.data.heroImage && (
-                <img
-                  src={post.data.heroImage}
-                  alt={post.data.heroImageAlt || post.data.title}
-                  class="blog-list__thumb"
-                  loading="lazy"
-                />
+  {posts.length > 0 ? (
+    <ul class="blog-list">
+      {posts.map((post) => (
+        <li class="blog-list__item">
+          <a href={`/blog/${post.id}/`} class="blog-list__link">
+            {post.data.heroImage && (
+              <img
+                src={post.data.heroImage}
+                alt={post.data.heroImageAlt || post.data.title}
+                class="blog-list__thumb"
+                loading="lazy"
+              />
+            )}
+            <div class="blog-list__content">
+              <h2 class="blog-list__title">{post.data.title}</h2>
+              <span class="blog-list__date">
+                {post.data.date.toLocaleDateString("en-GB", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+              {post.data.description && (
+                <p class="blog-list__description">{post.data.description}</p>
               )}
-              <div class="blog-list__content">
-                <h2 class="blog-list__title">{post.data.title}</h2>
-                <span class="blog-list__date">
-                  {post.data.date.toLocaleDateString("en-GB", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </span>
-                {post.data.description && (
-                  <p class="blog-list__description">{post.data.description}</p>
-                )}
-              </div>
-            </a>
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <p style="text-align: center; opacity: 0.7; padding: 2rem;">
-        No posts yet - check back soon.
-      </p>
-    )
-  }
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p style="text-align: center; opacity: 0.7; padding: 2rem;">No posts yet - check back soon.</p>
+  )}
 </BlogLayout>
 
 <style>
