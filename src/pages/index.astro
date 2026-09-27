@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import { ClientRouter } from "astro:transitions";
 import SpaceBackground from "../components/SpaceBackground.astro";
 import BandcampPlayer from "../components/BandcampPlayer.astro";
+import SocialLinks from "../components/SocialLinks.astro";
 import "../styles/glass-effects.css";
 
 const posts = (await getCollection("blog"))
@@ -82,66 +83,116 @@ const posts = (await getCollection("blog"))
     <style>
       /* Skip-link styles now in global CSS (public/css/style.css) */
 
-      /* Cookie notice - minimal bottom-left banner per web standards */
+      /* Cookie notice: a small glass card, bottom-left, same language as the player bar */
       #cookie-message {
         position: fixed;
-        bottom: 1rem;
-        left: 1rem;
-        max-width: 280px;
-        background: rgba(20, 20, 30, 0.92);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        color: rgba(255, 255, 255, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        bottom: calc(var(--edge-gap) + env(safe-area-inset-bottom));
+        left: calc(var(--edge-gap) + env(safe-area-inset-left));
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        max-width: 22rem;
+        padding: 0.875rem 1rem;
+        background: rgb(15 15 15 / 55%);
+        border: 1px solid rgb(0 212 255 / 12%);
+        border-radius: 12px;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow:
+          0 8px 32px rgb(0 0 0 / 40%),
+          inset 0 1px 0 rgb(255 255 255 / 5%);
+        color: #e0e0e0;
         font-family: "freight-sans-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
         font-size: 0.8125rem;
-        line-height: 1.4;
+        line-height: 1.45;
         z-index: 999;
+        animation: cookie-in 0.4s ease both;
+      }
+      @keyframes cookie-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
       }
       #cookie-message[hidden] {
         display: none;
       }
-      #cookie-message p {
-        margin: 0 0 0.5rem;
+      #cookie-message .cookie-mark {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        color: #00d4ff;
+        background: rgb(0 212 255 / 12%);
+        border: 1px solid rgb(0 212 255 / 20%);
+        border-radius: 50%;
       }
-      #cookie-message .cookie-icon {
-        display: inline-block;
-        width: 1em;
-        height: 1em;
-        vertical-align: -0.1em;
-        margin-right: 0.4em;
-        opacity: 0.75;
+      #cookie-message .cookie-mark svg {
+        width: 16px;
+        height: 16px;
+      }
+      #cookie-message .cookie-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 0;
+      }
+      #cookie-message .cookie-title {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 650;
+        letter-spacing: 0.01em;
+        color: #fff;
+      }
+      #cookie-message p {
+        margin: 0;
+        color: rgb(224 224 224 / 75%);
       }
       #cookie-message .cookie-actions {
         display: flex;
         justify-content: flex-end;
+        gap: 0.5rem;
       }
       #cookie-message button.cookie-dismiss {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.75rem;
-        background: rgba(0, 212, 255, 0.12);
-        border: 1px solid rgba(0, 212, 255, 0.25);
-        border-radius: 4px;
-        color: #00d4ff;
+        padding: 0.375rem 0.875rem;
+        font: inherit;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: #0a0a0f;
+        background: #00d4ff;
+        border: 0;
+        border-radius: 999px;
         cursor: pointer;
-        transition: background 0.15s ease;
+        transition:
+          background 0.15s ease,
+          box-shadow 0.2s ease;
       }
       #cookie-message button.cookie-dismiss:hover {
-        background: rgba(0, 212, 255, 0.22);
+        background: #5ce3ff;
+        box-shadow: 0 0 16px rgb(0 212 255 / 40%);
       }
-      #cookie-message button.cookie-dismiss:focus-visible {
-        outline: 2px solid rgba(0, 212, 255, 0.5);
+      #cookie-message button.cookie-dismiss:focus-visible,
+      #cookie-message:focus-visible {
+        outline: 2px solid #fff;
         outline-offset: 2px;
       }
-      @media (max-width: 480px) {
+      @media (max-width: 767px) {
+        /* Sit above the footer icons rather than over them */
         #cookie-message {
-          left: 0.75rem;
-          right: 0.75rem;
-          bottom: 0.75rem;
+          right: calc(var(--edge-gap) + env(safe-area-inset-right));
+          bottom: calc(var(--edge-gap) * 2 + var(--footer-h, 44px) + env(safe-area-inset-bottom));
           max-width: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #cookie-message {
+          animation: none;
         }
       }
       /* Content wrapper with glass panel styling */
@@ -284,40 +335,6 @@ const posts = (await getCollection("blog"))
       footer nav ul li a:hover {
         transform: scale(1.1);
       }
-      footer nav ul li a img {
-        transition: filter 0.3s ease;
-      }
-      /* Brand colors on hover - official hex colors */
-      /* Bandcamp: #629aa9 (teal) */
-      footer nav ul li a[data-social="bandcamp"]:hover img {
-        filter: brightness(0) saturate(100%) invert(58%) sepia(18%) saturate(683%)
-          hue-rotate(148deg) brightness(94%) contrast(89%) drop-shadow(0 0 8px #629aa9);
-      }
-      /* Spotify: #1DB954 (green) */
-      footer nav ul li a[data-social="spotify"]:hover img {
-        filter: brightness(0) saturate(100%) invert(53%) sepia(94%) saturate(421%)
-          hue-rotate(101deg) brightness(91%) contrast(87%) drop-shadow(0 0 8px #1db954);
-      }
-      /* Apple Music: #FA57C1 (pink) */
-      footer nav ul li a[data-social="apple-music"]:hover img {
-        filter: brightness(0) saturate(100%) invert(48%) sepia(96%) saturate(1547%)
-          hue-rotate(300deg) brightness(98%) contrast(97%) drop-shadow(0 0 8px #fa57c1);
-      }
-      /* YouTube Music: #FF0000 (red) */
-      footer nav ul li a[data-social="youtube-music"]:hover img {
-        filter: brightness(0) saturate(100%) invert(12%) sepia(97%) saturate(7471%) hue-rotate(4deg)
-          brightness(104%) contrast(117%) drop-shadow(0 0 8px #ff0000);
-      }
-      /* YouTube: #FF0000 (red) */
-      footer nav ul li a[data-social="youtube"]:hover img {
-        filter: brightness(0) saturate(100%) invert(12%) sepia(97%) saturate(7471%) hue-rotate(4deg)
-          brightness(104%) contrast(117%) drop-shadow(0 0 8px #ff0000);
-      }
-      /* Instagram: #E4405F (gradient pink - using primary) */
-      footer nav ul li a[data-social="instagram"]:hover img {
-        filter: brightness(0) saturate(100%) invert(36%) sepia(69%) saturate(2234%)
-          hue-rotate(326deg) brightness(95%) contrast(93%) drop-shadow(0 0 8px #e4405f);
-      }
       /* Reduced motion support */
       @media (prefers-reduced-motion: reduce) {
         .blog-panel__item,
@@ -372,119 +389,38 @@ const posts = (await getCollection("blog"))
       aria-label="Cookie notice"
       tabindex="-1"
     >
-      <p>
-        <svg class="cookie-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <span class="cookie-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor">
           <circle
             cx="12"
             cy="12"
             r="10"
             fill="none"
             stroke="currentColor"
-            stroke-width="1.5"
+            stroke-width="1.6"
           ></circle>
           <circle cx="8" cy="9" r="1.5"></circle>
           <circle cx="15" cy="8" r="1.2"></circle>
           <circle cx="10" cy="14" r="1.3"></circle>
           <circle cx="16" cy="14" r="1"></circle>
         </svg>
-        This site doesn't use cookies or trackers.
-      </p>
-      <div class="cookie-actions">
-        <button type="button" class="cookie-dismiss" aria-label="Dismiss" data-cookie-dismiss>
-          Got it
-        </button>
+      </span>
+      <div class="cookie-body">
+        <p class="cookie-title">No cookies from us</p>
+        <p>
+          This site sets no cookies and runs no analytics. The music player is embedded from
+          Bandcamp, which may set its own cookies when it loads.
+        </p>
+        <div class="cookie-actions">
+          <button type="button" class="cookie-dismiss" data-cookie-dismiss>
+            OK
+          </button>
+        </div>
       </div>
     </div>
 
     <footer role="contentinfo">
-      <nav aria-label="Social media and music platforms">
-        <ul>
-          <li>
-            <a
-              href="https://simonlowes.bandcamp.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Visit Simon Lowes on BandCamp (opens in new tab)"
-              data-social="bandcamp"
-            >
-              <img
-                src="https://img.icons8.com/ios-filled/50/ffffff/bandcamp.png"
-                alt="BandCamp icon"
-              />
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://open.spotify.com/artist/1E8slBJPNvUSPpRIh3xtkI?si=LOjXYVnQRhiZU6XmjkUdhg"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Listen to Simon Lowes on Spotify (opens in new tab)"
-              data-social="spotify"
-            >
-              <img
-                src="https://img.icons8.com/ios-filled/50/ffffff/spotify.png"
-                alt="Spotify icon"
-              />
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://music.apple.com/gb/artist/simon-lowes/1351008298"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Listen to Simon Lowes on Apple Music (opens in new tab)"
-              data-social="apple-music"
-            >
-              <img
-                src="https://img.icons8.com/ios-filled/50/ffffff/apple-music.png"
-                alt="Apple Music icon"
-              />
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://music.youtube.com/channel/UCI4xshiWQrOu_27TPmW9A2g?feature=share"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Listen to Simon Lowes on YouTube Music (opens in new tab)"
-              data-social="youtube-music"
-            >
-              <img
-                src="https://img.icons8.com/ios-filled/50/ffffff/youtube-music.png"
-                alt="YouTube Music icon"
-              />
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://www.youtube.com/simonlowesmusic"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Watch Simon Lowes on YouTube (opens in new tab)"
-              data-social="youtube"
-            >
-              <img
-                src="https://img.icons8.com/ios-filled/50/ffffff/youtube-play.png"
-                alt="YouTube icon"
-              />
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://www.instagram.com/simonlowesmusic/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Follow Simon Lowes on Instagram (opens in new tab)"
-              data-social="instagram"
-            >
-              <img
-                src="https://img.icons8.com/ios-filled/50/ffffff/instagram-new.png"
-                alt="Instagram icon"
-              />
-            </a>
-          </li>
-        </ul>
-      </nav>
+      <SocialLinks />
     </footer>
 
     <script>
