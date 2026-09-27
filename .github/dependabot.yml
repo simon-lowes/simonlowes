@@ -41,6 +41,23 @@ updates:
           - "stylelint*"
           - "@typescript-eslint/*"
 
+  # workers/bandcamp-proxy npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/workers/bandcamp-proxy"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    cooldown:
+      default-days: 5
+      semver-major-days: 7
+      semver-minor-days: 5
+      semver-patch-days: 3
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps):"
+    labels:
+      - "dependencies"
+
   # workers/media-api npm dependencies
   - package-ecosystem: "npm"
     directory: "/workers/media-api"

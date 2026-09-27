@@ -1,0 +1,15 @@
+{
+  "name": "simonlowes-bandcamp-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "First-party relay for Bandcamp's embedded player on simonlowes.com",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^4.132.0"
+  }
+}

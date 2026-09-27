@@ -32,7 +32,7 @@
   # - media-src: the fallback player's self-hosted audio (add the R2 host if tracks move there)
   # - frame-src https://bandcamp.com: the embedded Bandcamp player in the top bar
   # - worker-src 'self': PWA service worker
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://bandcamp.com https://s4.bcbits.com; media-src 'self' https://media.simonlowes.com; worker-src 'self'; frame-src https://bandcamp.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://bandcamp.com https://s4.bcbits.com https://player.simonlowes.com; media-src 'self' https://media.simonlowes.com; worker-src 'self'; frame-src https://bandcamp.com https://player.simonlowes.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 # Cache static assets for 1 year
 /favicons/*

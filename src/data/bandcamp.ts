@@ -54,3 +54,20 @@ export function bandcampEmbedUrl(release: BandcampRelease, size: BandcampSize): 
   }
   return `${base}/size=small/${colours}/`;
 }
+
+/**
+ * First-party relay of the same player (workers/bandcamp-proxy), used only
+ * when the visitor's browser or network blocks Bandcamp's CDN. Empty string
+ * disables it.
+ */
+export const BANDCAMP_PROXY_ORIGIN = "https://player.simonlowes.com";
+
+/** The embed URL served through the relay instead of bandcamp.com. */
+export function bandcampProxyEmbedUrl(release: BandcampRelease, size: BandcampSize): string {
+  return bandcampEmbedUrl(release, size).replace("https://bandcamp.com", BANDCAMP_PROXY_ORIGIN);
+}
+
+/** Answers { ok: boolean } when the relay can reach a real player upstream. */
+export function bandcampProxyHealthUrl(): string {
+  return `${BANDCAMP_PROXY_ORIGIN}/health`;
+}
