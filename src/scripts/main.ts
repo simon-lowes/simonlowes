@@ -27,3 +27,9 @@ if (document.readyState === "loading") {
 
 // Update on resize
 window.addEventListener("resize", updateLayoutMeasurements);
+
+// View transitions replace the <html> attributes, inline style included, so the
+// measured variables are gone after every navigation: measure again as soon as
+// the new page is in (before it paints) and once its scripts have run.
+document.addEventListener("astro:after-swap", updateLayoutMeasurements);
+document.addEventListener("astro:page-load", updateLayoutMeasurements);
