@@ -1,0 +1,16 @@
+name = "simonlowes-bandcamp-proxy"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+routes = [
+  { pattern = "player.simonlowes.com", custom_domain = true }
+]
+
+[vars]
+# Origins allowed to call /health and to frame the player
+ALLOWED_ORIGINS = "https://simonlowes.com,https://www.simonlowes.com,https://simonlowes.simonlowes.cloud"
+# The release the health check loads
+HEALTH_PATH = "/EmbeddedPlayer/album=2665327263/size=small/bgcol=0a0a0f/linkcol=00d4ff/transparent=true/"
+
+[observability]
+enabled = true

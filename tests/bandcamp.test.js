@@ -46,3 +46,17 @@ describe("Bandcamp embed URL", () => {
     expect(BANDCAMP.release.id).toMatch(/^\d+$/);
   });
 });
+
+describe("Bandcamp relay URLs", () => {
+  it("serve the same player path from player.simonlowes.com", async () => {
+    const { BANDCAMP_PROXY_ORIGIN, bandcampProxyEmbedUrl, bandcampProxyHealthUrl } =
+      await import("../src/data/bandcamp");
+    expect(BANDCAMP_PROXY_ORIGIN).toBe("https://player.simonlowes.com");
+    const proxied = bandcampProxyEmbedUrl(BANDCAMP.release, "large");
+    expect(proxied.startsWith("https://player.simonlowes.com/EmbeddedPlayer/")).toBe(true);
+    expect(proxied.replace("https://player.simonlowes.com", "https://bandcamp.com")).toBe(
+      bandcampEmbedUrl(BANDCAMP.release, "large")
+    );
+    expect(bandcampProxyHealthUrl()).toBe("https://player.simonlowes.com/health");
+  });
+});

@@ -15,18 +15,26 @@
  * the small 42px strip. The script picks the size with the same media query
  * the CSS uses, so the iframe height always matches the frame.
  *
- * Fallback: if the embed cannot load or render (content blockers, Pi-hole,
- * Bandcamp's CDN unreachable, third-party blocking) and src/data/tracks.ts
- * lists self-hosted files, the bar switches to a native player streaming
- * those files instead, so the music always plays. With no tracks listed the
- * facade stays, linking to Bandcamp.
+ * Order of preference: Bandcamp's own embed; the same player relayed through
+ * player.simonlowes.com (workers/bandcamp-proxy) when the browser or network
+ * blocks Bandcamp's CDN and the relay's /health says the upstream is
+ * answering; and finally, if src/data/tracks.ts lists self-hosted files, a
+ * native player streaming those, so the music always plays. With no tracks
+ * listed the facade stays, linking to Bandcamp.
  */
-import { BANDCAMP, bandcampEmbedUrl } from "../data/bandcamp";
+import {
+  BANDCAMP,
+  BANDCAMP_PROXY_ORIGIN,
+  bandcampEmbedUrl,
+  bandcampProxyEmbedUrl,
+  bandcampProxyHealthUrl,
+} from "../data/bandcamp";
 import { SITE_TRACKS, hasSiteTracks } from "../data/tracks";
 
 const { release, artistName } = BANDCAMP;
 const hasEmbed = release.id !== "";
 const hasNative = hasSiteTracks();
+const hasProxy = BANDCAMP_PROXY_ORIGIN !== "";
 const label = `Bandcamp player: ${release.title} by ${artistName}`;
 const nativeLabel = `Site player: ${artistName}`;
 ---
@@ -39,6 +47,8 @@ const nativeLabel = `Site player: ${artistName}`;
   data-has-embed={hasEmbed ? "true" : "false"}
   data-has-native={hasNative ? "true" : "false"}
   data-native-label={nativeLabel}
+  data-proxy-origin={hasProxy ? BANDCAMP_PROXY_ORIGIN : undefined}
+  data-proxy-health={hasProxy ? bandcampProxyHealthUrl() : undefined}
   transition:persist="player"
 >
   <div class="bc-player__frame">
@@ -61,6 +71,8 @@ const nativeLabel = `Site player: ${artistName}`;
       title={label}
       data-src-large={bandcampEmbedUrl(release, "large")}
       data-src-small={bandcampEmbedUrl(release, "small")}
+      data-proxy-large={hasProxy ? bandcampProxyEmbedUrl(release, "large") : undefined}
+      data-proxy-small={hasProxy ? bandcampProxyEmbedUrl(release, "small") : undefined}
       hidden
     ></iframe>}
     {hasNative && (
@@ -804,16 +816,62 @@ const nativeLabel = `Site player: ${artistName}`;
     let graceTimer: number | undefined;
     /** The src currently requested; a ready message for anything else is stale. */
     let currentSrc = "";
+    /** Which host the player is being loaded from. */
+    type Source = "bandcamp" | "proxy";
+    let source: Source = "bandcamp";
+    let proxyTried = false;
+    const proxyOrigin = root.dataset.proxyOrigin ?? "";
+    const proxyHealth = root.dataset.proxyHealth ?? "";
+    const allowedOrigins = new Set([BANDCAMP_ORIGIN, proxyOrigin].filter(Boolean));
+
+    const wantedSrc = (from: Source = source): string | undefined => {
+      if (from === "proxy")
+        return wide.matches ? frame.dataset.proxyLarge : frame.dataset.proxySmall;
+      return wide.matches ? frame.dataset.srcLarge : frame.dataset.srcSmall;
+    };
+
+    const setSrc = (from: Source): void => {
+      const src = wantedSrc(from);
+      if (!src || !root.isConnected) return;
+      source = from;
+      currentSrc = src;
+      root.classList.remove("is-loaded");
+      // Keep the fallback visible (if it is) until the player reports ready
+      if (!root.classList.contains("is-native")) frame.hidden = false;
+      frame.src = src;
+      armGrace();
+    };
+
+    /**
+     * Bandcamp's own host failed or went quiet: ask the first-party relay
+     * whether Bandcamp is answering it with a real player, and use that.
+     */
+    const tryProxy = (): void => {
+      if (proxyTried || !proxyOrigin || !proxyHealth || !frame.dataset.proxyLarge) {
+        showFallback();
+        return;
+      }
+      proxyTried = true;
+      fetch(proxyHealth, { mode: "cors", credentials: "omit", cache: "no-store" })
+        .then((response) => (response.ok ? response.json() : Promise.reject(new Error("health"))))
+        .then((health: { ok?: boolean }) => {
+          if (!root.isConnected) return;
+          if (health.ok) setSrc("proxy");
+          else showFallback();
+        })
+        .catch(showFallback);
+    };
 
     const armGrace = (): void => {
       window.clearTimeout(graceTimer);
       graceTimer = window.setTimeout(() => {
-        if (!root.classList.contains("is-loaded")) showFallback();
+        if (root.classList.contains("is-loaded")) return;
+        // The official embed loaded its HTML but its player never started
+        // (CDN blocked): try the relay before giving up on Bandcamp
+        if (source === "bandcamp") tryProxy();
+        else showFallback();
       }, EMBED_GRACE_MS);
     };
-
-    const wantedSrc = (): string | undefined =>
-      wide.matches ? frame.dataset.srcLarge : frame.dataset.srcSmall;
 
     const showFallback = (): void => {
       if (!root.isConnected) return;
@@ -834,7 +892,7 @@ const nativeLabel = `Site player: ${artistName}`;
         teardown();
         return;
       }
-      if (event.origin !== BANDCAMP_ORIGIN || event.source !== frame.contentWindow) return;
+      if (!allowedOrigins.has(event.origin) || event.source !== frame.contentWindow) return;
       const data: unknown = event.data;
       const ready =
         data === READY_MESSAGE ||
@@ -866,22 +924,22 @@ const nativeLabel = `Site player: ${artistName}`;
       }
       const src = wantedSrc();
       if (!src || frame.src === src) return;
+      if (source === "proxy") {
+        // Already on the relay (size switch): no probing needed
+        setSrc("proxy");
+        return;
+      }
       // Bandcamp's page and its CDN must both answer; a blocked CDN leaves a
       // blank player that still fires `load`.
       Promise.all([probe(src), probe(BCBITS_PROBE)])
         .then(() => {
           // The viewport may have crossed the breakpoint again meanwhile
-          if (!root.isConnected || wantedSrc() !== src || frame.src === src) return;
-          currentSrc = src;
-          root.classList.remove("is-loaded");
-          // Keep the fallback visible (if it is) until the new size reports ready
-          if (!root.classList.contains("is-native")) frame.hidden = false;
-          frame.src = src;
-          armGrace();
+          if (!root.isConnected || wantedSrc("bandcamp") !== src || frame.src === src) return;
+          setSrc("bandcamp");
         })
         .catch(() => {
           frame.removeAttribute("src");
-          showFallback();
+          tryProxy();
         });
     };
 

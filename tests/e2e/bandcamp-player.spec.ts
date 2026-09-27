@@ -72,6 +72,9 @@ test.describe("Bandcamp player", () => {
 
   test("keeps the facade when Bandcamp cannot be reached", async ({ page }) => {
     await page.route("https://bandcamp.com/**", (route) => route.abort("connectionfailed"));
+    await page.route("https://player.simonlowes.com/**", (route) =>
+      route.abort("connectionfailed")
+    );
     await page.goto("/");
     const player = page.locator("#bandcamp-player");
     test.skip((await player.getAttribute("data-has-embed")) !== "true", "No release ID set");
@@ -116,9 +119,9 @@ test.describe("Bandcamp player", () => {
     await expect(player).not.toHaveClass(/is-loaded/);
   });
 
-  test("falls back to the site player when Bandcamp's CDN is blocked", async ({ page }) => {
-    // Pi-hole / shields commonly allow bandcamp.com but block its CDN, which
-    // leaves a blank embed that still fires `load`. The bar must not go blank.
+  test("uses the first-party relay when Bandcamp's CDN is blocked", async ({ page }) => {
+    // Pi-hole / shields commonly allow bandcamp.com but block its CDN. The
+    // relay at player.simonlowes.com serves the same player from our host.
     await page.route("https://bandcamp.com/**", (route) =>
       route.fulfill({
         status: 200,
@@ -127,6 +130,48 @@ test.describe("Bandcamp player", () => {
       })
     );
     await page.route("https://*.bcbits.com/**", (route) => route.abort("blockedbyclient"));
+    await page.route("https://player.simonlowes.com/health", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ ok: true }),
+      })
+    );
+    await page.route("https://player.simonlowes.com/EmbeddedPlayer/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: '<!doctype html><title>relay stub</title><script>parent.postMessage("playerinited", "*")</script>',
+      })
+    );
+    await page.goto("/");
+    const player = page.locator("#bandcamp-player");
+    test.skip((await player.getAttribute("data-has-embed")) !== "true", "No release ID set");
+    test.skip(!(await player.getAttribute("data-proxy-origin")), "No relay configured");
+
+    await expect(player.locator(".bc-player__embed")).toHaveAttribute(
+      "src",
+      /player\.simonlowes\.com\/EmbeddedPlayer/,
+      { timeout: 8000 }
+    );
+    await expect(player).toHaveClass(/is-loaded/);
+    await expect(player).not.toHaveClass(/is-native/);
+    await expect(player.locator(".bc-player__facade")).toBeHidden();
+  });
+
+  test("falls back to the site player when Bandcamp's CDN and the relay are both blocked", async ({
+    page,
+  }) => {
+    await page.route("https://bandcamp.com/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<!doctype html><title>stub</title>",
+      })
+    );
+    await page.route("https://*.bcbits.com/**", (route) => route.abort("blockedbyclient"));
+    await page.route("https://player.simonlowes.com/**", (route) => route.abort("blockedbyclient"));
     await page.goto("/");
     const player = page.locator("#bandcamp-player");
     test.skip((await player.getAttribute("data-has-embed")) !== "true", "No release ID set");
@@ -150,6 +195,9 @@ test.describe("Bandcamp player", () => {
 
   test("the site player plays a self-hosted track", async ({ page }) => {
     await page.route("https://bandcamp.com/**", (route) => route.abort("connectionfailed"));
+    await page.route("https://player.simonlowes.com/**", (route) =>
+      route.abort("connectionfailed")
+    );
     await page.goto("/");
     const player = page.locator("#bandcamp-player");
     test.skip((await player.getAttribute("data-has-native")) !== "true", "No self-hosted tracks");
@@ -197,6 +245,9 @@ test.describe("Bandcamp player", () => {
 
   test("keeps playing across an in-site navigation", async ({ page }) => {
     await page.route("https://bandcamp.com/**", (route) => route.abort("connectionfailed"));
+    await page.route("https://player.simonlowes.com/**", (route) =>
+      route.abort("connectionfailed")
+    );
     await page.goto("/");
     const player = page.locator("#bandcamp-player");
     test.skip((await player.getAttribute("data-has-native")) !== "true", "No self-hosted tracks");

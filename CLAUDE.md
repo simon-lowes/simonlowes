@@ -94,7 +94,7 @@ Husky runs `lint-staged` on every commit. lint-staged config (from package.json)
 src/
   components/       # Astro components (SpaceBackground, MotionPermissionPrompt, BandcampPlayer, SocialLinks)
   components/post/  # Building blocks for designed MDX posts (Lead, Callout, Reveal, Figure, Track, Embed)
-  data/             # Site data (bandcamp.ts: the release the player streams)
+  data/             # Site data (bandcamp.ts: the release and relay; tracks.ts: self-hosted fallback)
   content/          # Content collections (blog posts in Markdown or MDX)
   content.config.ts # Content collection schemas
   layouts/          # Page layouts (BaseLayout, BlogLayout)
@@ -102,7 +102,7 @@ src/
   scripts/          # Client-side TypeScript (starfield, deepsky, galaxy, encounters, quality, parallax, layout)
   styles/           # CSS (glass-effects, etc.)
 tests/
-  *.test.js         # Unit tests (a11y, animation, bandcamp, dom, encounters, galaxy-shapes, quality, utils)
+  *.test.js         # Unit tests (a11y, animation, bandcamp, bandcamp-proxy, dom, encounters, galaxy-shapes, quality, tracks, utils)
   e2e/              # Playwright E2E tests (bandcamp-player, blog, homepage, visual)
 public/
   css/              # Global stylesheet
@@ -113,7 +113,15 @@ public/
 
 ## Bandcamp Player
 
-`src/components/BandcampPlayer.astro` is the site player: the fixed glass bar at the top of the homepage and every blog page holds Bandcamp's embedded player for the release in `src/data/bandcamp.ts`. The embed is transparent so the glass shows through; from 768px it is the 120px size with artwork, below that the 42px strip, chosen by the same media query in CSS and script. Until the embed loads (and for good while the release `id` is empty) the bar shows a facade with the release title and a link to Bandcamp, so nothing loads from bandcamp.com until an ID is set. How to find the ID is in `src/data/bandcamp.ts`. The CSP reference in `public/_headers` allows `frame-src https://bandcamp.com`. The live site (checked September 2026) sends only `content-security-policy: frame-ancestors 'none'`, so the embed is not blocked; if the full CSP is ever applied in Cloudflare or Traefik, keep that `frame-src` in it. The old self-hosted audio player and `neverthere.mp3` were removed in September 2026.
+`src/components/BandcampPlayer.astro` is the site player: the fixed glass bar at the top of the homepage and every blog page holds Bandcamp's embedded player for the release in `src/data/bandcamp.ts` (how to find the release ID is in that file). From 768px it is the 120px size with artwork, below that the 42px strip, chosen by the same media query in CSS and script. The bar is `transition:persist`ed so playback survives in-site navigation.
+
+Bandcamp's player is HTML from bandcamp.com whose script, styles, artwork and audio come from `*.bcbits.com`; content blockers, Pi-hole lists and strict browsers sometimes allow the first and block the second, which leaves an empty iframe that still fires `load`. So the bar proves the player before showing it, in this order:
+
+1. **Bandcamp's own embed.** Both bandcamp.com and s4.bcbits.com are probed (HEAD, no-cors), and the facade is hidden only when the player posts its `playerinited` message (origin- and source-checked). A slow embed is never lost: after a 10 s grace the next stage shows while the iframe keeps loading, and Bandcamp takes the bar back once ready if nothing is playing.
+2. **The first-party relay** at `player.simonlowes.com` (`workers/bandcamp-proxy`, a Cloudflare Worker): the same player served through the site's own host, so a blocked CDN does not matter. Used only if its `/health` says Bandcamp is answering it with a real player (Bandcamp's bot protection can challenge the relay at any time). Deploy and checks are in the worker's README; `BANDCAMP_PROXY_ORIGIN` in `src/data/bandcamp.ts` names it, empty disables it.
+3. **The native fallback**: a glass player streaming the self-hosted files in `src/data/tracks.ts` (currently the archived "Never There" excerpt, a placeholder: the released tracks are not self-hosted). With no tracks listed the facade stays, linking to Bandcamp.
+
+The CSP reference in `public/_headers` allows the frame and the probes. The live site (checked September 2026) sends only `content-security-policy: frame-ancestors 'none'`, so nothing is restricted; if the full CSP is ever applied in Cloudflare or Traefik, keep `frame-src`, `connect-src` and `media-src` from that file, and add `https://player.simonlowes.com` to `frame-src` and `connect-src`.
 
 ## Blog posts
 
