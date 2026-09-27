@@ -1,17 +1,19 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Blog editor (Sveltia CMS)", () => {
-  test("serves the editor page with a pinned Sveltia build", async ({ page }) => {
-    const response = await page.goto("/admin/");
-    expect(response?.status()).toBe(200);
-    await expect(page).toHaveTitle(/Blog editor/);
+  test("serves the editor page with a pinned Sveltia build", async ({ request }) => {
+    // Read the HTML as served: once Sveltia boots it rewrites the title and
+    // body, and whether it boots depends on reaching unpkg from the runner.
+    const response = await request.get("/admin/");
+    expect(response.status()).toBe(200);
+    const html = await response.text();
 
-    const script = page.locator('script[src*="@sveltia/cms@"]');
-    await expect(script).toHaveCount(1);
-    await expect(script).toHaveAttribute("type", "module");
-
+    expect(html).toContain("<title>Simon Lowes · Blog editor</title>");
+    expect(html).toMatch(
+      /<script src="https:\/\/unpkg\.com\/@sveltia\/cms@\d+\.\d+\.\d+\/dist\/sveltia-cms\.js" type="module">/
+    );
     // Not for search engines
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex");
+    expect(html).toContain('<meta name="robots" content="noindex" />');
   });
 
   test("serves a config that edits the blog collection through the OAuth worker", async ({
