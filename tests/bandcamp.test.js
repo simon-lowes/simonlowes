@@ -43,5 +43,6 @@ describe("Bandcamp embed URL", () => {
   it("configures a release with a Bandcamp URL", () => {
     expect(BANDCAMP.release.url).toMatch(/^https:\/\/simonlowes\.bandcamp\.com\//);
     expect(["album", "track"]).toContain(BANDCAMP.release.kind);
+    expect(BANDCAMP.release.id).toMatch(/^\d+$/);
   });
 });

@@ -3,6 +3,12 @@
 # Site is hosted on Dokploy VPS behind Cloudflare proxy (orange cloud).
 # To apply: set these via Cloudflare Transform Rules (Response Headers) or
 # Traefik middleware labels in Dokploy.
+#
+# As of September 2026 the live site sends only:
+#   content-security-policy: frame-ancestors 'none'
+#   x-frame-options: DENY, permissions-policy, referrer-policy
+# so the Bandcamp iframe in the top bar is not restricted. If the full CSP
+# below is ever applied, keep frame-src https://bandcamp.com in it.
 
 /*
   # Prevent clickjacking attacks

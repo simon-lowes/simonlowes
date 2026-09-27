@@ -27,7 +27,7 @@ export const BANDCAMP = {
     title: "Slow Motion",
     url: "https://simonlowes.bandcamp.com/album/slow-motion",
     kind: "album",
-    id: "",
+    id: "2665327263",
   } as BandcampRelease,
 } as const;
 

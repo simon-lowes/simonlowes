@@ -254,6 +254,12 @@ const label = `Bandcamp player: ${release.title} by ${artistName}`;
     .bc-player__sub {
       display: block;
     }
+
+    /* Bandcamp's large player stops at 700px; keep it centred in a wider bar */
+    .bc-player__embed {
+      max-width: 700px;
+      margin: 0 auto;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -297,9 +303,18 @@ const label = `Bandcamp player: ${release.title} by ${artistName}`;
       }
       const src = wide.matches ? frame.dataset.srcLarge : frame.dataset.srcSmall;
       if (!src || frame.src === src) return;
-      root.classList.remove("is-loaded");
-      frame.hidden = false;
-      frame.src = src;
+      // A frame that cannot load (offline, content blocker, CSP) still fires
+      // `load`, on an error page. Probe first so the facade stays in that case.
+      fetch(src, { method: "HEAD", mode: "no-cors", credentials: "omit" })
+        .then(() => {
+          if (!root.isConnected) return;
+          root.classList.remove("is-loaded");
+          frame.hidden = false;
+          frame.src = src;
+        })
+        .catch(() => {
+          /* keep the facade: it links to the release on Bandcamp */
+        });
     };
 
     frame.addEventListener("load", () => {
