@@ -77,9 +77,11 @@ export function unrewrite(text, origin) {
 /** True when the upstream answered with a bot challenge or not the player. */
 export function looksLikeChallenge(html) {
   if (!html) return true;
-  if (/<title>\s*Client Challenge/i.test(html)) return true;
-  if (/_fs_ch_|fastly.*challenge/i.test(html) && !html.includes("data-player-data")) return true;
-  return !html.includes("data-player-data");
+  // Plain substring checks only: this runs on uncontrolled upstream bodies.
+  // The real player always carries its data attribute; a bot challenge or
+  // any other page never does.
+  if (!html.includes("data-player-data")) return true;
+  return html.includes("<title>Client Challenge");
 }
 
 /**
