@@ -42,7 +42,6 @@ updates:
           - "@typescript-eslint/*"
 
   # workers/media-api npm dependencies
-  # workers/cms-auth npm dependencies
   - package-ecosystem: "npm"
     directory: "/workers/media-api"
     schedule:

@@ -1,0 +1,49 @@
+---
+/**
+ * Figure - an image with an optional caption, full width of the post,
+ * lazy-loaded. `src` is a site path (/images/blog/...) or a full URL.
+ * `wide` lets it bleed past the text column on large screens.
+ */
+interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+  wide?: boolean;
+}
+const { src, alt, caption, width, height, wide = false } = Astro.props;
+---
+
+<figure class:list={["post-figure", { "post-figure--wide": wide }]}>
+  <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async" />
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .post-figure {
+    margin: 1.75rem 0;
+  }
+
+  .post-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgb(0 0 0 / 40%);
+  }
+
+  .post-figure figcaption {
+    margin-top: 0.625rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: rgb(224 224 224 / 60%);
+    text-align: center;
+  }
+
+  @media (width >= 900px) {
+    .post-figure--wide {
+      margin-inline: -2rem;
+    }
+  }
+</style>

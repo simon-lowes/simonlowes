@@ -1,0 +1,165 @@
+---
+/**
+ * Embed - a YouTube video or Bandcamp player inside a post, loaded only
+ * when the reader clicks, so nothing third-party is fetched on page view.
+ * `kind` "youtube" takes a video id; "bandcamp" takes a full EmbeddedPlayer
+ * URL (Share / Embed on the release). `title` labels the frame.
+ */
+interface Props {
+  kind: "youtube" | "bandcamp";
+  id: string;
+  title: string;
+  poster?: string;
+}
+const { kind, id, title, poster } = Astro.props;
+const src =
+  kind === "youtube" ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0` : id;
+const height = kind === "youtube" ? undefined : 120;
+const posterUrl =
+  poster ?? (kind === "youtube" ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : undefined);
+---
+
+<div
+  class:list={["post-embed", `post-embed--${kind}`]}
+  data-embed-src={src}
+  data-embed-title={title}
+  style={height ? `--embed-h: ${height}px` : undefined}
+>
+  <button class="post-embed__facade" type="button" data-embed-load>
+    {posterUrl && <img class="post-embed__poster" src={posterUrl} alt="" loading="lazy" />}
+    <span class="post-embed__play" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M8 5v14l11-7z" fill="currentColor" />
+      </svg>
+    </span>
+    <span class="post-embed__label">
+      {kind === "youtube" ? "Play video" : "Play on Bandcamp"}: {title}
+    </span>
+  </button>
+</div>
+
+<style>
+  .post-embed {
+    position: relative;
+    margin: 1.75rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgb(15 15 15 / 35%);
+    border: 1px solid rgb(0 212 255 / 15%);
+  }
+
+  .post-embed--youtube {
+    aspect-ratio: 16 / 9;
+  }
+
+  .post-embed--bandcamp {
+    height: var(--embed-h, 120px);
+  }
+
+  .post-embed__facade {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1rem;
+    color: #e0e0e0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .post-embed__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.55;
+  }
+
+  .post-embed__play {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    color: #fff;
+    background: rgb(0 212 255 / 20%);
+    border: 1px solid rgb(0 212 255 / 40%);
+    border-radius: 50%;
+    backdrop-filter: blur(8px);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .post-embed__play svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .post-embed__facade:hover .post-embed__play,
+  .post-embed__facade:focus-visible .post-embed__play {
+    transform: scale(1.06);
+    box-shadow: 0 0 24px rgb(0 212 255 / 40%);
+  }
+
+  .post-embed__facade:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: -4px;
+  }
+
+  .post-embed__label {
+    position: relative;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+
+  .post-embed--bandcamp .post-embed__play {
+    width: 40px;
+    height: 40px;
+  }
+
+  .post-embed--bandcamp .post-embed__facade {
+    flex-direction: row;
+  }
+
+  .post-embed iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .post-embed__play {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  function initEmbeds(): void {
+    document.querySelectorAll<HTMLElement>(".post-embed:not([data-embed-bound])").forEach((box) => {
+      box.dataset.embedBound = "true";
+      box.querySelector<HTMLButtonElement>("[data-embed-load]")?.addEventListener("click", () => {
+        const frame = document.createElement("iframe");
+        frame.src = box.dataset.embedSrc ?? "";
+        frame.title = box.dataset.embedTitle ?? "";
+        frame.allow = "autoplay; encrypted-media; picture-in-picture";
+        frame.setAttribute("allowfullscreen", "");
+        box.replaceChildren(frame);
+      });
+    });
+  }
+
+  initEmbeds();
+  document.addEventListener("astro:page-load", initEmbeds);
+</script>

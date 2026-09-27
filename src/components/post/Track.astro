@@ -1,0 +1,58 @@
+---
+/**
+ * Track - a self-hosted audio clip inside a post, styled to the site's glass
+ * language. `src` is a site path (/audio/...) or an R2 URL. Streams on
+ * demand (preload=none) so the post loads light.
+ */
+interface Props {
+  src: string;
+  title: string;
+  note?: string;
+  mimeType?: string;
+}
+const { src, title, note, mimeType = "audio/mpeg" } = Astro.props;
+---
+
+<figure class="post-track">
+  <div class="post-track__text">
+    <span class="post-track__title">{title}</span>
+    {note && <span class="post-track__note">{note}</span>}
+  </div>
+  <audio class="post-track__audio" controls preload="none">
+    <source src={src} type={mimeType} />
+  </audio>
+</figure>
+
+<style>
+  .post-track {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    margin: 1.75rem 0;
+    padding: 1rem 1.25rem;
+    background: rgb(15 15 15 / 35%);
+    border: 1px solid rgb(0 212 255 / 15%);
+    border-radius: 12px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .post-track__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .post-track__title {
+    font-weight: 650;
+  }
+
+  .post-track__note {
+    font-size: 0.875rem;
+    color: rgb(224 224 224 / 60%);
+  }
+
+  .post-track__audio {
+    width: 100%;
+  }
+</style>

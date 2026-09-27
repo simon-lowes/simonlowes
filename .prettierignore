@@ -16,5 +16,3 @@ test-results/
 .playwright-mcp/
 coverage/
 
-# Vendored unchanged from sveltia/sveltia-cms-auth
-workers/cms-auth/src/

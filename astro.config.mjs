@@ -7,9 +7,7 @@ export default defineConfig({
   site: "https://simonlowes.com",
   integrations: [
     mdx(),
-    sitemap({
-      filter: (page) => !page.includes("/admin"),
-    }),
+    sitemap(),
     AstroPWA({
       registerType: "autoUpdate",
       manifest: {
@@ -34,22 +32,9 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: "/404",
-        navigateFallbackDenylist: [/^\/admin/],
         globPatterns: ["**/*.{css,js,html,svg,png,webp,ico}"],
-        globIgnores: ["**/admin/**"],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/img\.icons8\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "external-icons",
-              expiration: {
-                maxEntries: 20,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-            },
-          },
-        ],
+        // Audio is streamed on demand, never precached
+        globIgnores: ["**/audio/**"],
       },
     }),
   ],
