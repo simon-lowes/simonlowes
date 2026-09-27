@@ -290,6 +290,13 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
     opacity: 1;
   }
 
+  /* Bandcamp's dark theme draws its own #303030 panel (transparent=true only
+     clears the margin around it). Paint the frame the same grey once the
+     player is up, so the bar reads as one panel rather than a box in a box. */
+  .bc-player.is-loaded .bc-player__frame {
+    background: #303030;
+  }
+
   .bc-player.is-loaded .bc-player__facade {
     opacity: 0;
     visibility: hidden;
