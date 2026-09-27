@@ -38,66 +38,34 @@ function toHaveNoViolations(results) {
 expect.extend({ toHaveNoViolations });
 
 describe("Accessibility Tests", () => {
-  describe("Audio Player Component", () => {
+  describe("Bandcamp Player Component", () => {
     it("should have no accessibility violations", async () => {
       document.body.innerHTML = `
         <div
-          class="audio-player"
-          id="audio-player"
+          class="bc-player"
+          id="bandcamp-player"
           role="region"
-          aria-label="Audio player for Never There"
+          aria-label="Bandcamp player: Slow Motion by Simon Lowes"
         >
-          <audio id="myAudio" src="/neverthere.mp3" preload="metadata"></audio>
-
-          <button
-            type="button"
-            class="audio-player__play"
-            id="audio-play-btn"
-            aria-label="Play Never There"
-            aria-pressed="false"
-          >
-            <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </button>
-
-          <span class="audio-player__time" id="audio-time-elapsed" aria-live="off">0:00</span>
-
-          <input
-            type="range"
-            class="audio-player__seek"
-            id="audio-seek"
-            min="0"
-            max="100"
-            value="0"
-            step="0.1"
-            aria-label="Seek slider"
-          />
-
-          <span class="audio-player__time" id="audio-time-remaining" aria-live="off">-0:00</span>
-
-          <div class="audio-player__volume">
-            <button
-              type="button"
-              class="audio-player__mute"
-              id="audio-mute-btn"
-              aria-label="Mute audio"
-              aria-pressed="false"
+          <div class="bc-player__frame">
+            <a
+              class="bc-player__facade"
+              href="https://simonlowes.bandcamp.com/album/slow-motion"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              <svg class="icon-volume" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M3 9v6h4l5 5V4L7 9H3z" />
-              </svg>
-            </button>
-            <input
-              type="range"
-              class="audio-player__volume-slider"
-              id="audio-volume"
-              min="0"
-              max="100"
-              value="75"
-              step="1"
-              aria-label="Volume slider"
-            />
+              <span class="bc-player__mark" aria-hidden="true">
+                <img src="/icons/bandcamp.png" alt="" width="22" height="22" />
+              </span>
+              <span class="bc-player__text">
+                <span class="bc-player__title">Slow Motion</span>
+                <span class="bc-player__sub">Simon Lowes · stream and buy on Bandcamp</span>
+              </span>
+              <span class="bc-player__cta">
+                Listen on Bandcamp <span aria-hidden="true">&nearr;</span>
+                <span class="sr-only"> (opens in new tab)</span>
+              </span>
+            </a>
           </div>
         </div>
       `;

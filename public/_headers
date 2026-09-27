@@ -3,6 +3,12 @@
 # Site is hosted on Dokploy VPS behind Cloudflare proxy (orange cloud).
 # To apply: set these via Cloudflare Transform Rules (Response Headers) or
 # Traefik middleware labels in Dokploy.
+#
+# As of September 2026 the live site sends only:
+#   content-security-policy: frame-ancestors 'none'
+#   x-frame-options: DENY, permissions-policy, referrer-policy
+# so the Bandcamp iframe in the top bar is not restricted. If the full CSP
+# below is ever applied, keep frame-src https://bandcamp.com in it.
 
 /*
   # Prevent clickjacking attacks
@@ -21,9 +27,9 @@
   # - 'unsafe-inline' for scripts: required by Astro View Transitions and inline <script> tags
   # - 'unsafe-inline' for styles: required by inline <style> blocks in Astro components
   # - img.icons8.com: social media icons loaded from Icons8 CDN
-  # - media-src 'self': audio player (neverthere.mp3)
+  # - frame-src https://bandcamp.com: the embedded Bandcamp player in the top bar
   # - worker-src 'self': PWA service worker
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.icons8.com; font-src 'self'; connect-src 'self'; media-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.icons8.com; font-src 'self'; connect-src 'self'; worker-src 'self'; frame-src https://bandcamp.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 # Cache static assets for 1 year
 /favicons/*
@@ -36,7 +42,4 @@
   Cache-Control: public, max-age=31536000, immutable
 
 /JS/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.mp3
   Cache-Control: public, max-age=31536000, immutable

@@ -35,7 +35,7 @@ Official website for Simon Lowes, an alternative rock musician, singer-songwrite
 
 - Three.js animated starfield background with 3 parallax layers
 - Glass-morphism UI design with cyan accent (#00d4ff)
-- Integrated audio player (featuring "Never There")
+- Bandcamp player in the top glass bar (see "Bandcamp Player" below)
 - Blog using Astro content collections
 - Mobile responsive with reduced motion support
 - Social links: Spotify, Apple Music, YouTube Music, Bandcamp, YouTube, Instagram
@@ -94,22 +94,27 @@ Husky runs `lint-staged` on every commit. lint-staged config (from package.json)
 
 ```
 src/
-  components/       # Astro components (SpaceBackground, MotionPermissionPrompt)
+  components/       # Astro components (SpaceBackground, MotionPermissionPrompt, BandcampPlayer)
+  data/             # Site data (bandcamp.ts: the release the player streams)
   content/          # Content collections (blog posts in Markdown)
   content.config.ts # Content collection schemas
   layouts/          # Page layouts (BaseLayout, BlogLayout)
   pages/            # Route pages (index, blog, 404)
-  scripts/          # Client-side TypeScript (starfield, parallax, audio)
+  scripts/          # Client-side TypeScript (starfield, parallax, layout)
   styles/           # CSS (glass-effects, etc.)
 tests/
   *.test.js         # Unit tests (a11y, animation, dom, utils)
-  e2e/              # Playwright E2E tests (audio-player, blog, homepage, visual)
+  e2e/              # Playwright E2E tests (bandcamp-player, blog, homepage, visual)
 public/
   css/              # Global stylesheet
   icons/            # Platform icons
   images/           # Site images
   llms.txt          # AEO file for AI crawlers
 ```
+
+## Bandcamp Player
+
+`src/components/BandcampPlayer.astro` is the site player: the fixed glass bar at the top of the homepage and every blog page holds Bandcamp's embedded player for the release in `src/data/bandcamp.ts`. The embed is transparent so the glass shows through; from 768px it is the 120px size with artwork, below that the 42px strip, chosen by the same media query in CSS and script. Until the embed loads (and for good while the release `id` is empty) the bar shows a facade with the release title and a link to Bandcamp, so nothing loads from bandcamp.com until an ID is set. How to find the ID is in `src/data/bandcamp.ts`. The CSP reference in `public/_headers` allows `frame-src https://bandcamp.com`. The live site (checked September 2026) sends only `content-security-policy: frame-ancestors 'none'`, so the embed is not blocked; if the full CSP is ever applied in Cloudflare or Traefik, keep that `frame-src` in it. The old self-hosted audio player and `neverthere.mp3` were removed in September 2026.
 
 ## Notes
 
