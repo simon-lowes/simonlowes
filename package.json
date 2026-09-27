@@ -35,7 +35,7 @@
     "@astrojs/mdx": "^7.0.8",
     "@astrojs/sitemap": "^3.7.4",
     "@playwright/test": "^1.63.0",
-    "@types/three": "^0.185.4",
+    "@types/three": "^0.186.0",
     "@typescript-eslint/parser": "^8.70.1",
     "@vitest/ui": "^5.0.0",
     "astro": "^7.3.4",
@@ -61,7 +61,7 @@
     "@vite-pwa/astro": "^1.2.0",
     "gsap": "^3.15.0",
     "postprocessing": "^6.39.5",
-    "three": "^0.185.1"
+    "three": "^0.186.0"
   },
   "lint-staged": {
     "*.{js,ts,astro}": [
