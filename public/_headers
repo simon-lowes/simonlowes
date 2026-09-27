@@ -27,6 +27,8 @@
   # - 'unsafe-inline' for scripts: required by Astro View Transitions and inline <script> tags
   # - 'unsafe-inline' for styles: required by inline <style> blocks in Astro components
   # - img.icons8.com: social media icons loaded from Icons8 CDN
+  # - /admin/ (Sveltia CMS) additionally needs script-src https://unpkg.com and
+  #   connect-src https://api.github.com https://cms-auth.simonlowes.com
   # - frame-src https://bandcamp.com: the embedded Bandcamp player in the top bar
   # - worker-src 'self': PWA service worker
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://img.icons8.com; font-src 'self'; connect-src 'self'; worker-src 'self'; frame-src https://bandcamp.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'

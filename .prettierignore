@@ -11,8 +11,10 @@ node_modules/
 
 # Generated
 package-lock.json
-tina/__generated__/
 playwright-report/
 test-results/
 .playwright-mcp/
 coverage/
+
+# Vendored unchanged from sveltia/sveltia-cms-auth
+workers/cms-auth/src/

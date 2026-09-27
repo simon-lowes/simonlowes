@@ -1,0 +1,126 @@
+# Sveltia CMS configuration for simonlowes.com (served at /admin/config.yml).
+# Field names mirror the Astro content schema in src/content.config.ts;
+# keep the two in step when adding a field.
+
+backend:
+  name: github
+  repo: simon-lowes/simonlowes
+  branch: main
+  # GitHub OAuth proxy: the Cloudflare Worker in workers/cms-auth.
+  base_url: https://cms-auth.simonlowes.com
+  # Sveltia only needs to write this one public repository.
+  auth_scope: public_repo
+  commit_messages:
+    create: "content: add post “{{slug}}”"
+    update: "content: update post “{{slug}}”"
+    delete: "content: delete post “{{slug}}”"
+    uploadMedia: "content: add media {{path}}"
+    deleteMedia: "content: remove media {{path}}"
+
+site_url: https://simonlowes.com
+display_url: https://simonlowes.com
+logo_url: /favicons/apple-touch-icon.png
+
+# Images picked in the editor are committed here and served from /images/blog/.
+# Large audio and video stay on Cloudflare R2 (media.simonlowes.com): upload
+# them in the Cloudflare dashboard and paste the URL into a Media item below.
+media_folder: public/images/blog
+public_folder: /images/blog
+
+slug:
+  encoding: ascii
+  clean_accents: true
+
+collections:
+  - name: blog
+    label: Blog posts
+    label_singular: Blog post
+    description: Posts on simonlowes.com/blog. Untick Published to keep a draft out of the site.
+    folder: src/content/blog
+    extension: md
+    format: yaml-frontmatter
+    create: true
+    slug: "{{slug}}"
+    summary: "{{title}} · {{date}}"
+    sortable_fields:
+      fields: [date, title]
+      default:
+        field: date
+        direction: descending
+    editor:
+      preview: false
+    fields:
+      - label: Title
+        name: title
+        widget: string
+
+      - label: Date
+        name: date
+        widget: datetime
+        format: YYYY-MM-DD
+        date_format: YYYY-MM-DD
+        time_format: false
+        picker_utc: true
+
+      - label: Description
+        name: description
+        widget: text
+        required: false
+        hint: One or two sentences shown in the blog list and in search results.
+
+      - label: Draft
+        name: draft
+        widget: boolean
+        default: false
+        required: false
+        hint: Drafts are built but hidden from the homepage and the blog list.
+
+      - label: Hero image
+        name: heroImage
+        widget: image
+        required: false
+        hint: Shown at the top of the post, up to 400px tall.
+
+      - label: Hero image alt text
+        name: heroImageAlt
+        widget: string
+        required: false
+        hint: Describe the hero image for people who cannot see it.
+
+      - label: Media
+        name: media
+        widget: list
+        required: false
+        collapsed: true
+        summary: "{{fields.type}}: {{fields.title}}"
+        hint: Videos, audio and gallery images shown below the post, grouped by type.
+        fields:
+          - label: Type
+            name: type
+            widget: select
+            options:
+              - { label: Video, value: video }
+              - { label: Audio, value: audio }
+              - { label: Image, value: image }
+          - label: URL
+            name: url
+            widget: string
+            hint: A full URL, e.g. https://media.simonlowes.com/…, or a site path like /images/blog/….
+          - label: Title
+            name: title
+            widget: string
+            required: false
+          - label: Alt text
+            name: alt
+            widget: string
+            required: false
+            hint: For images; a description for people who cannot see it.
+          - label: MIME type
+            name: mimeType
+            widget: string
+            required: false
+            hint: Optional, e.g. video/mp4 or audio/mpeg.
+
+      - label: Body
+        name: body
+        widget: markdown

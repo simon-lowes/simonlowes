@@ -10,7 +10,7 @@ Official website for Simon Lowes, an alternative rock musician, singer-songwrite
 ## Tech Stack
 
 - **Framework:** Astro (static site generator)
-- **CMS:** TinaCMS (Git-backed headless CMS)
+- **CMS:** Sveltia CMS (static, Git-backed editor at /admin, see "Blog editor" below)
 - **3D Graphics:** Three.js (starfield background with parallax)
 - **Animations:** GSAP
 - **Unit Testing:** Vitest
@@ -47,11 +47,9 @@ Spotify, Apple Music, YouTube Music, Bandcamp, YouTube, Instagram (links in site
 ## Key Commands
 
 ```bash
-# Development (TinaCMS wraps Astro dev/build)
-npm run dev           # tinacms dev -c "astro dev" (starts TinaCMS + Astro)
-npm run dev:astro     # astro dev only (no TinaCMS)
-npm run build         # tinacms build && astro build
-npm run build:astro   # astro build only (no TinaCMS)
+# Development
+npm run dev           # astro dev (the editor is at http://localhost:4321/admin/)
+npm run build         # astro build
 npm run preview       # Preview production build
 
 # Testing
@@ -116,14 +114,20 @@ public/
 
 `src/components/BandcampPlayer.astro` is the site player: the fixed glass bar at the top of the homepage and every blog page holds Bandcamp's embedded player for the release in `src/data/bandcamp.ts`. The embed is transparent so the glass shows through; from 768px it is the 120px size with artwork, below that the 42px strip, chosen by the same media query in CSS and script. Until the embed loads (and for good while the release `id` is empty) the bar shows a facade with the release title and a link to Bandcamp, so nothing loads from bandcamp.com until an ID is set. How to find the ID is in `src/data/bandcamp.ts`. The CSP reference in `public/_headers` allows `frame-src https://bandcamp.com`. The live site (checked September 2026) sends only `content-security-policy: frame-ancestors 'none'`, so the embed is not blocked; if the full CSP is ever applied in Cloudflare or Traefik, keep that `frame-src` in it. The old self-hosted audio player and `neverthere.mp3` were removed in September 2026.
 
+## Blog editor (Sveltia CMS)
+
+Posts are Markdown files in `src/content/blog` with the front matter defined in `src/content.config.ts`. The editor is Sveltia CMS: two static files, `public/admin/index.html` (loads a pinned Sveltia build from unpkg) and `public/admin/config.yml` (the blog collection, whose fields mirror the content schema). There is no CMS build step and no CMS account: edits are commits to `main`, which Dokploy deploys.
+
+- **Sign-in** uses GitHub OAuth through the Cloudflare Worker in `workers/cms-auth` (Sveltia's reference worker, MIT), deployed at `cms-auth.simonlowes.com` and named as `base_url` in the config. One-time setup: create a GitHub OAuth App with callback `https://cms-auth.simonlowes.com/callback`, then in `workers/cms-auth` run `npx wrangler secret put GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` and `npx wrangler deploy`.
+- **Local editing**: run `npm run dev`, open `/admin/` and choose "Work with local repository"; Sveltia then edits the checkout directly (Chrome or Edge), no sign-in needed.
+- **Images** chosen in the editor are committed to `public/images/blog` and served from `/images/blog/`. Large audio and video stay on Cloudflare R2 (`media.simonlowes.com`): upload in the Cloudflare dashboard and paste the URL into a Media item. The old `workers/media-api` upload worker authenticated with TinaCMS tokens and is no longer used by the site.
+- `/admin/` is `Disallow`ed in `robots.txt` and carries `noindex`.
+
+TinaCMS was removed in September 2026: its build step had broken every Dokploy deploy since March, it needed a TinaCloud account and two secrets, and it added 134 MB of dependencies. The `TINA_CLIENT_ID` and `TINA_TOKEN` variables in Dokploy and the GitHub secrets of the same names can be deleted.
+
 ## Deployment Build (Dokploy + Nixpacks)
 
-Dokploy builds the site with Nixpacks: `npm ci`, then `npm run build` (`tinacms build && astro build`, with `TINA_CLIENT_ID`/`TINA_TOKEN` set in Dokploy). Two things keep that build working:
-
-- `nixpacks.toml` pins a newer nixpkgs archive so `nodejs_22` resolves to 22.23.x. Nixpacks' own archive gives 22.11.0, which Astro 7 refuses (`>=22.12.0`). `package.json` `engines.node` records the same floor.
-- The npm `overrides` in `package.json` must stay compatible with TinaCMS's admin bundler: `esbuild` within Vite 6's `^0.25.0`, and `markdown-it` 15 with `linkify-it` 6 (markdown-it 14 needs linkify-it 5). In September 2026 stricter overrides broke `tinacms build` and no deploy had succeeded since March; CI only warned on Tina failures. CI now runs `tinacms build --local --skip-cloud-checks` strictly, so an admin bundle failure fails the Build job.
-
-If a Dokploy deploy fails, read its log past the `npm ci` engine warnings: the real error is in the `npm run build` step.
+Dokploy builds the site with Nixpacks: `npm ci`, then `npm run build` (`astro build`). `nixpacks.toml` pins a newer nixpkgs archive so `nodejs_22` resolves to 22.23.x; Nixpacks' own archive gives 22.11.0, which Astro 7 refuses (`>=22.12.0`), and `package.json` `engines.node` records the same floor. If a deploy fails, read the log past the `npm ci` warnings: the real error is in the `npm run build` step.
 
 ## Notes
 

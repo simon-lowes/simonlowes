@@ -15,6 +15,6 @@
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": [".astro/types.d.ts", "src/**/*", "tests/**/*", "tina/**/*"],
+  "include": [".astro/types.d.ts", "src/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]
 }

@@ -9,7 +9,7 @@ Official website for Simon Lowes, an alternative rock musician, singer-songwrite
 - Three.js animated starfield background with parallax effect
 - Glass-morphism UI design
 - Bandcamp player in the top bar (the release in `src/data/bandcamp.ts`)
-- Blog with Astro content collections
+- Blog with Astro content collections, edited with Sveltia CMS at /admin
 - Mobile responsive with reduced motion support
 
 ## Tech Stack
