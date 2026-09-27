@@ -98,10 +98,10 @@ src/
   content.config.ts # Content collection schemas
   layouts/          # Page layouts (BaseLayout, BlogLayout)
   pages/            # Route pages (index, blog, 404)
-  scripts/          # Client-side TypeScript (starfield, deepsky, encounters, quality, parallax, layout)
+  scripts/          # Client-side TypeScript (starfield, deepsky, galaxy, encounters, quality, parallax, layout)
   styles/           # CSS (glass-effects, etc.)
 tests/
-  *.test.js         # Unit tests (a11y, animation, bandcamp, dom, encounters, quality, utils)
+  *.test.js         # Unit tests (a11y, animation, bandcamp, dom, encounters, galaxy-shapes, quality, utils)
   e2e/              # Playwright E2E tests (bandcamp-player, blog, homepage, visual)
 public/
   css/              # Global stylesheet
@@ -134,6 +134,7 @@ Dokploy builds the site with Nixpacks: `npm ci`, then `npm run build` (`astro bu
 `src/scripts/starfield.ts` (Three.js + `postprocessing`) draws the background on every page. Since September 2026 it has three parts:
 
 - **Deep-sky backdrop** (`src/scripts/deepsky.ts`): an always-on Milky Way band and nebula clouds, fractal noise rendered to a small offscreen texture and stretched over the screen with slow drift and a little mouse parallax. Palette is the site cyan, magenta and violet with a dusty core. The texture width, noise octaves and re-render cadence come from the quality tier, so it runs on phones too.
+- **Hero galaxy** (`src/scripts/galaxy.ts`, formations in `src/scripts/galaxy-shapes.ts`): thousands of particles that drift as a loose cloud, gather into a three-arm spiral with a white-hot core, turn, and loosen again on a fixed timeline. Both formations are vertex attributes, so the morph, spin and drift all run in the vertex shader on plain WebGL. Moving the pointer brings out more particles and ripples the ones under the cursor; a click or tap (and each navigation) surges the full set and forms the spiral at once. Particle count comes from the tier. It sits right of centre on wide screens and centred, smaller, on phones. Deliberately no glyphs or logos.
 - **Encounters** (`src/scripts/encounters.ts`): planets, galaxies and nebulae spawn probabilistically per frame; the pacing (phases reached within 20 s, each kind roughly once a minute, a few objects seeded before the first frame) lives there and is unit-tested. Raymarched volumetric nebulae run on HIGH and ULTRA.
 - **Quality tiers** (`src/scripts/quality.ts`): LOW / MEDIUM / HIGH / ULTRA. The GPU-name match is only the starting guess; a frame-time probe drops a tier when frames run slow (and never climbs back to it) and climbs one after a few windows of headroom. Phones are capped at MEDIUM. Unknown desktops start at HIGH. A visitor can pin a tier with the `starfield-quality-preference` localStorage key.
 

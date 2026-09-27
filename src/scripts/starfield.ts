@@ -9,6 +9,7 @@ import { ParallaxController } from "./parallax";
 import { QualityManager, type QualityConfig } from "./quality";
 import { DeepSkyBackdrop, type DeepSkySettings } from "./deepsky";
 import { ENCOUNTER_CONFIG, journeyPhase } from "./encounters";
+import { HeroGalaxy, type HeroGalaxySettings } from "./galaxy";
 import {
   EffectComposer,
   BloomEffect,
@@ -154,7 +155,7 @@ interface StarLayer {
 
 interface CelestialBody {
   mesh: THREE.Mesh | THREE.Sprite | THREE.Group;
-  type: "planet" | "galaxy" | "nebula";
+  type: "planet" | "galaxy" | "nebula" | "volumetricNebula" | "backgroundGalaxy";
   speed: number;
   rotationSpeed?: number;
   atmosphere?: THREE.Mesh;
@@ -353,6 +354,10 @@ export class Starfield {
   // Always-on deep-sky backdrop (Milky Way band + nebula clouds)
   private backdrop: DeepSkyBackdrop;
 
+  // Hero galaxy particle system (cloud <-> spiral, surges on interaction)
+  private galaxy: HeroGalaxy;
+  private lastFrameSeconds = 0;
+
   // Journey state for realistic encounter system
   private journeyTime = 0; // Seconds since start
   private activeEncounters = {
@@ -432,6 +437,14 @@ export class Starfield {
 
     // Create star layers (the base experience - always present)
     this.createLayers();
+
+    // Hero galaxy in front of the far stars
+    this.galaxy = new HeroGalaxy(
+      this.galaxySettings(),
+      Math.min(window.devicePixelRatio, this.qualityConfig.pixelRatioLimit)
+    );
+    this.galaxy.setAspect(this.camera.aspect);
+    this.scene.add(this.galaxy.points);
     this.createDiffractionSpikes(); // JWST-style spikes on brightest stars
 
     // Place the first encounters before the first frame, then let
@@ -441,8 +454,14 @@ export class Starfield {
     // Bind event handlers
     this.handleResize = this.handleResize.bind(this);
     this.animate = this.animate.bind(this);
+    this.handleSurge = this.handleSurge.bind(this);
+    this.handlePointerMove = this.handlePointerMove.bind(this);
 
     window.addEventListener("resize", this.handleResize);
+    // A click or tap anywhere, and each navigation, brings out more stars
+    document.addEventListener("pointerdown", this.handleSurge, { passive: true });
+    document.addEventListener("pointermove", this.handlePointerMove, { passive: true });
+    document.addEventListener("astro:page-load", this.handleSurge);
   }
 
   /**
@@ -535,6 +554,7 @@ export class Starfield {
 
     // Backdrop resolution, detail and cadence follow the tier
     this.backdrop.applySettings(this.backdropSettings());
+    this.galaxy.applySettings(this.galaxySettings());
 
     // Drop live volumetric nebulae if the tier no longer allows them
     if (!newConfig.volumetricNebulaEnabled) {
@@ -547,6 +567,24 @@ export class Starfield {
       // eslint-disable-next-line no-console
       console.log(`[Starfield] Quality changed to: ${this.qualityManager.getTier()}`);
     }
+  }
+
+  private galaxySettings(): HeroGalaxySettings {
+    return {
+      count: this.qualityConfig.heroGalaxyCount,
+      restingReveal: this.qualityConfig.heroGalaxyRestingReveal,
+    };
+  }
+
+  private handleSurge(): void {
+    this.galaxy.surge();
+  }
+
+  private handlePointerMove(event: PointerEvent): void {
+    this.galaxy.setPointer(
+      (event.clientX / window.innerWidth) * 2 - 1,
+      -((event.clientY / window.innerHeight) * 2 - 1)
+    );
   }
 
   private backdropSettings(): DeepSkySettings {
@@ -563,8 +601,9 @@ export class Starfield {
     this.renderer.setPixelRatio(ratio);
     this.composer.setSize(window.innerWidth, window.innerHeight);
     this.layers.forEach((layer) => {
-      layer.material.uniforms.uPixelRatio.value = ratio;
+      layer.material.uniforms.uPixelRatio!.value = ratio;
     });
+    this.galaxy?.setPixelRatio(ratio);
   }
 
   /**
@@ -574,7 +613,7 @@ export class Starfield {
   private removeEncounters(type: CelestialBody["type"]): void {
     for (let i = this.celestialBodies.length - 1; i >= 0; i--) {
       const body = this.celestialBodies[i];
-      if (body.type !== type) continue;
+      if (!body || body.type !== type) continue;
       this.disposeObject(body.mesh);
       this.scene.remove(body.mesh);
       this.celestialBodies.splice(i, 1);
@@ -2783,6 +2822,7 @@ export class Starfield {
     this.renderer.setSize(width, height);
     this.applyPixelRatio(); // also resizes the composer
     this.backdrop.setAspect(this.camera.aspect);
+    this.galaxy.setAspect(this.camera.aspect);
   }
 
   private animate(currentTime: number): void {
@@ -2839,6 +2879,11 @@ export class Starfield {
 
     // Update shooting stars (timer-based, see encounters.ts)
     this.updateShootingStars(currentTime);
+
+    // Hero galaxy timeline (morph, spin, surge decay)
+    const frameDelta = this.lastFrameSeconds > 0 ? elapsedTime - this.lastFrameSeconds : 0;
+    this.lastFrameSeconds = elapsedTime;
+    this.galaxy.update(elapsedTime, frameDelta);
 
     // Deep-sky backdrop: drift, parallax and (when due) a noise re-render
     this.backdrop.update(
@@ -3183,6 +3228,9 @@ export class Starfield {
   public destroy(): void {
     this.stop();
     window.removeEventListener("resize", this.handleResize);
+    document.removeEventListener("pointerdown", this.handleSurge);
+    document.removeEventListener("pointermove", this.handlePointerMove);
+    document.removeEventListener("astro:page-load", this.handleSurge);
     this.parallax.destroy();
 
     // Dispose of star layers
@@ -3224,6 +3272,8 @@ export class Starfield {
 
     this.scene.remove(this.backdrop.mesh);
     this.backdrop.dispose();
+    this.scene.remove(this.galaxy.points);
+    this.galaxy.dispose();
 
     this.disposeRenderer();
   }
