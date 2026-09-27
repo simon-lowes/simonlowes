@@ -45,11 +45,12 @@ test.describe("Bandcamp player", () => {
 
   test("swaps the facade for the embed once Bandcamp answers", async ({ page }) => {
     // Stand in for bandcamp.com so the test never depends on the network
+    // The stub does what the real player does once rendered: tells the parent
     await page.route("https://bandcamp.com/**", (route) =>
       route.fulfill({
         status: 200,
         contentType: "text/html",
-        body: "<!doctype html><title>Bandcamp player stub</title>",
+        body: '<!doctype html><title>Bandcamp player stub</title><script>parent.postMessage("playerinited", "*")</script>',
       })
     );
     // ...and for its CDN, which the player probes before trusting the embed
@@ -84,6 +85,34 @@ test.describe("Bandcamp player", () => {
     } else {
       await expect(player.locator(".bc-player__facade")).toBeVisible();
     }
+  });
+
+  test("keeps waiting for a loaded embed that never reports ready, then falls back", async ({
+    page,
+  }) => {
+    // A blank iframe still fires `load`; without Bandcamp's ready message the
+    // facade must not be hidden over nothing.
+    await page.route("https://bandcamp.com/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<!doctype html><title>blank</title>",
+      })
+    );
+    await page.route("https://*.bcbits.com/**", (route) =>
+      route.fulfill({ status: 200, body: "" })
+    );
+    await page.goto("/");
+    const player = page.locator("#bandcamp-player");
+    test.skip((await player.getAttribute("data-has-embed")) !== "true", "No release ID set");
+
+    await expect(player.locator(".bc-player__embed")).toHaveAttribute("src", /bandcamp\.com/);
+    await page.waitForTimeout(1500);
+    await expect(player).not.toHaveClass(/is-loaded/);
+    await expect(player.locator(".bc-player__facade")).toBeVisible();
+    // After the grace period the fallback (native player or facade) takes over
+    await expect(player.locator(".bc-player__embed")).toBeHidden({ timeout: 12000 });
+    await expect(player).not.toHaveClass(/is-loaded/);
   });
 
   test("falls back to the site player when Bandcamp's CDN is blocked", async ({ page }) => {

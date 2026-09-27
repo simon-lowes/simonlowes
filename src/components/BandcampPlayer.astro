@@ -573,8 +573,15 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
    * still fires `load`. Both must answer before the embed is trusted.
    */
   const BCBITS_PROBE = "https://s4.bcbits.com/img/bclogo.png";
-  /** How long the embed gets to render before the fallback takes over. */
-  const EMBED_GRACE_MS = 6000;
+  /** How long the embed gets to report ready before the fallback takes over. */
+  const EMBED_GRACE_MS = 8000;
+  /**
+   * Bandcamp's embedded player posts "playerinited" to its parent once it has
+   * rendered. That, not the iframe's `load` event (which fires for a blank
+   * page too), is what proves the player is really there.
+   */
+  const BANDCAMP_ORIGIN = "https://bandcamp.com";
+  const READY_MESSAGE = "playerinited";
 
   const probe = (url: string): Promise<void> =>
     fetch(url, { method: "HEAD", mode: "no-cors", credentials: "omit", cache: "no-store" }).then(
@@ -757,9 +764,19 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
         .catch(fallBack);
     };
 
-    frame.addEventListener("load", () => {
-      if (frame.src) root.classList.add("is-loaded");
-    });
+    const onMessage = (event: MessageEvent): void => {
+      if (event.origin !== BANDCAMP_ORIGIN || event.source !== frame.contentWindow) return;
+      const data: unknown = event.data;
+      const ready =
+        data === READY_MESSAGE ||
+        (typeof data === "object" &&
+          data !== null &&
+          (data as { data?: unknown }).data === READY_MESSAGE);
+      if (!ready || !frame.src) return;
+      window.clearTimeout(graceTimer);
+      root.classList.add("is-loaded");
+    };
+    window.addEventListener("message", onMessage);
 
     load();
     wide.addEventListener("change", load);
