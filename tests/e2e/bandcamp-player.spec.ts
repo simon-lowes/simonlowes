@@ -11,7 +11,8 @@ test.describe("Bandcamp player", () => {
     const player = page.locator("#bandcamp-player");
     await expect(player).toBeVisible();
     await expect(player).toHaveAttribute("role", "region");
-    await expect(player).toHaveAttribute("aria-label", /Bandcamp player/);
+    // "Bandcamp player" normally; "Site player" once the fallback has taken over
+    await expect(player).toHaveAttribute("aria-label", /(Bandcamp|Site) player/);
 
     // The bar is fixed at the top of the viewport
     const box = await player.boundingBox();
@@ -166,6 +167,49 @@ test.describe("Bandcamp player", () => {
     await expect(native.locator('[data-native="play"]')).toHaveAttribute("aria-label", "Pause");
     await native.locator('[data-native="play"]').click();
     await expect(player).not.toHaveClass(/is-playing/);
+  });
+
+  test("a slow but working Bandcamp takes the bar back from the fallback", async ({ page }) => {
+    // The embed's HTML arrives at once but its player script is slow: the
+    // fallback shows after the grace period, then Bandcamp reports ready and,
+    // with nothing playing, gets the bar back.
+    await page.route("https://bandcamp.com/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: '<!doctype html><title>slow</title><script>setTimeout(() => parent.postMessage("playerinited", "*"), 12500)</script>',
+      })
+    );
+    await page.route("https://*.bcbits.com/**", (route) =>
+      route.fulfill({ status: 200, body: "" })
+    );
+    await page.goto("/");
+    const player = page.locator("#bandcamp-player");
+    test.skip((await player.getAttribute("data-has-native")) !== "true", "No self-hosted tracks");
+
+    await expect(player).toHaveClass(/is-native/, { timeout: 12000 });
+    await expect(player.locator(".bc-player__embed")).toBeHidden();
+    await expect(player).toHaveClass(/is-loaded/, { timeout: 6000 });
+    await expect(player).not.toHaveClass(/is-native/);
+    await expect(player.locator(".bc-player__embed")).toBeVisible();
+    await expect(player.locator(".bc-player__native")).toBeHidden();
+  });
+
+  test("keeps playing across an in-site navigation", async ({ page }) => {
+    await page.route("https://bandcamp.com/**", (route) => route.abort("connectionfailed"));
+    await page.goto("/");
+    const player = page.locator("#bandcamp-player");
+    test.skip((await player.getAttribute("data-has-native")) !== "true", "No self-hosted tracks");
+
+    await player.locator('[data-native="play"]').click();
+    await expect(player).toHaveClass(/is-playing/, { timeout: 10000 });
+    await page.getByRole("link", { name: /all posts/i }).click();
+    await expect(page).toHaveURL(/\/blog\/?$/);
+    // The bar is persisted by the view transition, so the same audio keeps going
+    await expect(page.locator("#bandcamp-player")).toHaveClass(/is-playing/);
+    expect(
+      await page.locator("#bandcamp-player audio").evaluate((a) => (a as HTMLAudioElement).paused)
+    ).toBe(false);
   });
 
   test("the old self-hosted audio player is gone", async ({ page }) => {

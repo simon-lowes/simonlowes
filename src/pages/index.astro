@@ -86,7 +86,8 @@ const posts = (await getCollection("blog"))
       /* Cookie notice: a small glass card, bottom-left, same language as the player bar */
       #cookie-message {
         position: fixed;
-        bottom: calc(var(--edge-gap) + env(safe-area-inset-bottom));
+        /* Above the footer's social links at every width; --footer-h is measured by JS */
+        bottom: calc(var(--edge-gap) * 2 + var(--footer-h, 60px) + env(safe-area-inset-bottom));
         left: calc(var(--edge-gap) + env(safe-area-inset-left));
         display: flex;
         align-items: flex-start;
@@ -183,16 +184,19 @@ const posts = (await getCollection("blog"))
         outline-offset: 2px;
       }
       @media (max-width: 767px) {
-        /* Sit above the footer icons rather than over them */
         #cookie-message {
           right: calc(var(--edge-gap) + env(safe-area-inset-right));
-          bottom: calc(var(--edge-gap) * 2 + var(--footer-h, 44px) + env(safe-area-inset-bottom));
           max-width: none;
         }
       }
       @media (prefers-reduced-motion: reduce) {
         #cookie-message {
           animation: none;
+        }
+      }
+      @supports not (backdrop-filter: blur(16px)) {
+        #cookie-message {
+          background: rgb(10 10 15 / 95%);
         }
       }
       /* Content wrapper with glass panel styling */
@@ -382,13 +386,7 @@ const posts = (await getCollection("blog"))
       </section>
     </main>
     <BandcampPlayer />
-    <div
-      id="cookie-message"
-      role="status"
-      aria-live="polite"
-      aria-label="Cookie notice"
-      tabindex="-1"
-    >
+    <div id="cookie-message" role="status" aria-live="polite" aria-label="Cookie notice" hidden>
       <span class="cookie-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="currentColor">
           <circle
@@ -447,58 +445,30 @@ const posts = (await getCollection("blog"))
         const notice = document.getElementById("cookie-message");
         if (!notice) return;
 
-        // Always check dismissal state on navigation (View Transitions)
+        // Ships hidden; only revealed for visitors who have not dismissed it
         if (hasDismissed()) {
-          notice.setAttribute("hidden", "");
+          notice.hidden = true;
           return;
         }
+        notice.hidden = false;
+        if (notice.dataset.bound === "true") return;
+        notice.dataset.bound = "true";
 
-        // Show the notice if not dismissed
-        notice.removeAttribute("hidden");
-
-        const dismiss = notice.querySelector("[data-cookie-dismiss]");
-        const previouslyFocused = document.activeElement as HTMLElement | null;
-
-        const closeNotice = (): void => {
+        const close = (): void => {
           saveDismissal();
-          notice.setAttribute("hidden", "");
-          notice.removeAttribute("aria-modal");
-          if (previouslyFocused?.focus) {
-            previouslyFocused.focus();
-          }
+          notice.hidden = true;
+          document.removeEventListener("keydown", onKeydown);
         };
-
-        // Remove old listeners to avoid duplicates on re-navigation
-        const newDismiss = dismiss?.cloneNode(true) as HTMLElement | null;
-        if (dismiss && newDismiss) {
-          dismiss.parentNode?.replaceChild(newDismiss, dismiss);
-          newDismiss.addEventListener("click", closeNotice);
-        }
-
-        // Focus the notice for accessibility
-        if (!notice.hasAttribute("hidden")) {
-          requestAnimationFrame(() => notice.focus());
-        }
-
-        // Handle keyboard events (clone to remove old listeners)
-        const handleKeydown = (event: KeyboardEvent): void => {
-          if (event.key === "Escape" || event.key === "Esc") {
-            event.preventDefault();
-            closeNotice();
-          } else if (event.key === "Tab" && newDismiss) {
-            event.preventDefault();
-            newDismiss.focus();
-          }
+        // A polite status region needs no focus and must not trap Tab;
+        // Escape is a convenience while the notice is showing.
+        const onKeydown = (event: KeyboardEvent): void => {
+          if (event.key === "Escape" && !notice.hidden) close();
         };
-
-        // Use a flag to prevent duplicate keydown listeners
-        if (!notice.dataset.keydownAttached) {
-          notice.addEventListener("keydown", handleKeydown as EventListener);
-          notice.dataset.keydownAttached = "true";
-        }
+        notice.querySelector("[data-cookie-dismiss]")?.addEventListener("click", close);
+        document.addEventListener("keydown", onKeydown);
       }
 
-      // Run on initial load and after View Transitions navigation
+      initCookieNotice();
       document.addEventListener("astro:page-load", initCookieNotice);
     </script>
     <script>

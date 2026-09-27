@@ -83,4 +83,25 @@ test.describe("Cookie Notice", () => {
     await page.keyboard.press("Escape");
     await expect(cookieNotice).toBeHidden();
   });
+
+  test("does not steal focus or trap the Tab key", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#cookie-message")).toBeVisible();
+    // A polite status region is announced without taking focus
+    expect(await page.evaluate(() => document.activeElement?.id ?? "")).not.toBe("cookie-message");
+    // Tab moves through the page, not round and round the OK button
+    const ids = new Set<string>();
+    for (let i = 0; i < 6; i++) {
+      await page.keyboard.press("Tab");
+      ids.add(await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 60) ?? ""));
+    }
+    expect(ids.size).toBeGreaterThan(2);
+  });
+
+  test("stays hidden for returning visitors", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("cookie_notice_dismissed", "true"));
+    await page.goto("/");
+    await expect(page.locator("#cookie-message")).toBeHidden();
+    await expect(page.locator("#cookie-message")).toHaveAttribute("hidden", "");
+  });
 });

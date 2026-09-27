@@ -28,7 +28,7 @@ const { release, artistName } = BANDCAMP;
 const hasEmbed = release.id !== "";
 const hasNative = hasSiteTracks();
 const label = `Bandcamp player: ${release.title} by ${artistName}`;
-const nativeLabel = `Site player: ${release.title} by ${artistName}`;
+const nativeLabel = `Site player: ${artistName}`;
 ---
 
 <div
@@ -38,6 +38,8 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
   aria-label={label}
   data-has-embed={hasEmbed ? "true" : "false"}
   data-has-native={hasNative ? "true" : "false"}
+  data-native-label={nativeLabel}
+  transition:persist="player"
 >
   <div class="bc-player__frame">
     <a class="bc-player__facade" href={release.url} target="_blank" rel="noopener noreferrer">
@@ -78,7 +80,7 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
           </svg>
         </button>
         <div class="bc-player__text">
-          <span class="bc-player__title" data-native="title">
+          <span class="bc-player__title" data-native="title" aria-live="polite">
             {SITE_TRACKS[0]?.title}
           </span>
           <span class="bc-player__sub">
@@ -93,10 +95,11 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
               class="bc-player__range"
               type="range"
               min="0"
-              max="1000"
+              max="0"
               value="0"
               step="1"
               aria-label="Seek"
+              aria-valuetext="0:00"
               data-native="seek"
             />
             <span class="bc-player__time" data-native="duration">
@@ -126,7 +129,7 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
             <span class="sr-only"> (opens in new tab)</span>
           </a>
         </div>
-        <audio preload="metadata" data-native="audio"></audio>
+        <audio preload="none" data-native="audio"></audio>
       </div>
     )}
   </div>
@@ -342,8 +345,8 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
   }
 
   .bc-player__play {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
   }
 
   .bc-player__skip {
@@ -373,8 +376,21 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
 
   .bc-player__play:focus-visible,
   .bc-player__skip:focus-visible,
-  .bc-player__buy:focus-visible,
+  .bc-player__buy:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
   .bc-player__range:focus-visible {
+    outline: none;
+  }
+
+  .bc-player__range:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  .bc-player__range:focus-visible::-moz-range-thumb {
     outline: 2px solid #fff;
     outline-offset: 2px;
   }
@@ -460,6 +476,10 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
     display: none;
   }
 
+  .bc-player.has-many-tracks .bc-player__skip {
+    display: flex;
+  }
+
   .bc-player__buy {
     font-size: 0.8125rem;
     font-weight: 500;
@@ -535,10 +555,6 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
     .bc-player__seek {
       display: flex;
     }
-
-    .bc-player.has-many-tracks .bc-player__skip {
-      display: flex;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -577,11 +593,16 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
    * Bandcamp's player is HTML from bandcamp.com whose script, styles and
    * artwork come from its CDN, bcbits.com. Blockers and DNS filters often
    * allow the first and block the second, which leaves a blank iframe that
-   * still fires `load`. Both must answer before the embed is trusted.
+   * still fires `load`. Both must answer before the embed is even requested.
    */
   const BCBITS_PROBE = "https://s4.bcbits.com/img/bclogo.png";
-  /** How long the embed gets to report ready before the fallback takes over. */
-  const EMBED_GRACE_MS = 8000;
+  /**
+   * How long the embed gets, after its HTML has loaded, to report ready
+   * before the fallback is shown. The embed keeps loading behind the
+   * fallback; if it reports ready later and nothing is playing, it takes
+   * over again, so a slow connection never loses Bandcamp for good.
+   */
+  const EMBED_GRACE_MS = 10000;
   /**
    * Bandcamp's embedded player posts "playerinited" to its parent once it has
    * rendered. That, not the iframe's `load` event (which fires for a blank
@@ -595,10 +616,17 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
       () => undefined
     );
 
+  interface NativePlayer {
+    /** Reveal the native player (loads the first track on first call). */
+    show: () => void;
+    /** Hide it again, only when nothing is playing. Returns whether it did. */
+    hideIfIdle: () => boolean;
+  }
+
   // ---------------------------------------------------------------------
   // Native fallback player
   // ---------------------------------------------------------------------
-  function initNativePlayer(root: HTMLElement, native: HTMLElement): (() => void) | null {
+  function initNativePlayer(root: HTMLElement, native: HTMLElement): NativePlayer | null {
     let tracks: SiteTrack[] = [];
     try {
       tracks = JSON.parse(native.dataset.tracks ?? "[]") as SiteTrack[];
@@ -622,12 +650,35 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
 
     let index = 0;
     let seeking = false;
+    let started = false;
+    const embedLabel = root.getAttribute("aria-label") ?? "";
+    const nativeLabel = root.dataset.nativeLabel ?? "Site player";
     if (tracks.length > 1) root.classList.add("has-many-tracks");
 
-    const setProgress = (fraction: number): void => {
-      const pct = Math.max(0, Math.min(100, fraction * 100));
-      seek.value = String(Math.round(pct * 10));
+    const setSeek = (position: number, total: number): void => {
+      const ok = Number.isFinite(total) && total > 0;
+      seek.max = ok ? String(Math.floor(total)) : "0";
+      seek.value = ok ? String(Math.floor(position)) : "0";
+      const pct = ok ? Math.max(0, Math.min(100, (position / total) * 100)) : 0;
       seek.style.setProperty("--bc-progress", `${pct}%`);
+      seek.setAttribute(
+        "aria-valuetext",
+        ok ? `${formatTime(position)} of ${formatTime(total)}` : formatTime(position)
+      );
+      if (current) current.textContent = formatTime(position);
+      if (duration) duration.textContent = formatTime(total);
+    };
+
+    const setMediaSession = (track: SiteTrack): void => {
+      if (!("mediaSession" in navigator) || typeof MediaMetadata !== "function") return;
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: track.title,
+          artist: "Simon Lowes",
+        });
+      } catch {
+        /* optional */
+      }
     };
 
     const loadTrack = (i: number, autoplay: boolean): void => {
@@ -637,15 +688,8 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
       audio.src = track.src;
       title.textContent = track.title;
       if (count) count.textContent = tracks.length > 1 ? `· ${index + 1}/${tracks.length}` : "";
-      if (duration) duration.textContent = formatTime(track.duration ?? NaN);
-      if (current) current.textContent = "0:00";
-      setProgress(0);
-      if ("mediaSession" in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: track.title,
-          artist: "Simon Lowes",
-        });
-      }
+      setSeek(0, track.duration ?? NaN);
+      setMediaSession(track);
       if (autoplay) void audio.play().catch(() => undefined);
     };
 
@@ -667,49 +711,65 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
     });
     audio.addEventListener("ended", () => {
       if (tracks.length > 1) loadTrack(index + 1, true);
-      else setProgress(0);
+      else setSeek(0, audio.duration);
     });
-    audio.addEventListener("loadedmetadata", () => {
-      if (duration) duration.textContent = formatTime(audio.duration);
-    });
+    audio.addEventListener("loadedmetadata", () => setSeek(audio.currentTime, audio.duration));
     audio.addEventListener("timeupdate", () => {
-      if (seeking || !Number.isFinite(audio.duration) || audio.duration === 0) return;
-      setProgress(audio.currentTime / audio.duration);
-      if (current) current.textContent = formatTime(audio.currentTime);
+      if (!seeking) setSeek(audio.currentTime, audio.duration);
     });
     seek.addEventListener("input", () => {
       seeking = true;
-      const fraction = Number(seek.value) / 1000;
-      seek.style.setProperty("--bc-progress", `${fraction * 100}%`);
-      if (current && Number.isFinite(audio.duration)) {
-        current.textContent = formatTime(fraction * audio.duration);
-      }
+      const position = Number(seek.value);
+      const total = Number(seek.max);
+      seek.style.setProperty("--bc-progress", `${total > 0 ? (position / total) * 100 : 0}%`);
+      seek.setAttribute("aria-valuetext", `${formatTime(position)} of ${formatTime(total)}`);
+      if (current) current.textContent = formatTime(position);
     });
     seek.addEventListener("change", () => {
       seeking = false;
-      if (Number.isFinite(audio.duration)) {
-        audio.currentTime = (Number(seek.value) / 1000) * audio.duration;
-      }
+      if (Number.isFinite(audio.duration)) audio.currentTime = Number(seek.value);
     });
-    if ("mediaSession" in navigator) {
-      navigator.mediaSession.setActionHandler(
-        "play",
-        () => void audio.play().catch(() => undefined)
-      );
-      navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+
+    const registerMediaSessionActions = (): void => {
+      if (!("mediaSession" in navigator)) return;
+      const actions: [MediaSessionAction, () => void][] = [
+        ["play", () => void audio.play().catch(() => undefined)],
+        ["pause", () => audio.pause()],
+      ];
       if (tracks.length > 1) {
-        navigator.mediaSession.setActionHandler("previoustrack", () => loadTrack(index - 1, true));
-        navigator.mediaSession.setActionHandler("nexttrack", () => loadTrack(index + 1, true));
+        actions.push(["previoustrack", () => loadTrack(index - 1, true)]);
+        actions.push(["nexttrack", () => loadTrack(index + 1, true)]);
       }
-    }
+      for (const [action, handler] of actions) {
+        try {
+          navigator.mediaSession.setActionHandler(action, handler);
+        } catch {
+          /* unsupported action */
+        }
+      }
+    };
 
-    loadTrack(0, false);
-
-    // Returns the function that reveals the native player
-    return () => {
-      native.hidden = false;
-      root.classList.add("is-native");
-      root.classList.remove("is-loaded");
+    return {
+      show: () => {
+        if (!started) {
+          // Nothing is fetched and no OS media controls are claimed until the
+          // fallback is really needed
+          started = true;
+          loadTrack(0, false);
+          registerMediaSessionActions();
+        }
+        native.hidden = false;
+        root.classList.add("is-native");
+        root.classList.remove("is-loaded");
+        root.setAttribute("aria-label", nativeLabel);
+      },
+      hideIfIdle: () => {
+        if (!audio.paused) return false;
+        native.hidden = true;
+        root.classList.remove("is-native");
+        root.setAttribute("aria-label", embedLabel);
+        return true;
+      },
     };
   }
 
@@ -719,59 +779,61 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
   function initBandcampPlayer(): void {
     const root = document.getElementById("bandcamp-player");
     if (!root) return;
+    // With transition:persist the element, its iframe and its audio survive
+    // navigation, so this runs once per element
     if (root.dataset.bcReady === "true") return;
     root.dataset.bcReady = "true";
 
     const frame = root.querySelector<HTMLIFrameElement>(".bc-player__embed");
     const nativeEl = root.querySelector<HTMLElement>(".bc-player__native");
-    const showNative = nativeEl ? initNativePlayer(root, nativeEl) : null;
-
-    const fallBack = (): void => {
-      if (!root.isConnected) return;
-      if (frame) {
-        frame.hidden = true;
-        frame.removeAttribute("src");
-      }
-      root.classList.remove("is-loaded");
-      if (showNative) showNative();
-      /* otherwise the facade stays: it links to the release on Bandcamp */
-    };
+    let native: NativePlayer | null = null;
+    try {
+      native = nativeEl ? initNativePlayer(root, nativeEl) : null;
+    } catch {
+      // A fallback-only failure must never take the Bandcamp path down
+      native = null;
+    }
 
     if (!frame) {
       // No release ID configured: native player if there are tracks, else facade
-      if (showNative) showNative();
+      native?.show();
       return;
     }
 
     const wide = window.matchMedia(LARGE_QUERY);
     let graceTimer: number | undefined;
+    /** The src currently requested; a ready message for anything else is stale. */
+    let currentSrc = "";
 
-    const load = (): void => {
-      // The page may have been swapped by a view transition since this ran.
-      if (!root.isConnected) {
-        wide.removeEventListener("change", load);
-        return;
-      }
-      if (root.classList.contains("is-native")) return;
-      const src = wide.matches ? frame.dataset.srcLarge : frame.dataset.srcSmall;
-      if (!src || frame.src === src) return;
-      // Bandcamp's page and its CDN must both answer; a blocked CDN leaves a
-      // blank player that still fires `load`.
-      Promise.all([probe(src), probe(BCBITS_PROBE)])
-        .then(() => {
-          if (!root.isConnected || root.classList.contains("is-native")) return;
-          root.classList.remove("is-loaded");
-          frame.hidden = false;
-          frame.src = src;
-          window.clearTimeout(graceTimer);
-          graceTimer = window.setTimeout(() => {
-            if (!root.classList.contains("is-loaded")) fallBack();
-          }, EMBED_GRACE_MS);
-        })
-        .catch(fallBack);
+    const armGrace = (): void => {
+      window.clearTimeout(graceTimer);
+      graceTimer = window.setTimeout(() => {
+        if (!root.classList.contains("is-loaded")) showFallback();
+      }, EMBED_GRACE_MS);
+    };
+
+    const wantedSrc = (): string | undefined =>
+      wide.matches ? frame.dataset.srcLarge : frame.dataset.srcSmall;
+
+    const showFallback = (): void => {
+      if (!root.isConnected) return;
+      root.classList.remove("is-loaded");
+      frame.hidden = true;
+      if (native) native.show();
+      /* otherwise the facade stays: it links to the release on Bandcamp */
+    };
+
+    const teardown = (): void => {
+      window.clearTimeout(graceTimer);
+      window.removeEventListener("message", onMessage);
+      wide.removeEventListener("change", load);
     };
 
     const onMessage = (event: MessageEvent): void => {
+      if (!root.isConnected) {
+        teardown();
+        return;
+      }
       if (event.origin !== BANDCAMP_ORIGIN || event.source !== frame.contentWindow) return;
       const data: unknown = event.data;
       const ready =
@@ -779,17 +841,56 @@ const nativeLabel = `Site player: ${release.title} by ${artistName}`;
         (typeof data === "object" &&
           data !== null &&
           (data as { data?: unknown }).data === READY_MESSAGE);
-      if (!ready || !frame.src) return;
+      if (!ready || !frame.src || frame.src !== currentSrc) return;
       window.clearTimeout(graceTimer);
+      // The fallback may already be up (slow connection); take over only if
+      // the visitor is not listening to it
+      if (root.classList.contains("is-native") && !(native && native.hideIfIdle())) return;
+      frame.hidden = false;
       root.classList.add("is-loaded");
     };
     window.addEventListener("message", onMessage);
+
+    frame.addEventListener("load", () => {
+      // The player script usually reports ready before `load` (which waits for
+      // artwork and styles); if it has not yet, give it a fresh grace period
+      // from here so slow HTML and a slow script are each tolerated.
+      if (frame.src && !root.classList.contains("is-loaded")) armGrace();
+    });
+
+    const load = (): void => {
+      // The page may have been swapped by a view transition since this ran.
+      if (!root.isConnected) {
+        teardown();
+        return;
+      }
+      const src = wantedSrc();
+      if (!src || frame.src === src) return;
+      // Bandcamp's page and its CDN must both answer; a blocked CDN leaves a
+      // blank player that still fires `load`.
+      Promise.all([probe(src), probe(BCBITS_PROBE)])
+        .then(() => {
+          // The viewport may have crossed the breakpoint again meanwhile
+          if (!root.isConnected || wantedSrc() !== src || frame.src === src) return;
+          currentSrc = src;
+          root.classList.remove("is-loaded");
+          // Keep the fallback visible (if it is) until the new size reports ready
+          if (!root.classList.contains("is-native")) frame.hidden = false;
+          frame.src = src;
+          armGrace();
+        })
+        .catch(() => {
+          frame.removeAttribute("src");
+          showFallback();
+        });
+    };
 
     load();
     wide.addEventListener("change", load);
   }
 
   initBandcampPlayer();
-  // Astro view transitions swap the body; re-bind on each navigation.
+  // Astro view transitions swap the body; re-bind on each navigation (a
+  // persisted bar is skipped by the bcReady guard, a fresh one is set up).
   document.addEventListener("astro:page-load", initBandcampPlayer);
 </script>
