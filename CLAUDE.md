@@ -116,6 +116,15 @@ public/
 
 `src/components/BandcampPlayer.astro` is the site player: the fixed glass bar at the top of the homepage and every blog page holds Bandcamp's embedded player for the release in `src/data/bandcamp.ts`. The embed is transparent so the glass shows through; from 768px it is the 120px size with artwork, below that the 42px strip, chosen by the same media query in CSS and script. Until the embed loads (and for good while the release `id` is empty) the bar shows a facade with the release title and a link to Bandcamp, so nothing loads from bandcamp.com until an ID is set. How to find the ID is in `src/data/bandcamp.ts`. The CSP reference in `public/_headers` allows `frame-src https://bandcamp.com`. The live site (checked September 2026) sends only `content-security-policy: frame-ancestors 'none'`, so the embed is not blocked; if the full CSP is ever applied in Cloudflare or Traefik, keep that `frame-src` in it. The old self-hosted audio player and `neverthere.mp3` were removed in September 2026.
 
+## Deployment Build (Dokploy + Nixpacks)
+
+Dokploy builds the site with Nixpacks: `npm ci`, then `npm run build` (`tinacms build && astro build`, with `TINA_CLIENT_ID`/`TINA_TOKEN` set in Dokploy). Two things keep that build working:
+
+- `nixpacks.toml` pins a newer nixpkgs archive so `nodejs_22` resolves to 22.23.x. Nixpacks' own archive gives 22.11.0, which Astro 7 refuses (`>=22.12.0`). `package.json` `engines.node` records the same floor.
+- The npm `overrides` in `package.json` must stay compatible with TinaCMS's admin bundler: `esbuild` within Vite 6's `^0.25.0`, and `markdown-it` 15 with `linkify-it` 6 (markdown-it 14 needs linkify-it 5). In September 2026 stricter overrides broke `tinacms build` and no deploy had succeeded since March; CI only warned on Tina failures. CI now runs `tinacms build --local --skip-cloud-checks` strictly, so an admin bundle failure fails the Build job.
+
+If a Dokploy deploy fails, read its log past the `npm ci` engine warnings: the real error is in the `npm run build` step.
+
 ## Notes
 
 - Pushing to `main` triggers Dokploy auto-deploy

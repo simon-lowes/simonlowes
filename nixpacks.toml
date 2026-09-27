@@ -1,0 +1,12 @@
+# Nixpacks build config for Dokploy (the site is deployed with Nixpacks there).
+#
+# Nixpacks can only pick a Node *major* version, and the nixpkgs archive
+# bundled with Nixpacks 1.41 resolves nodejs_22 to 22.11.0, which Astro 7
+# refuses ("Node.js v22.11.0 is not supported by Astro! >=22.12.0").
+# Pointing the setup phase at a newer nixpkgs archive gives nodejs_22 = 22.23.3,
+# which satisfies every engine range in the lockfile (Astro, Vite, jsdom, lint-staged).
+#
+# To bump later: pick a nixpkgs commit (https://channels.nixos.org/nixpkgs-unstable/git-revision)
+# and check pkgs/development/web/nodejs/v22.nix at that commit for the version.
+[phases.setup]
+nixpkgsArchive = "f9bce96a417afbb9c64725f8727e42efafeafc21"
