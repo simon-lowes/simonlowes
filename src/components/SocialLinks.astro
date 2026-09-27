@@ -1,0 +1,86 @@
+---
+/**
+ * SocialLinks - the footer row of music platform and social links.
+ *
+ * Icons are inlined as SVG from the simple-icons package at build time, so
+ * nothing is fetched from a third-party icon CDN at runtime: content blockers,
+ * Pi-hole and strict browsers used to leave this row as six broken images.
+ * Each link hovers to its brand colour via currentColor.
+ */
+import {
+  siApplemusic,
+  siBandcamp,
+  siInstagram,
+  siSpotify,
+  siYoutube,
+  siYoutubemusic,
+} from "simple-icons";
+
+interface Platform {
+  id: string;
+  label: string;
+  href: string;
+  icon: { title: string; path: string; hex: string };
+}
+
+const platforms: Platform[] = [
+  {
+    id: "bandcamp",
+    label: "Visit Simon Lowes on Bandcamp",
+    href: "https://simonlowes.bandcamp.com",
+    icon: siBandcamp,
+  },
+  {
+    id: "spotify",
+    label: "Listen to Simon Lowes on Spotify",
+    href: "https://open.spotify.com/artist/1E8slBJPNvUSPpRIh3xtkI?si=LOjXYVnQRhiZU6XmjkUdhg",
+    icon: siSpotify,
+  },
+  {
+    id: "apple-music",
+    label: "Listen to Simon Lowes on Apple Music",
+    href: "https://music.apple.com/gb/artist/simon-lowes/1351008298",
+    icon: siApplemusic,
+  },
+  {
+    id: "youtube-music",
+    label: "Listen to Simon Lowes on YouTube Music",
+    href: "https://music.youtube.com/channel/UCI4xshiWQrOu_27TPmW9A2g?feature=share",
+    icon: siYoutubemusic,
+  },
+  {
+    id: "youtube",
+    label: "Watch Simon Lowes on YouTube",
+    href: "https://www.youtube.com/simonlowesmusic",
+    icon: siYoutube,
+  },
+  {
+    id: "instagram",
+    label: "Follow Simon Lowes on Instagram",
+    href: "https://www.instagram.com/simonlowesmusic",
+    icon: siInstagram,
+  },
+];
+---
+
+<nav aria-label="Social media and music platforms">
+  <ul>
+    {platforms.map((p) => (
+      <li>
+        <a
+          href={p.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${p.label} (opens in new tab)`}
+          data-social={p.id}
+          style={`--brand: #${p.icon.hex}`}
+        >
+          <svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <title>{p.icon.title}</title>
+            <path d={p.icon.path} fill="currentColor" />
+          </svg>
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
