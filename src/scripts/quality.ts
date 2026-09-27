@@ -48,6 +48,10 @@ export interface QualityConfig {
   backdropUpdateInterval: number; // Re-render the noise every N frames
   backdropIntensity: number; // Brightness multiplier
 
+  // Hero galaxy (always on; particle count scales its cost)
+  heroGalaxyCount: number;
+  heroGalaxyRestingReveal: number; // Fraction of particles shown between surges
+
   // Performance
   targetFps: number;
   pixelRatioLimit: number;
@@ -71,6 +75,8 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     backdropOctaves: 3,
     backdropUpdateInterval: 3,
     backdropIntensity: 0.6, // No tone mapping on LOW, so keep the haze off the text
+    heroGalaxyCount: 3000,
+    heroGalaxyRestingReveal: 0.6,
     targetFps: 30,
     pixelRatioLimit: 1,
   },
@@ -91,6 +97,8 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     backdropOctaves: 4,
     backdropUpdateInterval: 2,
     backdropIntensity: 0.85,
+    heroGalaxyCount: 8000,
+    heroGalaxyRestingReveal: 0.6,
     targetFps: 30,
     pixelRatioLimit: 1.5,
   },
@@ -111,6 +119,8 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     backdropOctaves: 5,
     backdropUpdateInterval: 1,
     backdropIntensity: 1.0,
+    heroGalaxyCount: 20000,
+    heroGalaxyRestingReveal: 0.65,
     targetFps: 60,
     pixelRatioLimit: 2,
   },
@@ -131,6 +141,8 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     backdropOctaves: 6,
     backdropUpdateInterval: 1,
     backdropIntensity: 1.0,
+    heroGalaxyCount: 36000,
+    heroGalaxyRestingReveal: 0.7,
     targetFps: 60,
     pixelRatioLimit: 2,
   },
