@@ -134,12 +134,13 @@ export function setViewportHeight(): number {
   return vh;
 }
 
-// Cache for fixed element heights to avoid unnecessary style recalcs
-let lastPlayerHeight: number | null = null;
-let lastFooterHeight: number | null = null;
-
 /**
- * Update CSS custom properties for fixed element heights
+ * Update CSS custom properties for fixed element heights.
+ *
+ * The values are compared with what is on the root element, not a cache:
+ * Astro's view transitions swap the <html> attributes on every navigation,
+ * which takes the inline style (and these variables) with it, so the next
+ * measurement must write them again even when nothing has changed size.
  */
 export function updateFixedElementHeights(): void {
   const player = document.getElementById("bandcamp-player");
@@ -147,17 +148,15 @@ export function updateFixedElementHeights(): void {
   const root = document.documentElement;
 
   // Read layout once per element
-  const playerHeight = player ? Math.round(player.getBoundingClientRect().height) : 0;
-  const footerHeight = footer ? Math.round(footer.getBoundingClientRect().height) : 0;
+  const playerHeight = `${player ? Math.round(player.getBoundingClientRect().height) : 0}px`;
+  const footerHeight = `${footer ? Math.round(footer.getBoundingClientRect().height) : 0}px`;
 
   // Only write CSS vars if they changed (avoids extra style recalcs)
-  if (lastPlayerHeight !== playerHeight) {
-    root.style.setProperty("--player-h", `${playerHeight}px`);
-    lastPlayerHeight = playerHeight;
+  if (root.style.getPropertyValue("--player-h") !== playerHeight) {
+    root.style.setProperty("--player-h", playerHeight);
   }
-  if (lastFooterHeight !== footerHeight) {
-    root.style.setProperty("--footer-h", `${footerHeight}px`);
-    lastFooterHeight = footerHeight;
+  if (root.style.getPropertyValue("--footer-h") !== footerHeight) {
+    root.style.setProperty("--footer-h", footerHeight);
   }
 }
 

@@ -6,6 +6,7 @@ import {
   debounce,
   closeCookieNotice,
   setViewportHeight,
+  updateFixedElementHeights,
   initCellData,
 } from "../src/scripts/utils";
 
@@ -183,6 +184,48 @@ describe("Canvas Functions", () => {
       window.innerHeight = 800;
       const vh = setViewportHeight();
       expect(vh).toBe(8);
+    });
+  });
+
+  describe("updateFixedElementHeights", () => {
+    const fixed = (id, tag, height) => {
+      const el = document.createElement(tag);
+      if (id) el.id = id;
+      el.getBoundingClientRect = () => ({ height });
+      document.body.appendChild(el);
+      return el;
+    };
+
+    beforeEach(() => {
+      document.body.innerHTML = "";
+      document.documentElement.removeAttribute("style");
+    });
+
+    it("writes the measured player and footer heights to the root", () => {
+      fixed("bandcamp-player", "div", 142);
+      fixed(null, "footer", 76);
+      updateFixedElementHeights();
+      const style = document.documentElement.style;
+      expect(style.getPropertyValue("--player-h")).toBe("142px");
+      expect(style.getPropertyValue("--footer-h")).toBe("76px");
+    });
+
+    it("writes 0px when the elements are missing", () => {
+      updateFixedElementHeights();
+      expect(document.documentElement.style.getPropertyValue("--player-h")).toBe("0px");
+      expect(document.documentElement.style.getPropertyValue("--footer-h")).toBe("0px");
+    });
+
+    it("writes the values again after a view transition clears the root style", () => {
+      fixed("bandcamp-player", "div", 142);
+      fixed(null, "footer", 76);
+      updateFixedElementHeights();
+      // Astro's swap replaces the <html> attributes, dropping the inline style
+      document.documentElement.removeAttribute("style");
+      expect(document.documentElement.style.getPropertyValue("--player-h")).toBe("");
+      updateFixedElementHeights();
+      expect(document.documentElement.style.getPropertyValue("--player-h")).toBe("142px");
+      expect(document.documentElement.style.getPropertyValue("--footer-h")).toBe("76px");
     });
   });
 
