@@ -1,0 +1,57 @@
+---
+/**
+ * Callout - a glass card inside a post for an aside, a quote or a note.
+ * `tone` picks the accent: "cyan" (default) or "magenta". Optional `title`.
+ */
+interface Props {
+  title?: string;
+  tone?: "cyan" | "magenta";
+}
+const { title, tone = "cyan" } = Astro.props;
+---
+
+<aside class:list={["post-callout", `post-callout--${tone}`]}>
+  {title && <p class="post-callout__title">{title}</p>}
+  <div class="post-callout__body">
+    <slot />
+  </div>
+</aside>
+
+<style>
+  .post-callout {
+    --accent: #00d4ff;
+
+    margin: 1.75rem 0;
+    padding: 1rem 1.25rem;
+    background: rgb(15 15 15 / 35%);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    border-left: 3px solid var(--accent);
+    border-radius: 12px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow:
+      0 8px 32px rgb(0 0 0 / 30%),
+      inset 0 1px 0 rgb(255 255 255 / 5%);
+  }
+
+  .post-callout--magenta {
+    --accent: #ff3fb4;
+  }
+
+  .post-callout__title {
+    margin: 0 0 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .post-callout__body :global(p:first-child) {
+    margin-top: 0;
+  }
+
+  .post-callout__body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+</style>

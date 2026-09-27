@@ -12,7 +12,8 @@ const mediaItemSchema = z.object({
 const blog = defineCollection({
   // Astro 6 removed legacy `type: "content"` collections; entries are loaded
   // via the glob loader and are keyed by `id` (the old `slug`).
-  loader: glob({ pattern: "**/*.md", base: "./src/content/blog" }),
+  // .md for plain posts, .mdx for designed ones (components from src/components/post)
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/blog" }),
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),

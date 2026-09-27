@@ -22,6 +22,6 @@ export default [
     },
   },
   {
-    ignores: ["dist/", "node_modules/", ".astro/", "public/admin/", "workers/cms-auth/src/"],
+    ignores: ["dist/", "node_modules/", ".astro/"],
   },
 ];

@@ -10,7 +10,7 @@ Official website for Simon Lowes, an alternative rock musician, singer-songwrite
 ## Tech Stack
 
 - **Framework:** Astro (static site generator)
-- **CMS:** Sveltia CMS (static, Git-backed editor at /admin, see "Blog editor" below)
+- **Content:** Markdown / MDX posts in the repo, written with Claude (see "Blog posts" below); no CMS
 - **3D Graphics:** Three.js (starfield background with parallax)
 - **Animations:** GSAP
 - **Unit Testing:** Vitest
@@ -48,7 +48,7 @@ Spotify, Apple Music, YouTube Music, Bandcamp, YouTube, Instagram (links in site
 
 ```bash
 # Development
-npm run dev           # astro dev (the editor is at http://localhost:4321/admin/)
+npm run dev           # astro dev (drafts are visible here)
 npm run build         # astro build
 npm run preview       # Preview production build
 
@@ -92,9 +92,10 @@ Husky runs `lint-staged` on every commit. lint-staged config (from package.json)
 
 ```
 src/
-  components/       # Astro components (SpaceBackground, MotionPermissionPrompt, BandcampPlayer)
+  components/       # Astro components (SpaceBackground, MotionPermissionPrompt, BandcampPlayer, SocialLinks)
+  components/post/  # Building blocks for designed MDX posts (Lead, Callout, Reveal, Figure, Track, Embed)
   data/             # Site data (bandcamp.ts: the release the player streams)
-  content/          # Content collections (blog posts in Markdown)
+  content/          # Content collections (blog posts in Markdown or MDX)
   content.config.ts # Content collection schemas
   layouts/          # Page layouts (BaseLayout, BlogLayout)
   pages/            # Route pages (index, blog, 404)
@@ -114,16 +115,14 @@ public/
 
 `src/components/BandcampPlayer.astro` is the site player: the fixed glass bar at the top of the homepage and every blog page holds Bandcamp's embedded player for the release in `src/data/bandcamp.ts`. The embed is transparent so the glass shows through; from 768px it is the 120px size with artwork, below that the 42px strip, chosen by the same media query in CSS and script. Until the embed loads (and for good while the release `id` is empty) the bar shows a facade with the release title and a link to Bandcamp, so nothing loads from bandcamp.com until an ID is set. How to find the ID is in `src/data/bandcamp.ts`. The CSP reference in `public/_headers` allows `frame-src https://bandcamp.com`. The live site (checked September 2026) sends only `content-security-policy: frame-ancestors 'none'`, so the embed is not blocked; if the full CSP is ever applied in Cloudflare or Traefik, keep that `frame-src` in it. The old self-hosted audio player and `neverthere.mp3` were removed in September 2026.
 
-## Blog editor (Sveltia CMS)
+## Blog posts
 
-Posts are Markdown files in `src/content/blog` with the front matter defined in `src/content.config.ts`. The editor is Sveltia CMS: two static files, `public/admin/index.html` (loads a pinned Sveltia build from unpkg) and `public/admin/config.yml` (the blog collection, whose fields mirror the content schema). There is no CMS build step and no CMS account: edits are commits to `main`, which Dokploy deploys.
+There is no CMS. Posts are files in `src/content/blog/` (front matter schema in `src/content.config.ts`), written with Claude and shipped through a PR; the `/new-post` skill (`.claude/skills/new-post/SKILL.md`) holds the full recipe.
 
-- **Sign-in** uses GitHub OAuth through the Cloudflare Worker in `workers/cms-auth` (Sveltia's reference worker, MIT), deployed at `cms-auth.simonlowes.com` and named as `base_url` in the config. One-time setup: create a GitHub OAuth App with callback `https://cms-auth.simonlowes.com/callback`, then in `workers/cms-auth` run `npx wrangler secret put GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` and `npx wrangler deploy`.
-- **Local editing**: run `npm run dev`, open `/admin/` and choose "Work with local repository"; Sveltia then edits the checkout directly (Chrome or Edge), no sign-in needed.
-- **Images** chosen in the editor are committed to `public/images/blog` and served from `/images/blog/`. Large audio and video stay on Cloudflare R2 (`media.simonlowes.com`): upload in the Cloudflare dashboard and paste the URL into a Media item. The old `workers/media-api` upload worker authenticated with TinaCMS tokens and is no longer used by the site.
-- `/admin/` is `Disallow`ed in `robots.txt` and carries `noindex`.
+- **Plain posts** are `.md`. **Designed posts** are `.mdx` and compose the kit in `src/components/post/`: `Lead`, `Callout`, `Reveal` (scroll-in, reduced-motion aware), `Figure`, `Track` (self-hosted audio) and `Embed` (click-to-load YouTube or Bandcamp, nothing third-party fetched on page view). `src/content/blog/post-kit.mdx` is a permanent draft that exercises every component; drafts render in `npm run dev` only and are excluded from the build and the listing.
+- **Images** go in `public/images/blog/<slug>/`, web-sized. Large audio and video stay on Cloudflare R2 (`media.simonlowes.com`) and are referenced by URL. The old `workers/media-api` upload worker authenticated with TinaCMS tokens and is no longer used by the site.
 
-TinaCMS was removed in September 2026: its build step had broken every Dokploy deploy since March, it needed a TinaCloud account and two secrets, and it added 134 MB of dependencies. The `TINA_CLIENT_ID` and `TINA_TOKEN` variables in Dokploy and the GitHub secrets of the same names can be deleted.
+TinaCMS was removed in September 2026 (its build step broke every deploy since March). Sveltia CMS replaced it briefly the same month and was removed the same day, before its OAuth worker was ever deployed: a form editor cannot produce designed posts, and writing them here can. The `TINA_CLIENT_ID` and `TINA_TOKEN` variables in Dokploy and the GitHub secrets of the same names can be deleted.
 
 ## Deployment Build (Dokploy + Nixpacks)
 

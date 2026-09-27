@@ -1,0 +1,70 @@
+---
+/**
+ * Reveal - fades and lifts its content in when it scrolls into view.
+ * Wrap any block. `delay` (ms) staggers siblings. Honours reduced motion:
+ * the content is simply visible with no animation.
+ */
+interface Props {
+  delay?: number;
+}
+const { delay = 0 } = Astro.props;
+---
+
+<div class="post-reveal" style={`--reveal-delay: ${delay}ms`} data-reveal>
+  <slot />
+</div>
+
+<style>
+  .post-reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.7s ease var(--reveal-delay, 0ms),
+      transform 0.7s ease var(--reveal-delay, 0ms);
+  }
+
+  .post-reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Without JS, or with reduced motion, everything is simply visible */
+  :global(html.no-js) .post-reveal,
+  .post-reveal.is-static {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+</style>
+
+<script>
+  function initReveals(): void {
+    const items = document.querySelectorAll<HTMLElement>("[data-reveal]:not([data-reveal-bound])");
+    if (items.length === 0) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || !("IntersectionObserver" in window)) {
+      items.forEach((el) => {
+        el.classList.add("is-static");
+        el.dataset.revealBound = "true";
+      });
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add("is-in");
+          io.unobserve(entry.target);
+        }
+      },
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.1 }
+    );
+    items.forEach((el) => {
+      el.dataset.revealBound = "true";
+      io.observe(el);
+    });
+  }
+
+  initReveals();
+  document.addEventListener("astro:page-load", initReveals);
+</script>

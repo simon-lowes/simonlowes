@@ -1,0 +1,46 @@
+---
+title: Post kit
+date: "2026-09-27"
+description: A draft that shows every building block available to a designed post. Never published.
+draft: true
+---
+
+import Lead from "../../components/post/Lead.astro";
+import Callout from "../../components/post/Callout.astro";
+import Reveal from "../../components/post/Reveal.astro";
+import Figure from "../../components/post/Figure.astro";
+import Track from "../../components/post/Track.astro";
+import Embed from "../../components/post/Embed.astro";
+
+<Lead>
+  This draft exists so a new post can be built by example. It stays a draft, so it is visible in
+  `npm run dev` and never on the live site.
+</Lead>
+
+Plain Markdown works as always: **bold**, _italic_, [links](https://simonlowes.bandcamp.com), lists and headings.
+
+<Reveal>
+  <Callout title="Note">
+    A glass callout for an aside. Use `tone="magenta"` for the other accent.
+  </Callout>
+</Reveal>
+
+<Reveal delay={120}>
+  <Figure
+    src="/images/IMG_0404.webp"
+    alt="Simon Lowes"
+    caption="A figure with a caption. Add `wide` to bleed past the column."
+  />
+</Reveal>
+
+<Reveal delay={240}>
+  <Track src="/audio/never-there.mp3" title="Never There" note="An excerpt, streamed on demand." />
+</Reveal>
+
+<Embed kind="youtube" id="dQw4w9WgXcQ" title="Example video" />
+
+<Embed
+  kind="bandcamp"
+  id="https://bandcamp.com/EmbeddedPlayer/album=2665327263/size=large/bgcol=0a0a0f/linkcol=00d4ff/transparent=true/tracklist=false/artwork=small/"
+  title="Slow Motion on Bandcamp"
+/>
