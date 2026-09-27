@@ -7,6 +7,8 @@
 import * as THREE from "three";
 import { ParallaxController } from "./parallax";
 import { QualityManager, type QualityConfig } from "./quality";
+import { DeepSkyBackdrop, type DeepSkySettings } from "./deepsky";
+import { ENCOUNTER_CONFIG, journeyPhase } from "./encounters";
 import {
   EffectComposer,
   BloomEffect,
@@ -110,19 +112,20 @@ const _STAR_COLORS = {
   red: STELLAR_CLASSIFICATION.M.colors,
 };
 
-// JWST-inspired nebula colors based on emission spectra
-// These colors represent actual ionized gas emissions observed by telescopes
+// Nebula colours keyed by the emission lines JWST imagery maps them from, but
+// pushed towards the site's cinematic cyan / magenta palette rather than the
+// telescope's red / orange (see deepsky.ts for the backdrop palette)
 const NEBULA_COLORS = {
-  // Hydrogen-alpha (H-alpha) - ionized hydrogen, the most common nebula emission
-  hydrogenAlpha: 0xff4444, // Deep red
-  // Oxygen III (O-III) - doubly ionized oxygen, gives the teal/blue glow
-  oxygenIII: 0x33ccaa, // Teal-blue
-  // Sulfur II (S-II) - ionized sulfur, appears in star-forming regions
-  sulfurII: 0xff8844, // Orange
+  // Hydrogen-alpha (H-alpha) - the most common nebula emission
+  hydrogenAlpha: 0xff3f9f, // Magenta-red
+  // Oxygen III (O-III) - doubly ionized oxygen, gives the glow
+  oxygenIII: 0x00d4ff, // Site cyan
+  // Sulfur II (S-II) - star-forming regions
+  sulfurII: 0xff7a9c, // Warm pink
   // Nitrogen II (N-II) - ionized nitrogen
-  nitrogenII: 0xcc4466, // Pink-red
-  // Reflection nebulae - blue due to scattered starlight
-  reflection: 0x4488cc, // Blue
+  nitrogenII: 0xd946ef, // Magenta-violet
+  // Reflection nebulae - scattered starlight
+  reflection: 0x5c7cff, // Blue-violet
   // Combination colors seen in famous nebulae
   pillarsOfCreation: 0x886644, // Brownish dust pillars
   carinaCliffs: 0x664422, // Dark cosmic cliffs
@@ -275,38 +278,28 @@ const CELESTIAL_SPAWN_Z = -2000;
 const CELESTIAL_RECYCLE_Z = CAMERA_Z + 100;
 
 // ===========================================================
-// REALISTIC ENCOUNTER SYSTEM
-// Phase-based probabilistic spawning for authentic space journey
+// ENCOUNTER SYSTEM - pacing lives in ./encounters.ts
 // ===========================================================
 
-const ENCOUNTER_CONFIG = {
-  // Phase thresholds (seconds of journey time) - 60% accelerated
-  phases: {
-    deepSpace: 0, // Phase 1: Stars only
-    distantGlow: 38, // Phase 2: Background galaxies appear (~38s)
-    stellarDensity: 112, // Phase 3: Planets and spiral galaxies (~1:52)
-    cosmicWonder: 188, // Phase 4: Nebulae become possible (~3:08)
+// Volumetric nebula palettes: cinematic cyan / magenta / violet, matching
+// the deep-sky backdrop and the site accent
+const VOLUMETRIC_PALETTES = [
+  {
+    primary: new THREE.Color(0x00d4ff), // Site cyan
+    secondary: new THREE.Color(0xff3fb4), // Magenta
+    tertiary: new THREE.Color(0x7c5cff), // Violet bridge
   },
-
-  // Probability per frame (at 60fps) - +69% total boost (2x 30% increases)
-  spawnRates: {
-    shootingStar: 0.000507, // ~1 per 32 seconds
-    backgroundGalaxy: 0.00507, // ~1 per 3.2 seconds (after Phase 2)
-    planet: 0.000169, // ~1 per 1.6 minutes (after Phase 3)
-    spiralGalaxy: 0.0000845, // ~1 per 3.2 minutes (after Phase 3)
-    spriteNebula: 0.0000338, // ~1 per 8.2 minutes (after Phase 4)
-    volumetricNebula: 0.0000169, // ~1 per 16 minutes (after Phase 4)
+  {
+    primary: new THREE.Color(0xd946ef), // Magenta-violet
+    secondary: new THREE.Color(0x22d3ee), // Aqua
+    tertiary: new THREE.Color(0xe0e0ff), // Pale highlights
   },
-
-  // Maximum concurrent objects (performance caps)
-  maxActive: {
-    planets: 4,
-    spiralGalaxies: 3,
-    spriteNebulae: 4,
-    volumetricNebulae: 2,
-    backgroundGalaxies: 200,
+  {
+    primary: new THREE.Color(0x3b82f6), // Deep blue
+    secondary: new THREE.Color(0xff4fd8), // Hot pink
+    tertiary: new THREE.Color(0x00ffe0), // Electric aqua
   },
-};
+];
 
 // Interface for tracking bright stars that get diffraction spikes
 interface BrightStar {
@@ -343,7 +336,7 @@ export class Starfield {
   // Shooting star system
   private shootingStars: THREE.Group[] = [];
   private lastShootingStarTime = 0;
-  private nextShootingStarInterval = 30000 + Math.random() * 30000; // 30-60 seconds
+  private nextShootingStarInterval = Starfield.randomShootingStarInterval();
 
   // Post-processing
   private composer: EffectComposer;
@@ -356,6 +349,9 @@ export class Starfield {
   // Quality management
   private qualityManager: QualityManager;
   private qualityConfig: QualityConfig;
+
+  // Always-on deep-sky backdrop (Milky Way band + nebula clouds)
+  private backdrop: DeepSkyBackdrop;
 
   // Journey state for realistic encounter system
   private journeyTime = 0; // Seconds since start
@@ -430,12 +426,17 @@ export class Starfield {
     // Initialize parallax controller (always full animation)
     this.parallax = new ParallaxController(false);
 
+    // Deep-sky backdrop behind everything (always present, scaled by tier)
+    this.backdrop = new DeepSkyBackdrop(this.backdropSettings(), this.camera.aspect);
+    this.scene.add(this.backdrop.mesh);
+
     // Create star layers (the base experience - always present)
     this.createLayers();
     this.createDiffractionSpikes(); // JWST-style spikes on brightest stars
 
-    // NOTE: Nebulae, planets, galaxies now spawn probabilistically via checkEncounters()
-    // This creates a more realistic space journey where interesting objects are rare encounters
+    // Place the first encounters before the first frame, then let
+    // checkEncounters() keep the journey populated
+    this.seedOpeningScene();
 
     // Bind event handlers
     this.handleResize = this.handleResize.bind(this);
@@ -529,11 +530,73 @@ export class Starfield {
       this.bloomEffect.intensity = newConfig.bloomIntensity;
     }
 
-    // Note: Full effect rebuilding would require recreating the composer
-    // For now, we just adjust parameters that can be changed dynamically
+    // Pixel ratio is the biggest lever on fragment cost
+    this.applyPixelRatio();
+
+    // Backdrop resolution, detail and cadence follow the tier
+    this.backdrop.applySettings(this.backdropSettings());
+
+    // Drop live volumetric nebulae if the tier no longer allows them
+    if (!newConfig.volumetricNebulaEnabled) {
+      this.removeEncounters("volumetricNebula");
+    }
+
+    // Note: star counts and the PSF shader are fixed at construction;
+    // rebuilding them would need a new composer
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.log(`[Starfield] Quality changed to: ${this.qualityManager.getTier()}`);
+    }
+  }
+
+  private backdropSettings(): DeepSkySettings {
+    return {
+      textureWidth: this.qualityConfig.backdropTextureWidth,
+      octaves: this.qualityConfig.backdropOctaves,
+      updateInterval: this.qualityConfig.backdropUpdateInterval,
+      intensity: this.qualityConfig.backdropIntensity,
+    };
+  }
+
+  private applyPixelRatio(): void {
+    const ratio = Math.min(window.devicePixelRatio, this.qualityConfig.pixelRatioLimit);
+    this.renderer.setPixelRatio(ratio);
+    this.composer.setSize(window.innerWidth, window.innerHeight);
+    this.layers.forEach((layer) => {
+      layer.material.uniforms.uPixelRatio.value = ratio;
+    });
+  }
+
+  /**
+   * Remove every live encounter of one type (used when a tier downgrade
+   * turns an effect off)
+   */
+  private removeEncounters(type: CelestialBody["type"]): void {
+    for (let i = this.celestialBodies.length - 1; i >= 0; i--) {
+      const body = this.celestialBodies[i];
+      if (body.type !== type) continue;
+      this.disposeObject(body.mesh);
+      this.scene.remove(body.mesh);
+      this.celestialBodies.splice(i, 1);
+    }
+    if (type === "volumetricNebula") this.activeEncounters.volumetricNebulae = 0;
+  }
+
+  private static randomShootingStarInterval(): number {
+    const { min, max } = ENCOUNTER_CONFIG.shootingStarIntervalMs;
+    return min + Math.random() * (max - min);
+  }
+
+  /**
+   * Populate the distance before the first frame so the opening view has
+   * galaxies and nebulae in it rather than dots alone
+   */
+  private seedOpeningScene(): void {
+    const { opening } = ENCOUNTER_CONFIG;
+    for (let i = 0; i < opening.backgroundGalaxies; i++) this.spawnBackgroundGalaxy();
+    for (let i = 0; i < opening.spriteNebulae; i++) this.spawnSpriteNebula();
+    if (this.qualityConfig.volumetricNebulaEnabled) {
+      for (let i = 0; i < opening.volumetricNebulae; i++) this.spawnVolumetricNebula();
     }
   }
 
@@ -871,36 +934,14 @@ export class Starfield {
   }
 
   /**
-   * Create volumetric raymarched nebulae for ULTRA quality tier
+   * Create volumetric raymarched nebulae (HIGH and ULTRA tiers)
    * Uses sphere meshes with raymarching shaders to render 3D gas clouds
    */
   private createVolumetricNebulae(): void {
     const nebulaCount = 3; // Fewer but more impressive volumetric clouds
 
-    // JWST-inspired color palettes for different nebula regions
-    const nebulaPalettes = [
-      // Carina Nebula style - warm emission
-      {
-        primary: new THREE.Color(0xff6b4a), // Hydrogen-alpha red/orange
-        secondary: new THREE.Color(0x4a9eff), // Oxygen blue
-        tertiary: new THREE.Color(0xffb347), // Sulfur orange
-      },
-      // Eagle Nebula style - cool pillars
-      {
-        primary: new THREE.Color(0x7b68ee), // Dusty purple
-        secondary: new THREE.Color(0x00ced1), // Cyan emission
-        tertiary: new THREE.Color(0xffa07a), // Light salmon highlights
-      },
-      // Orion Nebula style - classic emission
-      {
-        primary: new THREE.Color(0xff69b4), // Hot pink hydrogen
-        secondary: new THREE.Color(0x87ceeb), // Sky blue oxygen
-        tertiary: new THREE.Color(0xdda0dd), // Plum ionization
-      },
-    ];
-
     for (let i = 0; i < nebulaCount; i++) {
-      const palette = nebulaPalettes[i % nebulaPalettes.length];
+      const palette = VOLUMETRIC_PALETTES[i % VOLUMETRIC_PALETTES.length];
       const nebula = this.createVolumetricNebulaMesh(palette, i);
 
       // Position in the far background
@@ -2533,7 +2574,7 @@ export class Starfield {
     if (currentTime - this.lastShootingStarTime > this.nextShootingStarInterval) {
       this.createShootingStar();
       this.lastShootingStarTime = currentTime;
-      this.nextShootingStarInterval = 30000 + Math.random() * 30000; // 30-60 seconds
+      this.nextShootingStarInterval = Starfield.randomShootingStarInterval();
     }
 
     // Update existing shooting stars
@@ -2740,14 +2781,8 @@ export class Starfield {
     this.camera.updateProjectionMatrix();
 
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    // Resize the post-processing composer
-    this.composer.setSize(width, height);
-
-    this.layers.forEach((layer) => {
-      layer.material.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
-    });
+    this.applyPixelRatio(); // also resizes the composer
+    this.backdrop.setAspect(this.camera.aspect);
   }
 
   private animate(currentTime: number): void {
@@ -2774,7 +2809,7 @@ export class Starfield {
     // Check for probabilistic celestial encounters based on journey phase
     this.checkEncounters();
 
-    // Update volumetric nebula uniforms (ULTRA quality only)
+    // Update volumetric nebula uniforms (HIGH and ULTRA tiers)
     if (this.qualityConfig.volumetricNebulaEnabled) {
       this.celestialBodies.forEach((body) => {
         if (body.mesh.userData.volumetricMaterial) {
@@ -2802,8 +2837,16 @@ export class Starfield {
     // FORWARD MOTION: Move stars toward camera
     this.updateForwardMotion();
 
-    // Update shooting stars (probabilistic spawning every 30-60 seconds)
+    // Update shooting stars (timer-based, see encounters.ts)
     this.updateShootingStars(currentTime);
+
+    // Deep-sky backdrop: drift, parallax and (when due) a noise re-render
+    this.backdrop.update(
+      this.renderer,
+      elapsedTime,
+      this.camera.rotation.y,
+      this.camera.rotation.x
+    );
 
     // Render with post-processing (bloom + vignette)
     this.composer.render();
@@ -2912,11 +2955,7 @@ export class Starfield {
    * Phase 4: Cosmic Wonder (nebulae become possible)
    */
   private getCurrentPhase(): number {
-    const { phases } = ENCOUNTER_CONFIG;
-    if (this.journeyTime >= phases.cosmicWonder) return 4;
-    if (this.journeyTime >= phases.stellarDensity) return 3;
-    if (this.journeyTime >= phases.distantGlow) return 2;
-    return 1;
+    return journeyPhase(this.journeyTime);
   }
 
   /**
@@ -3044,32 +3083,10 @@ export class Starfield {
   }
 
   /**
-   * Spawn a single volumetric nebula (raymarched 3D cloud) - ULTRA quality only
+   * Spawn a single volumetric nebula (raymarched 3D cloud) - HIGH and ULTRA tiers
    */
   private spawnVolumetricNebula(): void {
-    // JWST-inspired color palettes
-    const nebulaPalettes = [
-      // Carina Nebula style - warm emission
-      {
-        primary: new THREE.Color(0xff6b4a),
-        secondary: new THREE.Color(0x4a9eff),
-        tertiary: new THREE.Color(0xffb347),
-      },
-      // Eagle Nebula style - cool pillars
-      {
-        primary: new THREE.Color(0x7b68ee),
-        secondary: new THREE.Color(0x00ced1),
-        tertiary: new THREE.Color(0xffa07a),
-      },
-      // Orion Nebula style - classic emission
-      {
-        primary: new THREE.Color(0xff69b4),
-        secondary: new THREE.Color(0x87ceeb),
-        tertiary: new THREE.Color(0xdda0dd),
-      },
-    ];
-
-    const palette = nebulaPalettes[Math.floor(Math.random() * nebulaPalettes.length)];
+    const palette = VOLUMETRIC_PALETTES[Math.floor(Math.random() * VOLUMETRIC_PALETTES.length)];
     const nebula = this.createVolumetricNebulaMesh(palette, Math.random() * 1000);
 
     nebula.position.set(
@@ -3204,6 +3221,9 @@ export class Starfield {
       this.scene.remove(starGroup);
     });
     this.shootingStars = [];
+
+    this.scene.remove(this.backdrop.mesh);
+    this.backdrop.dispose();
 
     this.disposeRenderer();
   }
