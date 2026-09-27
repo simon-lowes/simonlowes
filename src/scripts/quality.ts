@@ -14,6 +14,13 @@ export enum QualityTier {
   _ULTRA = "ultra",
 }
 
+const TIER_ORDER: readonly QualityTier[] = [
+  QualityTier._LOW,
+  QualityTier._MEDIUM,
+  QualityTier._HIGH,
+  QualityTier._ULTRA,
+];
+
 export interface QualityConfig {
   // Particle counts
   farStarCount: number;
@@ -35,6 +42,12 @@ export interface QualityConfig {
   // Volumetric effects
   volumetricNebulaEnabled: boolean; // Raymarched 3D gas clouds (expensive)
 
+  // Deep-sky backdrop (always on; these scale its cost)
+  backdropTextureWidth: number; // Offscreen noise texture width in pixels
+  backdropOctaves: number; // Fractal noise detail
+  backdropUpdateInterval: number; // Re-render the noise every N frames
+  backdropIntensity: number; // Brightness multiplier
+
   // Performance
   targetFps: number;
   pixelRatioLimit: number;
@@ -54,6 +67,10 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     adaptiveExposureEnabled: false,
     realisticPsfEnabled: false,
     volumetricNebulaEnabled: false,
+    backdropTextureWidth: 384,
+    backdropOctaves: 3,
+    backdropUpdateInterval: 3,
+    backdropIntensity: 0.6, // No tone mapping on LOW, so keep the haze off the text
     targetFps: 30,
     pixelRatioLimit: 1,
   },
@@ -70,6 +87,10 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     adaptiveExposureEnabled: true, // Low cost, enable at MEDIUM+
     realisticPsfEnabled: false, // Keep simple stars for performance
     volumetricNebulaEnabled: false,
+    backdropTextureWidth: 640,
+    backdropOctaves: 4,
+    backdropUpdateInterval: 2,
+    backdropIntensity: 0.85,
     targetFps: 30,
     pixelRatioLimit: 1.5,
   },
@@ -85,7 +106,11 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     vignetteEnabled: true,
     adaptiveExposureEnabled: true,
     realisticPsfEnabled: true, // Airy disk + diffraction spikes
-    volumetricNebulaEnabled: false, // Save for ULTRA tier
+    volumetricNebulaEnabled: true, // Raymarched 3D gas clouds: the showpiece, on by default
+    backdropTextureWidth: 1024,
+    backdropOctaves: 5,
+    backdropUpdateInterval: 1,
+    backdropIntensity: 1.0,
     targetFps: 60,
     pixelRatioLimit: 2,
   },
@@ -102,6 +127,10 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
     adaptiveExposureEnabled: true,
     realisticPsfEnabled: true, // Airy disk + diffraction spikes
     volumetricNebulaEnabled: true, // Raymarched 3D gas clouds
+    backdropTextureWidth: 1280,
+    backdropOctaves: 6,
+    backdropUpdateInterval: 1,
+    backdropIntensity: 1.0,
     targetFps: 60,
     pixelRatioLimit: 2,
   },
@@ -109,7 +138,8 @@ const QUALITY_PRESETS: Record<QualityTier, QualityConfig> = {
 
 // ============================================================
 // GPU CLASSIFICATION
-// Known GPU strings mapped to quality tiers
+// Known GPU strings mapped to quality tiers. This is only a starting guess:
+// the frame-time probe below moves the tier up or down from here.
 // ============================================================
 
 interface GPUMatch {
@@ -121,8 +151,8 @@ const GPU_CLASSIFICATIONS: GPUMatch[] = [
   // ULTRA tier - High-end dedicated GPUs
   {
     patterns: [
-      /RTX\s*(30|40)/i, // NVIDIA RTX 3000/4000 series
-      /RX\s*(6[89]|7[0-9])/i, // AMD RX 6800+, 7000 series
+      /RTX\s*(30|40|50)/i, // NVIDIA RTX 3000/4000/5000 series
+      /RX\s*(6[89]|7[0-9]|9[0-9])/i, // AMD RX 6800+, 7000, 9000 series
       /Radeon\s*Pro\s*(W[67]|VII)/i, // AMD Pro workstation
       /Quadro\s*RTX/i, // NVIDIA Quadro RTX
     ],
@@ -145,8 +175,8 @@ const GPU_CLASSIFICATIONS: GPUMatch[] = [
     patterns: [
       /GTX\s*(9[0-9]0|10[0-5]0)/i, // NVIDIA GTX 900/1000 series (not 1060+)
       /RX\s*(4[0-9]{2})/i, // AMD RX 400 series
-      /Iris\s*(Plus|Pro|Xe)/i, // Intel Iris integrated
-      /UHD\s*(6[2-9]0|7[0-9]0)/i, // Intel UHD 620+
+      /Iris(\(R\))?\s*(Plus|Pro|Xe)/i, // Intel Iris integrated (strings often read "Iris(R) Xe")
+      /UHD\s*(Graphics\s*)?(6[2-9]0|7[0-9]0)/i, // Intel UHD 620+
     ],
     tier: QualityTier._MEDIUM,
   },
@@ -161,7 +191,6 @@ const GPU_CLASSIFICATIONS: GPUMatch[] = [
       /Radeon\s*(HD|R[579])/i, // Old AMD
       /SwiftShader/i, // Software renderer
       /llvmpipe/i, // Software renderer
-      /ANGLE/i, // DirectX translation layer (often weaker)
     ],
     tier: QualityTier._LOW,
   },
@@ -190,7 +219,7 @@ function detectGPU(gl: WebGLRenderingContext | null): string | null {
 /**
  * Classify GPU string to quality tier
  */
-function classifyGPU(gpuString: string | null): QualityTier | null {
+export function classifyGPU(gpuString: string | null): QualityTier | null {
   if (!gpuString) return null;
 
   for (const classification of GPU_CLASSIFICATIONS) {
@@ -213,10 +242,10 @@ function detectMemory(): number | null {
 }
 
 /**
- * Detect if device is mobile
+ * Detect if device is a phone or tablet
  */
-function detectMobile(): boolean {
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+export function detectMobile(userAgent: string = navigator.userAgent): boolean {
+  return /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
 }
 
 /**
@@ -240,15 +269,34 @@ function getWebGLCapabilities(
   };
 }
 
+function tierValue(tier: QualityTier): number {
+  return TIER_ORDER.indexOf(tier);
+}
+
+function minTier(a: QualityTier, b: QualityTier): QualityTier {
+  return tierValue(a) <= tierValue(b) ? a : b;
+}
+
 // ============================================================
 // QUALITY MANAGER CLASS
 // ============================================================
 
 const STORAGE_KEY = "starfield-quality-preference";
 
+/** Phones and tablets never go above this, whatever their GPU: heat and battery. */
+export const MOBILE_MAX_TIER = QualityTier._MEDIUM;
+
+/** Consecutive 60-frame windows at full frame rate before trying the next tier up. */
+const HEADROOM_WINDOWS_TO_UPGRADE = 3;
+
 export class QualityManager {
   private currentTier: QualityTier;
   private detectedTier: QualityTier;
+  /** Hardware ceiling: MEDIUM on phones, ULTRA on desktop. */
+  private maxTier: QualityTier;
+  /** Lowered whenever a tier proves too slow, so the probe never bounces back up to it. */
+  private ceilingTier: QualityTier;
+  private headroomWindows = 0;
   private userOverride: QualityTier | null = null;
   private gpuString: string | null = null;
   private deviceMemory: number | null = null;
@@ -263,6 +311,8 @@ export class QualityManager {
     this.gpuString = detectGPU(gl);
     this.deviceMemory = detectMemory();
     this.isMobile = detectMobile();
+    this.maxTier = this.isMobile ? MOBILE_MAX_TIER : QualityTier._ULTRA;
+    this.ceilingTier = this.maxTier;
 
     // Load user preference
     this.loadUserPreference();
@@ -280,49 +330,44 @@ export class QualityManager {
       // eslint-disable-next-line no-console
       console.log("[Quality] Mobile:", this.isMobile);
       // eslint-disable-next-line no-console
-      console.log("[Quality] Detected tier:", this.detectedTier);
+      console.log("[Quality] Detected tier:", this.detectedTier, "max:", this.maxTier);
       // eslint-disable-next-line no-console
       console.log("[Quality] Current tier:", this.currentTier);
     }
   }
 
   /**
-   * Calculate optimal quality tier based on all signals
+   * Starting tier from the signals we have. The frame-time probe in
+   * recordFrame() corrects this within a few seconds either way, so the
+   * guess errs towards the richer tier on desktop.
    */
   private calculateOptimalTier(gl: WebGLRenderingContext | null): QualityTier {
-    // Start with GPU classification if available
     const gpuTier = classifyGPU(this.gpuString);
 
-    // If we got a confident GPU match, use it
+    // A recognised GPU is the best signal we have
     if (gpuTier !== null) {
-      // Downgrade mobile even with good GPU (thermal/battery)
-      if (this.isMobile && gpuTier === QualityTier._ULTRA) {
-        return QualityTier._HIGH;
-      }
-      return gpuTier;
+      return minTier(gpuTier, this.maxTier);
     }
 
-    // Fallback: Use heuristics
     const caps = getWebGLCapabilities(gl);
 
-    // Mobile devices default to LOW unless proven otherwise
+    // Phones default to LOW unless they look capable
     if (this.isMobile) {
-      // Check if it's a capable mobile (high memory, large textures)
       if (this.deviceMemory && this.deviceMemory >= 4 && caps && caps.maxTextureSize >= 8192) {
-        return QualityTier._MEDIUM;
+        return minTier(QualityTier._MEDIUM, this.maxTier);
       }
       return QualityTier._LOW;
     }
 
-    // Desktop fallback based on memory
+    // Desktop with an unrecognised GPU: memory is the only other hint
     if (this.deviceMemory) {
       if (this.deviceMemory >= 8) return QualityTier._HIGH;
       if (this.deviceMemory >= 4) return QualityTier._MEDIUM;
       return QualityTier._LOW;
     }
 
-    // Complete unknown - assume MEDIUM for desktop
-    return QualityTier._MEDIUM;
+    // Complete unknown on desktop (Safari, Firefox): start HIGH and let the probe decide
+    return QualityTier._HIGH;
   }
 
   /**
@@ -376,6 +421,13 @@ export class QualityManager {
   }
 
   /**
+   * Highest tier this device may ever be given
+   */
+  getMaxTier(): QualityTier {
+    return this.maxTier;
+  }
+
+  /**
    * Check if user has overridden quality
    */
   hasUserOverride(): boolean {
@@ -398,6 +450,8 @@ export class QualityManager {
   resetToAuto(): void {
     this.userOverride = null;
     this.currentTier = this.detectedTier;
+    this.ceilingTier = this.maxTier;
+    this.headroomWindows = 0;
     this.saveUserPreference(null);
     this.onQualityChange?.(this.getConfig());
   }
@@ -445,7 +499,11 @@ export class QualityManager {
   }
 
   /**
-   * Check if quality should be adjusted based on FPS
+   * The capability probe. Sustained frame rate below target drops a tier and
+   * lowers the ceiling; sustained full frame rate for a few windows tries the
+   * next tier up, as far as the ceiling allows. The animation loop throttles
+   * to each tier's target FPS, so "full frame rate" means the tier is holding
+   * its own target, not that the display is faster.
    */
   private checkAdaptiveQuality(): void {
     const avgFps = this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length;
@@ -462,16 +520,25 @@ export class QualityManager {
           );
         }
         this.currentTier = newTier;
+        this.ceilingTier = newTier;
+        this.headroomWindows = 0;
         this.fpsHistory = []; // Reset history
         this.onQualityChange?.(this.getConfig());
       }
+      return;
     }
 
-    // Upgrade if consistently above 95% of target and not at detected tier
-    if (avgFps > targetFps * 0.95 && this.currentTier !== this.detectedTier) {
+    // Upgrade after sustained headroom, never past the ceiling
+    if (avgFps >= targetFps * 0.97) {
+      this.headroomWindows++;
+    } else {
+      this.headroomWindows = 0;
+    }
+
+    if (this.headroomWindows >= HEADROOM_WINDOWS_TO_UPGRADE) {
+      this.headroomWindows = 0;
       const newTier = this.higherTier(this.currentTier);
-      // Only upgrade if we're below detected tier
-      if (this.tierValue(newTier) <= this.tierValue(this.detectedTier)) {
+      if (newTier !== this.currentTier && tierValue(newTier) <= tierValue(this.ceilingTier)) {
         if (import.meta.env.DEV) {
           // eslint-disable-next-line no-console
           console.log(
@@ -485,21 +552,14 @@ export class QualityManager {
     }
   }
 
-  private tierValue(tier: QualityTier): number {
-    const order = [QualityTier._LOW, QualityTier._MEDIUM, QualityTier._HIGH, QualityTier._ULTRA];
-    return order.indexOf(tier);
-  }
-
   private lowerTier(tier: QualityTier): QualityTier {
-    const order = [QualityTier._LOW, QualityTier._MEDIUM, QualityTier._HIGH, QualityTier._ULTRA];
-    const idx = order.indexOf(tier);
-    return idx > 0 ? order[idx - 1] : tier;
+    const idx = tierValue(tier);
+    return idx > 0 ? (TIER_ORDER[idx - 1] ?? tier) : tier;
   }
 
   private higherTier(tier: QualityTier): QualityTier {
-    const order = [QualityTier._LOW, QualityTier._MEDIUM, QualityTier._HIGH, QualityTier._ULTRA];
-    const idx = order.indexOf(tier);
-    return idx < order.length - 1 ? order[idx + 1] : tier;
+    const idx = tierValue(tier);
+    return idx < TIER_ORDER.length - 1 ? (TIER_ORDER[idx + 1] ?? tier) : tier;
   }
 
   /**
@@ -511,6 +571,7 @@ export class QualityManager {
     isMobile: boolean;
     detectedTier: QualityTier;
     currentTier: QualityTier;
+    maxTier: QualityTier;
     hasOverride: boolean;
   } {
     return {
@@ -519,6 +580,7 @@ export class QualityManager {
       isMobile: this.isMobile,
       detectedTier: this.detectedTier,
       currentTier: this.currentTier,
+      maxTier: this.maxTier,
       hasOverride: this.userOverride !== null,
     };
   }
@@ -535,5 +597,5 @@ export function getQualityPreset(tier: QualityTier): QualityConfig {
  * Get all available quality tiers
  */
 export function getAvailableTiers(): QualityTier[] {
-  return [QualityTier._LOW, QualityTier._MEDIUM, QualityTier._HIGH, QualityTier._ULTRA];
+  return [...TIER_ORDER];
 }

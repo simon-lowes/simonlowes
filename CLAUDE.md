@@ -98,10 +98,10 @@ src/
   content.config.ts # Content collection schemas
   layouts/          # Page layouts (BaseLayout, BlogLayout)
   pages/            # Route pages (index, blog, 404)
-  scripts/          # Client-side TypeScript (starfield, parallax, layout)
+  scripts/          # Client-side TypeScript (starfield, deepsky, encounters, quality, parallax, layout)
   styles/           # CSS (glass-effects, etc.)
 tests/
-  *.test.js         # Unit tests (a11y, animation, dom, utils)
+  *.test.js         # Unit tests (a11y, animation, bandcamp, dom, encounters, quality, utils)
   e2e/              # Playwright E2E tests (bandcamp-player, blog, homepage, visual)
 public/
   css/              # Global stylesheet
@@ -129,10 +129,19 @@ TinaCMS was removed in September 2026: its build step had broken every Dokploy d
 
 Dokploy builds the site with Nixpacks: `npm ci`, then `npm run build` (`astro build`). `nixpacks.toml` pins a newer nixpkgs archive so `nodejs_22` resolves to 22.23.x; Nixpacks' own archive gives 22.11.0, which Astro 7 refuses (`>=22.12.0`), and `package.json` `engines.node` records the same floor. If a deploy fails, read the log past the `npm ci` warnings: the real error is in the `npm run build` step.
 
+## Starfield
+
+`src/scripts/starfield.ts` (Three.js + `postprocessing`) draws the background on every page. Since September 2026 it has three parts:
+
+- **Deep-sky backdrop** (`src/scripts/deepsky.ts`): an always-on Milky Way band and nebula clouds, fractal noise rendered to a small offscreen texture and stretched over the screen with slow drift and a little mouse parallax. Palette is the site cyan, magenta and violet with a dusty core. The texture width, noise octaves and re-render cadence come from the quality tier, so it runs on phones too.
+- **Encounters** (`src/scripts/encounters.ts`): planets, galaxies and nebulae spawn probabilistically per frame; the pacing (phases reached within 20 s, each kind roughly once a minute, a few objects seeded before the first frame) lives there and is unit-tested. Raymarched volumetric nebulae run on HIGH and ULTRA.
+- **Quality tiers** (`src/scripts/quality.ts`): LOW / MEDIUM / HIGH / ULTRA. The GPU-name match is only the starting guess; a frame-time probe drops a tier when frames run slow (and never climbs back to it) and climbs one after a few windows of headroom. Phones are capped at MEDIUM. Unknown desktops start at HIGH. A visitor can pin a tier with the `starfield-quality-preference` localStorage key.
+
+To eyeball a tier in a headless run, set that key before load and screenshot after a few seconds; SwiftShader is classed LOW by name, so the override is needed.
+
 ## Notes
 
 - Pushing to `main` triggers Dokploy auto-deploy
-- The starfield uses reduced particle count on mobile for performance
 - Respects `prefers-reduced-motion` accessibility setting
 
 ## Claude GitHub Actions (removed September 2026)
