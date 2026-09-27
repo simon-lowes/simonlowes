@@ -14,12 +14,21 @@
  * From 768px the large embed (120px, artwork thumbnail) is used; below that
  * the small 42px strip. The script picks the size with the same media query
  * the CSS uses, so the iframe height always matches the frame.
+ *
+ * Fallback: if the embed cannot load or render (content blockers, Pi-hole,
+ * Bandcamp's CDN unreachable, third-party blocking) and src/data/tracks.ts
+ * lists self-hosted files, the bar switches to a native player streaming
+ * those files instead, so the music always plays. With no tracks listed the
+ * facade stays, linking to Bandcamp.
  */
 import { BANDCAMP, bandcampEmbedUrl } from "../data/bandcamp";
+import { SITE_TRACKS, hasSiteTracks } from "../data/tracks";
 
 const { release, artistName } = BANDCAMP;
 const hasEmbed = release.id !== "";
+const hasNative = hasSiteTracks();
 const label = `Bandcamp player: ${release.title} by ${artistName}`;
+const nativeLabel = `Site player: ${release.title} by ${artistName}`;
 ---
 
 <div
@@ -28,6 +37,7 @@ const label = `Bandcamp player: ${release.title} by ${artistName}`;
   role="region"
   aria-label={label}
   data-has-embed={hasEmbed ? "true" : "false"}
+  data-has-native={hasNative ? "true" : "false"}
 >
   <div class="bc-player__frame">
     <a class="bc-player__facade" href={release.url} target="_blank" rel="noopener noreferrer">
@@ -51,6 +61,74 @@ const label = `Bandcamp player: ${release.title} by ${artistName}`;
       data-src-small={bandcampEmbedUrl(release, "small")}
       hidden
     ></iframe>}
+    {hasNative && (
+      <div
+        class="bc-player__native"
+        role="group"
+        aria-label={nativeLabel}
+        data-tracks={JSON.stringify(SITE_TRACKS)}
+        hidden
+      >
+        <button class="bc-player__play" type="button" aria-label="Play" data-native="play">
+          <svg class="bc-player__icon-play" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 5v14l11-7z" fill="currentColor" />
+          </svg>
+          <svg class="bc-player__icon-pause" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 5h4v14H6zm8 0h4v14h-4z" fill="currentColor" />
+          </svg>
+        </button>
+        <div class="bc-player__text">
+          <span class="bc-player__title" data-native="title">
+            {SITE_TRACKS[0]?.title}
+          </span>
+          <span class="bc-player__sub">
+            {artistName}
+            <span class="bc-player__native-count" data-native="count"></span>
+          </span>
+          <div class="bc-player__seek">
+            <span class="bc-player__time" data-native="current">
+              0:00
+            </span>
+            <input
+              class="bc-player__range"
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Seek"
+              data-native="seek"
+            />
+            <span class="bc-player__time" data-native="duration">
+              0:00
+            </span>
+          </div>
+        </div>
+        <div class="bc-player__native-actions">
+          <button
+            class="bc-player__skip"
+            type="button"
+            aria-label="Previous track"
+            data-native="prev"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" fill="currentColor" />
+            </svg>
+          </button>
+          <button class="bc-player__skip" type="button" aria-label="Next track" data-native="next">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z" fill="currentColor" />
+            </svg>
+          </button>
+          <a class="bc-player__buy" href={release.url} target="_blank" rel="noopener noreferrer">
+            <span class="bc-player__cta-long">Buy on </span>Bandcamp
+            <span aria-hidden="true">&nearr;</span>
+            <span class="sr-only"> (opens in new tab)</span>
+          </a>
+        </div>
+        <audio preload="metadata" data-native="audio"></audio>
+      </div>
+    )}
   </div>
 </div>
 
@@ -218,6 +296,177 @@ const label = `Bandcamp player: ${release.title} by ${artistName}`;
     pointer-events: none;
   }
 
+  /* Native fallback player: takes over the frame when the embed cannot */
+  .bc-player__native {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0 0.5rem;
+  }
+
+  .bc-player__native[hidden] {
+    display: none;
+  }
+
+  .bc-player.is-native .bc-player__facade {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .bc-player__play,
+  .bc-player__skip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    color: #e0e0e0;
+    background: rgb(0 212 255 / 15%);
+    border: 1px solid rgb(0 212 255 / 25%);
+    border-radius: 50%;
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      box-shadow 0.3s ease,
+      transform 0.15s ease;
+  }
+
+  .bc-player__play {
+    width: 32px;
+    height: 32px;
+  }
+
+  .bc-player__skip {
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border-color: rgb(255 255 255 / 12%);
+  }
+
+  .bc-player__play svg,
+  .bc-player__skip svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .bc-player__skip svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .bc-player__play:hover,
+  .bc-player__skip:hover {
+    background: rgb(0 212 255 / 25%);
+    box-shadow: 0 0 20px rgb(0 212 255 / 30%);
+    transform: scale(1.05);
+  }
+
+  .bc-player__play:focus-visible,
+  .bc-player__skip:focus-visible,
+  .bc-player__buy:focus-visible,
+  .bc-player__range:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  .bc-player__icon-pause {
+    display: none;
+  }
+
+  .bc-player.is-playing .bc-player__icon-pause {
+    display: block;
+  }
+
+  .bc-player.is-playing .bc-player__icon-play {
+    display: none;
+  }
+
+  .bc-player__native-count {
+    margin-left: 0.25rem;
+  }
+
+  .bc-player__seek {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  .bc-player__time {
+    flex-shrink: 0;
+    min-width: 2.5rem;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: rgb(224 224 224 / 60%);
+  }
+
+  .bc-player__time:last-child {
+    text-align: right;
+  }
+
+  .bc-player__range {
+    flex: 1;
+    height: 4px;
+    margin: 0;
+    appearance: none;
+    background: linear-gradient(
+      to right,
+      #00d4ff 0%,
+      #00d4ff var(--bc-progress, 0%),
+      rgb(255 255 255 / 15%) var(--bc-progress, 0%),
+      rgb(255 255 255 / 15%) 100%
+    );
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  .bc-player__range::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    appearance: none;
+    background: #fff;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgb(0 212 255 / 60%);
+  }
+
+  .bc-player__range::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgb(0 212 255 / 60%);
+  }
+
+  .bc-player__native-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .bc-player__skip {
+    display: none;
+  }
+
+  .bc-player__buy {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: rgb(224 224 224 / 85%);
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .bc-player__buy:hover {
+    color: #00d4ff;
+  }
+
   @media (width >= 480px) {
     .bc-player__cta-long {
       display: inline;
@@ -260,17 +509,45 @@ const label = `Bandcamp player: ${release.title} by ${artistName}`;
       max-width: 700px;
       margin: 0 auto;
     }
+
+    .bc-player__native {
+      gap: 1rem;
+      padding: 0 1.25rem 0 1rem;
+    }
+
+    .bc-player__play {
+      width: 44px;
+      height: 44px;
+    }
+
+    .bc-player__play svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .bc-player__seek {
+      display: flex;
+    }
+
+    .bc-player.has-many-tracks .bc-player__skip {
+      display: flex;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .bc-player__facade,
     .bc-player__mark,
     .bc-player__cta,
-    .bc-player__embed {
+    .bc-player__embed,
+    .bc-player__play,
+    .bc-player__skip,
+    .bc-player__buy {
       transition: none;
     }
 
-    .bc-player__facade:hover .bc-player__mark {
+    .bc-player__facade:hover .bc-player__mark,
+    .bc-player__play:hover,
+    .bc-player__skip:hover {
       transform: none;
     }
   }
@@ -283,17 +560,177 @@ const label = `Bandcamp player: ${release.title} by ${artistName}`;
 </style>
 
 <script>
+  import { formatTime } from "../data/tracks";
+  import type { SiteTrack } from "../data/tracks";
+
   /** Must match the `width >= 768px` breakpoint that sets --bc-h above. */
   const LARGE_QUERY = "(min-width: 768px)";
 
+  /**
+   * Bandcamp's player is HTML from bandcamp.com whose script, styles and
+   * artwork come from its CDN, bcbits.com. Blockers and DNS filters often
+   * allow the first and block the second, which leaves a blank iframe that
+   * still fires `load`. Both must answer before the embed is trusted.
+   */
+  const BCBITS_PROBE = "https://s4.bcbits.com/img/bclogo.png";
+  /** How long the embed gets to render before the fallback takes over. */
+  const EMBED_GRACE_MS = 6000;
+
+  const probe = (url: string): Promise<void> =>
+    fetch(url, { method: "HEAD", mode: "no-cors", credentials: "omit", cache: "no-store" }).then(
+      () => undefined
+    );
+
+  // ---------------------------------------------------------------------
+  // Native fallback player
+  // ---------------------------------------------------------------------
+  function initNativePlayer(root: HTMLElement, native: HTMLElement): (() => void) | null {
+    let tracks: SiteTrack[] = [];
+    try {
+      tracks = JSON.parse(native.dataset.tracks ?? "[]") as SiteTrack[];
+    } catch {
+      tracks = [];
+    }
+    if (tracks.length === 0) return null;
+
+    const q = <T extends Element>(name: string): T | null =>
+      native.querySelector<T>(`[data-native="${name}"]`);
+    const audio = q<HTMLAudioElement>("audio");
+    const play = q<HTMLButtonElement>("play");
+    const prev = q<HTMLButtonElement>("prev");
+    const next = q<HTMLButtonElement>("next");
+    const seek = q<HTMLInputElement>("seek");
+    const title = q<HTMLElement>("title");
+    const count = q<HTMLElement>("count");
+    const current = q<HTMLElement>("current");
+    const duration = q<HTMLElement>("duration");
+    if (!audio || !play || !seek || !title) return null;
+
+    let index = 0;
+    let seeking = false;
+    if (tracks.length > 1) root.classList.add("has-many-tracks");
+
+    const setProgress = (fraction: number): void => {
+      const pct = Math.max(0, Math.min(100, fraction * 100));
+      seek.value = String(Math.round(pct * 10));
+      seek.style.setProperty("--bc-progress", `${pct}%`);
+    };
+
+    const loadTrack = (i: number, autoplay: boolean): void => {
+      index = (i + tracks.length) % tracks.length;
+      const track = tracks[index];
+      if (!track) return;
+      audio.src = track.src;
+      title.textContent = track.title;
+      if (count) count.textContent = tracks.length > 1 ? `· ${index + 1}/${tracks.length}` : "";
+      if (duration) duration.textContent = formatTime(track.duration ?? NaN);
+      if (current) current.textContent = "0:00";
+      setProgress(0);
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: track.title,
+          artist: "Simon Lowes",
+        });
+      }
+      if (autoplay) void audio.play().catch(() => undefined);
+    };
+
+    const toggle = (): void => {
+      if (audio.paused) void audio.play().catch(() => undefined);
+      else audio.pause();
+    };
+
+    play.addEventListener("click", toggle);
+    prev?.addEventListener("click", () => loadTrack(index - 1, !audio.paused));
+    next?.addEventListener("click", () => loadTrack(index + 1, !audio.paused));
+    audio.addEventListener("play", () => {
+      root.classList.add("is-playing");
+      play.setAttribute("aria-label", "Pause");
+    });
+    audio.addEventListener("pause", () => {
+      root.classList.remove("is-playing");
+      play.setAttribute("aria-label", "Play");
+    });
+    audio.addEventListener("ended", () => {
+      if (tracks.length > 1) loadTrack(index + 1, true);
+      else setProgress(0);
+    });
+    audio.addEventListener("loadedmetadata", () => {
+      if (duration) duration.textContent = formatTime(audio.duration);
+    });
+    audio.addEventListener("timeupdate", () => {
+      if (seeking || !Number.isFinite(audio.duration) || audio.duration === 0) return;
+      setProgress(audio.currentTime / audio.duration);
+      if (current) current.textContent = formatTime(audio.currentTime);
+    });
+    seek.addEventListener("input", () => {
+      seeking = true;
+      const fraction = Number(seek.value) / 1000;
+      seek.style.setProperty("--bc-progress", `${fraction * 100}%`);
+      if (current && Number.isFinite(audio.duration)) {
+        current.textContent = formatTime(fraction * audio.duration);
+      }
+    });
+    seek.addEventListener("change", () => {
+      seeking = false;
+      if (Number.isFinite(audio.duration)) {
+        audio.currentTime = (Number(seek.value) / 1000) * audio.duration;
+      }
+    });
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.setActionHandler(
+        "play",
+        () => void audio.play().catch(() => undefined)
+      );
+      navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+      if (tracks.length > 1) {
+        navigator.mediaSession.setActionHandler("previoustrack", () => loadTrack(index - 1, true));
+        navigator.mediaSession.setActionHandler("nexttrack", () => loadTrack(index + 1, true));
+      }
+    }
+
+    loadTrack(0, false);
+
+    // Returns the function that reveals the native player
+    return () => {
+      native.hidden = false;
+      root.classList.add("is-native");
+      root.classList.remove("is-loaded");
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Mode selection: embed if it will really render, else native, else facade
+  // ---------------------------------------------------------------------
   function initBandcampPlayer(): void {
     const root = document.getElementById("bandcamp-player");
-    const frame = root?.querySelector<HTMLIFrameElement>(".bc-player__embed");
-    if (!root || !frame) return;
+    if (!root) return;
     if (root.dataset.bcReady === "true") return;
     root.dataset.bcReady = "true";
 
+    const frame = root.querySelector<HTMLIFrameElement>(".bc-player__embed");
+    const nativeEl = root.querySelector<HTMLElement>(".bc-player__native");
+    const showNative = nativeEl ? initNativePlayer(root, nativeEl) : null;
+
+    const fallBack = (): void => {
+      if (!root.isConnected) return;
+      if (frame) {
+        frame.hidden = true;
+        frame.removeAttribute("src");
+      }
+      root.classList.remove("is-loaded");
+      if (showNative) showNative();
+      /* otherwise the facade stays: it links to the release on Bandcamp */
+    };
+
+    if (!frame) {
+      // No release ID configured: native player if there are tracks, else facade
+      if (showNative) showNative();
+      return;
+    }
+
     const wide = window.matchMedia(LARGE_QUERY);
+    let graceTimer: number | undefined;
 
     const load = (): void => {
       // The page may have been swapped by a view transition since this ran.
@@ -301,20 +738,23 @@ const label = `Bandcamp player: ${release.title} by ${artistName}`;
         wide.removeEventListener("change", load);
         return;
       }
+      if (root.classList.contains("is-native")) return;
       const src = wide.matches ? frame.dataset.srcLarge : frame.dataset.srcSmall;
       if (!src || frame.src === src) return;
-      // A frame that cannot load (offline, content blocker, CSP) still fires
-      // `load`, on an error page. Probe first so the facade stays in that case.
-      fetch(src, { method: "HEAD", mode: "no-cors", credentials: "omit" })
+      // Bandcamp's page and its CDN must both answer; a blocked CDN leaves a
+      // blank player that still fires `load`.
+      Promise.all([probe(src), probe(BCBITS_PROBE)])
         .then(() => {
-          if (!root.isConnected) return;
+          if (!root.isConnected || root.classList.contains("is-native")) return;
           root.classList.remove("is-loaded");
           frame.hidden = false;
           frame.src = src;
+          window.clearTimeout(graceTimer);
+          graceTimer = window.setTimeout(() => {
+            if (!root.classList.contains("is-loaded")) fallBack();
+          }, EMBED_GRACE_MS);
         })
-        .catch(() => {
-          /* keep the facade: it links to the release on Bandcamp */
-        });
+        .catch(fallBack);
     };
 
     frame.addEventListener("load", () => {

@@ -1,2 +1,8 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Audio is binary: never normalise line endings
+*.mp3 binary
+*.m4a binary
+*.ogg binary
+*.wav binary
