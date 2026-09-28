@@ -19,17 +19,28 @@ relay" > "Run workflow"). One-time setup, in the Cloudflare account that owns
 `simonlowes.com`:
 
 1. Cloudflare dashboard > profile icon > **My Profile** > **API Tokens** >
-   **Create Token** > template **Edit Cloudflare Workers**. Under Zone
-   Resources pick `simonlowes.com`; add one more permission row,
-   **Zone > DNS > Edit**, so `wrangler` can create the `player` subdomain.
-   Continue, create, copy the token.
+   **Create Token** > template **Edit Cloudflare Workers**. Under **Account
+   Resources** pick the account that owns `simonlowes.com`; under **Zone
+   Resources** choose **Include > Specific zone > simonlowes.com**. Leave the
+   template's permissions as they are: **Workers Scripts: Edit** (account)
+   creates and updates the Worker, and **Workers Routes: Edit** (zone) lets
+   `wrangler deploy` create the `player.simonlowes.com` custom domain.
+   Cloudflare adds the DNS record and issues the certificate itself, so the
+   token needs no DNS or SSL permission. If the token screen offers Workers
+   _roles_ instead of these permissions, choose **Workers > Admin** (product
+   scope): creating a Worker that does not exist yet needs Admin, Editor is
+   enough once it exists. Continue, create, copy the token.
 2. GitHub repository > **Settings** > **Secrets and variables** > **Actions**
    > **New repository secret**: name `CLOUDFLARE_API_TOKEN`, value the token.
-   > (`CLOUDFLARE_ACCOUNT_ID` is only needed if the token can see several
-   > accounts.)
+   > `CLOUDFLARE_ACCOUNT_ID` is optional: wrangler picks the account itself when
+   > the token can see exactly one; add it (or `account_id` in `wrangler.toml`)
+   > if the deploy log says "More than one account available".
 3. **Actions** > **Deploy Bandcamp relay** > **Run workflow**. The job deploys
-   and then waits for `https://player.simonlowes.com/health` to report
-   `ok: true`.
+   and then waits for `https://player.simonlowes.com/health` to answer. A
+   warning instead of a pass means the Worker is live but Bandcamp is
+   challenging it at the moment; the site uses its own player until it
+   recovers. Without a terminal, wrangler replaces any conflicting DNS record
+   or custom domain on `player.simonlowes.com` without asking.
 
 The same deploy works from a machine with the Cloudflare login:
 

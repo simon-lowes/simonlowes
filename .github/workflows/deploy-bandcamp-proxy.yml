@@ -4,11 +4,16 @@
 # Actions tab ("Run workflow"). It needs one repository secret:
 #
 #   CLOUDFLARE_API_TOKEN   an API token made from the "Edit Cloudflare Workers"
-#                          template, scoped to the account and the simonlowes.com
-#                          zone, plus Zone > DNS > Edit so the custom domain
-#                          player.simonlowes.com can be created.
+#                          template, with the account that owns simonlowes.com
+#                          under Account Resources and the simonlowes.com zone
+#                          under Zone Resources. The template's Workers Scripts
+#                          and Workers Routes permissions cover creating the
+#                          Worker and its custom domain; Cloudflare adds the DNS
+#                          record and certificate itself.
 #
 # CLOUDFLARE_ACCOUNT_ID is only needed if that token can see more than one account.
+# Without a terminal, wrangler replaces any conflicting DNS record or custom
+# domain on player.simonlowes.com without asking.
 
 name: Deploy Bandcamp relay
 
@@ -31,6 +36,7 @@ jobs:
   deploy:
     name: Deploy to Cloudflare
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: workers/bandcamp-proxy
@@ -57,20 +63,26 @@ jobs:
             echo "::error::The CLOUDFLARE_API_TOKEN repository secret is not set. Add it under Settings > Secrets and variables > Actions, then re-run this workflow."
             exit 1
           fi
-          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            unset CLOUDFLARE_ACCOUNT_ID
-          fi
           npx wrangler deploy
 
       - name: Wait for the relay to answer
         run: |
+          # The Worker is live once /health answers with its JSON (it carries
+          # "checkedAt"). ok:false only means Bandcamp's bot protection is
+          # challenging the relay right now; the site then uses its own player,
+          # and that is not a failed deploy.
           for attempt in $(seq 1 18); do
             body=$(curl -sS --max-time 20 https://player.simonlowes.com/health || true)
             echo "attempt $attempt: ${body:-no response}"
             case "$body" in
-              *'"ok":true'*) echo "Relay is up."; exit 0 ;;
+              *'"ok":true'*)
+                echo "Relay is up and Bandcamp is answering it."
+                exit 0 ;;
+              *'"checkedAt"'*)
+                echo "::warning::The relay is deployed, but Bandcamp is not answering it with a real player right now (${body}). The site falls back to its own player until /health reports ok."
+                exit 0 ;;
             esac
             sleep 10
           done
-          echo "::error::https://player.simonlowes.com/health did not report ok within three minutes. Check the deploy log above and the Worker in the Cloudflare dashboard."
+          echo "::error::https://player.simonlowes.com/health never answered. The first deploy also issues the custom domain's certificate, which can take a few minutes: re-run this workflow, and check the Worker and its custom domain in the Cloudflare dashboard if it still fails."
           exit 1
