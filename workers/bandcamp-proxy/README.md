@@ -10,7 +10,28 @@ The site tries the official embed first, this proxy second (only after
 player last. So a Bandcamp policy change degrades to the site player rather
 than to a blank bar.
 
-## Deploy (one-time, needs the Cloudflare account that owns simonlowes.com)
+## Deploy
+
+The Worker is deployed by GitHub Actions
+(`.github/workflows/deploy-bandcamp-proxy.yml`): on every merge to `main` that
+touches this directory, and on demand from the Actions tab ("Deploy Bandcamp
+relay" > "Run workflow"). One-time setup, in the Cloudflare account that owns
+`simonlowes.com`:
+
+1. Cloudflare dashboard > profile icon > **My Profile** > **API Tokens** >
+   **Create Token** > template **Edit Cloudflare Workers**. Under Zone
+   Resources pick `simonlowes.com`; add one more permission row,
+   **Zone > DNS > Edit**, so `wrangler` can create the `player` subdomain.
+   Continue, create, copy the token.
+2. GitHub repository > **Settings** > **Secrets and variables** > **Actions**
+   > **New repository secret**: name `CLOUDFLARE_API_TOKEN`, value the token.
+   > (`CLOUDFLARE_ACCOUNT_ID` is only needed if the token can see several
+   > accounts.)
+3. **Actions** > **Deploy Bandcamp relay** > **Run workflow**. The job deploys
+   and then waits for `https://player.simonlowes.com/health` to report
+   `ok: true`.
+
+The same deploy works from a machine with the Cloudflare login:
 
 ```bash
 cd workers/bandcamp-proxy
