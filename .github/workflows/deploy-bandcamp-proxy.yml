@@ -63,6 +63,16 @@ jobs:
             echo "::error::The CLOUDFLARE_API_TOKEN repository secret is not set. Add it under Settings > Secrets and variables > Actions, then re-run this workflow."
             exit 1
           fi
+          # A token pasted with a trailing newline is common; one with a line
+          # break or space inside it is not a token (wrangler then fails with
+          # "invalid header value"). Trim the first, refuse the second.
+          CLOUDFLARE_API_TOKEN="$(printf '%s' "$CLOUDFLARE_API_TOKEN" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          case "$CLOUDFLARE_API_TOKEN" in
+            *[[:space:]]*)
+              echo "::error::The CLOUDFLARE_API_TOKEN secret contains a space or line break. Update it with the token value alone: one line, no 'Bearer', nothing else from the Cloudflare page."
+              exit 1 ;;
+          esac
+          export CLOUDFLARE_API_TOKEN
           npx wrangler deploy
 
       - name: Wait for the relay to answer
