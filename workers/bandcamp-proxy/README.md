@@ -39,8 +39,14 @@ relay" > "Run workflow"). One-time setup, in the Cloudflare account that owns
    and then waits for `https://player.simonlowes.com/health` to answer. A
    warning instead of a pass means the Worker is live but Bandcamp is
    challenging it at the moment; the site uses its own player until it
-   recovers. Without a terminal, wrangler replaces any conflicting DNS record
-   or custom domain on `player.simonlowes.com` without asking.
+   recovers. A warning can also mean Cloudflare's own bot protection
+   challenged the GitHub runner (a "Just a moment..." page) instead of
+   letting it reach the Worker: the deploy landed, check `/health` from a
+   browser, and add a WAF custom rule on the zone that skips Bot Fight Mode
+   and managed challenges for hostname `player.simonlowes.com` if you want
+   the check to see the Worker. Without a terminal, wrangler replaces any
+   conflicting DNS record or custom domain on `player.simonlowes.com`
+   without asking.
 
 The same deploy works from a machine with the Cloudflare login:
 
