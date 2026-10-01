@@ -312,7 +312,9 @@ export async function handle(request, env = {}, upstreamFetch = fetch) {
  * header; method, headers, body and the edge-cache hint pass through.
  */
 export function egressFetch(env, baseFetch = fetch) {
-  const base = String(env.EGRESS_URL).replace(/\/+$/, "");
+  // Strip trailing slashes without a regex (CodeQL: the value is configuration)
+  let base = String(env.EGRESS_URL);
+  while (base.endsWith("/")) base = base.slice(0, -1);
   return (url, init = {}) => {
     const headers = new Headers(init.headers);
     headers.set("x-relay-token", env.EGRESS_TOKEN || "");
