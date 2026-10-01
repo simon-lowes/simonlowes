@@ -32,7 +32,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: "/404",
-        globPatterns: ["**/*.{css,js,html,svg,png,webp,ico}"],
+        globPatterns: ["**/*.{css,js,html,svg,png,webp,ico,woff2}"],
         // Audio is streamed on demand, never precached
         globIgnores: ["**/audio/**"],
       },

@@ -128,6 +128,10 @@ Bandcamp's player is HTML from bandcamp.com whose script, styles, artwork and au
 
 The CSP reference in `public/_headers` allows the frame and the probes. The live site (checked September 2026) sends only `content-security-policy: frame-ancestors 'none'`, so nothing is restricted; if the full CSP is ever applied in Cloudflare or Traefik, keep `frame-src`, `connect-src` and `media-src` from that file, and add `https://player.simonlowes.com` to `frame-src` and `connect-src`.
 
+## Typography
+
+The site face is **Source Sans 3** (Adobe's open humanist sans, SIL OFL), self-hosted from `public/fonts/source-sans-3/` as two variable WOFF2 files (roman and italic, weight 200–900) split into latin and latin-ext subsets, so weights like 650 render exactly. `public/css/style.css` declares the `@font-face` rules, a metric-matched `"Source Sans 3 Fallback"` (Arial with `size-adjust`/`ascent-override`) so text does not shift when the font arrives, and the `--font-sans` token that `body`, `.prose`, the player bar, the cookie notice and the 404 page use. `BaseLayout.astro` preloads only the roman latin file. The font was chosen in October 2026 over FreightSans Pro (declared since the original design but never loaded, which left most of the site in the browser's default serif) because it needs no Adobe subscription or third-party request. To change the face, replace the files, the `@font-face` rules and the preload together.
+
 ## Blog posts
 
 There is no CMS. Posts are files in `src/content/blog/` (front matter schema in `src/content.config.ts`), written with Claude and shipped through a PR; the `/new-post` skill (`.claude/skills/new-post/SKILL.md`) holds the full recipe.
