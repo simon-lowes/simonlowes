@@ -35,7 +35,7 @@
     bottom: 100px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgb(10 10 20 / 85%);
+    background: rgb(var(--color-bg-rgb) / 85%);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgb(var(--color-accent-rgb) / 20%);
@@ -84,14 +84,14 @@
   }
 
   .motion-title {
-    color: #e8e8e8;
+    color: var(--color-text-primary);
     font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
   }
 
   .motion-subtitle {
-    color: #a0a0a0;
+    color: var(--color-text-muted);
     font-size: 12px;
     white-space: nowrap;
   }
@@ -131,14 +131,14 @@
 
   .motion-btn-secondary {
     background: transparent;
-    color: #a0a0a0;
+    color: var(--color-text-muted);
     padding: 6px 10px;
     font-size: 18px;
     line-height: 1;
   }
 
   .motion-btn-secondary:hover {
-    color: #e8e8e8;
+    color: var(--color-text-primary);
     background: rgb(255 255 255 / 8%);
   }
 
@@ -175,7 +175,7 @@
   /* Backdrop filter fallback */
   @supports not (backdrop-filter: blur(12px)) {
     .motion-prompt {
-      background: rgb(10 10 20 / 95%);
+      background: rgb(var(--color-bg-rgb) / 95%);
     }
   }
 </style>
