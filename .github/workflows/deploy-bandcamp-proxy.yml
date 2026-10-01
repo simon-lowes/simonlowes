@@ -1,0 +1,88 @@
+# Deploys the Bandcamp relay Worker (workers/bandcamp-proxy) to Cloudflare.
+#
+# Runs on every merge to main that touches the worker, and by hand from the
+# Actions tab ("Run workflow"). It needs one repository secret:
+#
+#   CLOUDFLARE_API_TOKEN   an API token made from the "Edit Cloudflare Workers"
+#                          template, with the account that owns simonlowes.com
+#                          under Account Resources and the simonlowes.com zone
+#                          under Zone Resources. The template's Workers Scripts
+#                          and Workers Routes permissions cover creating the
+#                          Worker and its custom domain; Cloudflare adds the DNS
+#                          record and certificate itself.
+#
+# CLOUDFLARE_ACCOUNT_ID is only needed if that token can see more than one account.
+# Without a terminal, wrangler replaces any conflicting DNS record or custom
+# domain on player.simonlowes.com without asking.
+
+name: Deploy Bandcamp relay
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "workers/bandcamp-proxy/**"
+      - ".github/workflows/deploy-bandcamp-proxy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-bandcamp-proxy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: workers/bandcamp-proxy
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: workers/bandcamp-proxy/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy with wrangler
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::The CLOUDFLARE_API_TOKEN repository secret is not set. Add it under Settings > Secrets and variables > Actions, then re-run this workflow."
+            exit 1
+          fi
+          npx wrangler deploy
+
+      - name: Wait for the relay to answer
+        run: |
+          # The Worker is live once /health answers with its JSON (it carries
+          # "checkedAt"). ok:false only means Bandcamp's bot protection is
+          # challenging the relay right now; the site then uses its own player,
+          # and that is not a failed deploy.
+          for attempt in $(seq 1 18); do
+            body=$(curl -sS --max-time 20 https://player.simonlowes.com/health || true)
+            echo "attempt $attempt: ${body:-no response}"
+            case "$body" in
+              *'"ok":true'*)
+                echo "Relay is up and Bandcamp is answering it."
+                exit 0 ;;
+              *'"checkedAt"'*)
+                echo "::warning::The relay is deployed, but Bandcamp is not answering it with a real player right now (${body}). The site falls back to its own player until /health reports ok."
+                exit 0 ;;
+            esac
+            sleep 10
+          done
+          echo "::error::https://player.simonlowes.com/health never answered. The first deploy also issues the custom domain's certificate, which can take a few minutes: re-run this workflow, and check the Worker and its custom domain in the Cloudflare dashboard if it still fails."
+          exit 1
