@@ -185,10 +185,21 @@ async function checkUpstream(path, upstreamFetch) {
     headers: { "user-agent": USER_AGENT, accept: "text/html" },
     redirect: "follow",
   });
-  const html = response.ok ? await response.text() : "";
-  if (!response.ok) return { ok: false, reason: `upstream ${response.status}`, html: "" };
-  if (looksLikeChallenge(html)) return { ok: false, reason: "challenge", html: "" };
-  return { ok: true, reason: "ok", html };
+  const html = await response.text();
+  // What the upstream answered, for /health: enough to tell a bot challenge
+  // from an outage without exposing the page itself.
+  const titleMatch = html.match(/<title>([^<]{0,80})/);
+  const upstream = {
+    status: response.status,
+    title: titleMatch ? titleMatch[1] : "",
+    server: response.headers.get("server") || "",
+    servedBy: response.headers.get("x-served-by") || "",
+    length: html.length,
+    snippet: html.slice(0, 160).replace(/\s+/g, " "),
+  };
+  if (!response.ok) return { ok: false, reason: `upstream ${response.status}`, html: "", upstream };
+  if (looksLikeChallenge(html)) return { ok: false, reason: "challenge", html: "", upstream };
+  return { ok: true, reason: "ok", html, upstream };
 }
 
 /**
@@ -211,7 +222,12 @@ export async function handle(request, env = {}, upstreamFetch = fetch) {
     try {
       const result = await checkUpstream(env.HEALTH_PATH || DEFAULT_HEALTH_PATH, upstreamFetch);
       return json(
-        { ok: result.ok, reason: result.reason, checkedAt: new Date().toISOString() },
+        {
+          ok: result.ok,
+          reason: result.reason,
+          checkedAt: new Date().toISOString(),
+          upstream: result.upstream,
+        },
         result.ok ? 200 : 503,
         cors
       );
@@ -287,8 +303,28 @@ export async function handle(request, env = {}, upstreamFetch = fetch) {
   return new Response(text, { status: upstream.status, headers });
 }
 
+/**
+ * A fetch that goes through the egress helper (egress/relay.mjs on the VPS)
+ * instead of leaving Cloudflare's network directly. Bandcamp's bot
+ * protection challenges every dynamic request from Cloudflare's own
+ * addresses, whatever the headers; from the VPS it answers with the player.
+ * The upstream URL travels in the query string, the shared token in a
+ * header; method, headers, body and the edge-cache hint pass through.
+ */
+export function egressFetch(env, baseFetch = fetch) {
+  // Strip trailing slashes without a regex (CodeQL: the value is configuration)
+  let base = String(env.EGRESS_URL);
+  while (base.endsWith("/")) base = base.slice(0, -1);
+  return (url, init = {}) => {
+    const headers = new Headers(init.headers);
+    headers.set("x-relay-token", env.EGRESS_TOKEN || "");
+    return baseFetch(`${base}/fetch?url=${encodeURIComponent(url)}`, { ...init, headers });
+  };
+}
+
 export default {
   fetch(request, env, _ctx) {
-    return handle(request, env, fetch);
+    const upstreamFetch = env.EGRESS_URL ? egressFetch(env) : fetch;
+    return handle(request, env, upstreamFetch);
   },
 };

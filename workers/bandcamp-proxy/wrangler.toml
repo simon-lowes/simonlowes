@@ -11,6 +11,11 @@ routes = [
 ALLOWED_ORIGINS = "https://simonlowes.com,https://www.simonlowes.com,https://simonlowes.simonlowes.cloud"
 # The release the health check loads
 HEALTH_PATH = "/EmbeddedPlayer/album=2665327263/size=small/bgcol=0a0a0f/linkcol=00d4ff/transparent=true/"
+# Where the egress helper (egress/) runs; empty means fetch Bandcamp directly,
+# which Bandcamp's bot protection challenges from Cloudflare's network. The
+# deploy workflow sets it from the RELAY_EGRESS_URL repository variable, and
+# the matching EGRESS_TOKEN secret from RELAY_EGRESS_TOKEN.
+EGRESS_URL = ""
 
 [observability]
 enabled = true
