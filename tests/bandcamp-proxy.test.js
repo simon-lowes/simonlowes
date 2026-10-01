@@ -8,7 +8,9 @@ import {
   resolveTarget,
   rewrite,
   unrewrite,
+  egressFetch,
 } from "../workers/bandcamp-proxy/src/index.js";
+import { relay } from "../workers/bandcamp-proxy/egress/relay.mjs";
 
 const ORIGIN = "https://player.simonlowes.com";
 const PLAYER_HTML =
@@ -287,5 +289,117 @@ describe("handle", () => {
     expect(res.status).toBe(204);
     expect(res.headers.get("access-control-allow-origin")).toBe("https://simonlowes.com");
     expect(upstream.calls).toHaveLength(0);
+  });
+});
+
+describe("egress helper", () => {
+  const env = { EGRESS_URL: "https://upstream.example/", EGRESS_TOKEN: "s3cret" };
+
+  it("egressFetch sends the upstream URL and the token to the helper", async () => {
+    const calls = [];
+    const fetchViaHelper = egressFetch(env, async (url, init) => {
+      calls.push({ url, init });
+      return new Response("ok");
+    });
+    await fetchViaHelper("https://t4.bcbits.com/stream/a/mp3-128/1?x=1", {
+      method: "GET",
+      headers: { range: "bytes=0-9" },
+      cf: { cacheEverything: true },
+    });
+    expect(calls[0].url).toBe(
+      "https://upstream.example/fetch?url=" +
+        encodeURIComponent("https://t4.bcbits.com/stream/a/mp3-128/1?x=1")
+    );
+    expect(calls[0].init.headers.get("x-relay-token")).toBe("s3cret");
+    expect(calls[0].init.headers.get("range")).toBe("bytes=0-9");
+    expect(calls[0].init.cf).toEqual({ cacheEverything: true });
+  });
+
+  it("relay refuses a missing or wrong token and hosts off the allowlist", async () => {
+    const upstream = async () => new Response("never");
+    let res = await relay(
+      new Request("http://helper/fetch?url=https://bandcamp.com/x"),
+      env,
+      upstream
+    );
+    expect(res.status).toBe(401);
+    res = await relay(
+      new Request("http://helper/fetch?url=https://evil.example/x", {
+        headers: { "x-relay-token": "s3cret" },
+      }),
+      env,
+      upstream
+    );
+    expect(res.status).toBe(403);
+    res = await relay(
+      new Request("http://helper/fetch?url=http://bandcamp.com/x", {
+        headers: { "x-relay-token": "s3cret" },
+      }),
+      env,
+      upstream
+    );
+    expect(res.status).toBe(403);
+    expect((await relay(new Request("http://helper/healthz"), env, upstream)).status).toBe(200);
+  });
+
+  it("relay forwards the request to Bandcamp and strips encoding headers", async () => {
+    const seen = [];
+    const upstream = async (url, init) => {
+      seen.push({ url, init });
+      return new Response("body", {
+        status: 206,
+        headers: {
+          "content-type": "audio/mpeg",
+          "content-encoding": "gzip",
+          "content-range": "bytes 0-3/4",
+        },
+      });
+    };
+    const res = await relay(
+      new Request(
+        "http://helper/fetch?url=" + encodeURIComponent("https://t4.bcbits.com/stream/a/mp3-128/1"),
+        { headers: { "x-relay-token": "s3cret", range: "bytes=0-3", cookie: "no=thanks" } }
+      ),
+      env,
+      upstream
+    );
+    expect(seen[0].url).toBe("https://t4.bcbits.com/stream/a/mp3-128/1");
+    expect(seen[0].init.headers.get("range")).toBe("bytes=0-3");
+    expect(seen[0].init.headers.get("cookie")).toBeNull();
+    expect(seen[0].init.headers.get("user-agent")).toContain("SimonLowesPlayerProxy");
+    expect(res.status).toBe(206);
+    expect(res.headers.get("content-range")).toBe("bytes 0-3/4");
+    expect(res.headers.get("content-encoding")).toBeNull();
+    expect(await res.text()).toBe("body");
+  });
+
+  it("relay passes a POST body through", async () => {
+    let got;
+    const upstream = async (url, init) => {
+      got = {
+        url,
+        body: new TextDecoder().decode(init.body),
+        type: init.headers.get("content-type"),
+      };
+      return new Response("ok");
+    };
+    const res = await relay(
+      new Request(
+        "http://helper/fetch?url=" + encodeURIComponent("https://bandcamp.com/stat_record"),
+        {
+          method: "POST",
+          headers: { "x-relay-token": "s3cret", "content-type": "text/plain" },
+          body: "played",
+        }
+      ),
+      env,
+      upstream
+    );
+    expect(res.status).toBe(200);
+    expect(got).toEqual({
+      url: "https://bandcamp.com/stat_record",
+      body: "played",
+      type: "text/plain",
+    });
   });
 });

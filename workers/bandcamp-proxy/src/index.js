@@ -303,8 +303,26 @@ export async function handle(request, env = {}, upstreamFetch = fetch) {
   return new Response(text, { status: upstream.status, headers });
 }
 
+/**
+ * A fetch that goes through the egress helper (egress/relay.mjs on the VPS)
+ * instead of leaving Cloudflare's network directly. Bandcamp's bot
+ * protection challenges every dynamic request from Cloudflare's own
+ * addresses, whatever the headers; from the VPS it answers with the player.
+ * The upstream URL travels in the query string, the shared token in a
+ * header; method, headers, body and the edge-cache hint pass through.
+ */
+export function egressFetch(env, baseFetch = fetch) {
+  const base = String(env.EGRESS_URL).replace(/\/+$/, "");
+  return (url, init = {}) => {
+    const headers = new Headers(init.headers);
+    headers.set("x-relay-token", env.EGRESS_TOKEN || "");
+    return baseFetch(`${base}/fetch?url=${encodeURIComponent(url)}`, { ...init, headers });
+  };
+}
+
 export default {
   fetch(request, env, _ctx) {
-    return handle(request, env, fetch);
+    const upstreamFetch = env.EGRESS_URL ? egressFetch(env) : fetch;
+    return handle(request, env, upstreamFetch);
   },
 };

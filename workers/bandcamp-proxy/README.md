@@ -10,7 +10,43 @@ The site tries the official embed first, this proxy second (only after
 player last. So a Bandcamp policy change degrades to the site player rather
 than to a blank bar.
 
-## Deploy
+## Why there is an egress helper
+
+Bandcamp sits behind Fastly's bot protection, which answers every dynamic
+request from Cloudflare's own network with a JavaScript challenge (tested
+from two Cloudflare colos with eighteen request shapes: all challenged; the
+same request from an ordinary server gets the player). So the Worker does
+not fetch Bandcamp itself. `egress/` is a tiny Node service for the site's
+VPS that fetches Bandcamp on the Worker's behalf: it accepts only requests
+with the shared token, only for Bandcamp's hosts, and forwards the same few
+headers the Worker would send. The browser still talks only to
+`player.simonlowes.com`; the helper is never framed, so the VPS's
+`X-Frame-Options` header does not matter.
+
+## Deploy the egress helper (Dokploy, one time)
+
+1. Dokploy > the project > **Create Application**, name `bandcamp-egress`.
+   Provider GitHub, repository `simon-lowes/simonlowes`, branch `main`.
+   Build type **Dockerfile**: Docker file `workers/bandcamp-proxy/egress/Dockerfile`,
+   Docker context path `workers/bandcamp-proxy/egress`.
+2. **Environment**: `EGRESS_TOKEN=<a long random string>` (for example
+   `openssl rand -hex 32`). Keep it: the Worker needs the same value.
+3. **Domains** > add `relay-upstream.simonlowes.com`, container port `8787`,
+   HTTPS on with Let's Encrypt. In Cloudflare DNS add an **A** record
+   `relay-upstream` → `76.13.255.213`, **DNS only** (grey cloud): the Worker
+   must reach the VPS directly, not through the zone's bot protection.
+4. **Deploy**. `https://relay-upstream.simonlowes.com/healthz` answers `ok`.
+5. GitHub > Settings > Secrets and variables > Actions: **Variables** >
+   `RELAY_EGRESS_URL` = `https://relay-upstream.simonlowes.com`; **Secrets** >
+   `RELAY_EGRESS_TOKEN` = the token from step 2.
+6. Actions > **Deploy Bandcamp relay** > Run workflow. The job points the
+   Worker at the helper and `/health` should report `ok: true`.
+
+If Bandcamp ever starts challenging the VPS too, `/health` says so (the
+`upstream` object carries the status, title and a snippet) and the site uses
+its own player until it recovers.
+
+## Deploy the Worker
 
 The Worker is deployed by GitHub Actions
 (`.github/workflows/deploy-bandcamp-proxy.yml`): on every merge to `main` that
