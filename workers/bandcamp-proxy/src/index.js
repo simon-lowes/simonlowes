@@ -185,10 +185,21 @@ async function checkUpstream(path, upstreamFetch) {
     headers: { "user-agent": USER_AGENT, accept: "text/html" },
     redirect: "follow",
   });
-  const html = response.ok ? await response.text() : "";
-  if (!response.ok) return { ok: false, reason: `upstream ${response.status}`, html: "" };
-  if (looksLikeChallenge(html)) return { ok: false, reason: "challenge", html: "" };
-  return { ok: true, reason: "ok", html };
+  const html = await response.text();
+  // What the upstream answered, for /health: enough to tell a bot challenge
+  // from an outage without exposing the page itself.
+  const titleMatch = html.match(/<title>([^<]{0,80})/);
+  const upstream = {
+    status: response.status,
+    title: titleMatch ? titleMatch[1] : "",
+    server: response.headers.get("server") || "",
+    servedBy: response.headers.get("x-served-by") || "",
+    length: html.length,
+    snippet: html.slice(0, 160).replace(/\s+/g, " "),
+  };
+  if (!response.ok) return { ok: false, reason: `upstream ${response.status}`, html: "", upstream };
+  if (looksLikeChallenge(html)) return { ok: false, reason: "challenge", html: "", upstream };
+  return { ok: true, reason: "ok", html, upstream };
 }
 
 /**
@@ -211,7 +222,12 @@ export async function handle(request, env = {}, upstreamFetch = fetch) {
     try {
       const result = await checkUpstream(env.HEALTH_PATH || DEFAULT_HEALTH_PATH, upstreamFetch);
       return json(
-        { ok: result.ok, reason: result.reason, checkedAt: new Date().toISOString() },
+        {
+          ok: result.ok,
+          reason: result.reason,
+          checkedAt: new Date().toISOString(),
+          upstream: result.upstream,
+        },
         result.ok ? 200 : 503,
         cors
       );
