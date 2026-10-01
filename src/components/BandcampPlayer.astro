@@ -172,16 +172,16 @@ const nativeLabel = `Site player: ${artistName}`;
     max-width: calc((1200px - var(--h-inset)) * var(--content-w));
     box-sizing: border-box;
     padding: 0.5rem;
-    background: rgb(15 15 15 / 18%);
-    border: 1px solid rgb(0 212 255 / 10%);
+    background: rgb(var(--color-surface-rgb) / 18%);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     box-shadow:
       0 8px 32px rgb(0 0 0 / 40%),
-      0 0 40px rgb(0 212 255 / 3%),
+      0 0 40px rgb(var(--color-accent-rgb) / 3%),
       inset 0 1px 0 rgb(255 255 255 / 5%);
-    color: #e0e0e0;
+    color: var(--color-text-primary);
     font-family: "freight-sans-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
     z-index: 99;
   }
@@ -221,9 +221,9 @@ const nativeLabel = `Site player: ${artistName}`;
     flex-shrink: 0;
     width: 32px;
     height: 32px;
-    border: 1px solid rgb(0 212 255 / 20%);
+    border: 1px solid rgb(var(--color-accent-rgb) / 20%);
     border-radius: 50%;
-    background: rgb(0 212 255 / 15%);
+    background: var(--color-interactive-bg);
     transition:
       background 0.2s ease,
       box-shadow 0.3s ease,
@@ -236,8 +236,8 @@ const nativeLabel = `Site player: ${artistName}`;
   }
 
   .bc-player__facade:hover .bc-player__mark {
-    background: rgb(0 212 255 / 25%);
-    box-shadow: 0 0 20px rgb(0 212 255 / 30%);
+    background: var(--color-interactive-bg-hover);
+    box-shadow: 0 0 20px rgb(var(--color-accent-rgb) / 30%);
     transform: scale(1.05);
   }
 
@@ -263,7 +263,7 @@ const nativeLabel = `Site player: ${artistName}`;
     display: none;
     font-size: 0.8125rem;
     line-height: 1.3;
-    color: rgb(224 224 224 / 60%);
+    color: var(--color-text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -274,7 +274,7 @@ const nativeLabel = `Site player: ${artistName}`;
     font-size: 0.8125rem;
     font-weight: 500;
     line-height: 1.2;
-    color: rgb(224 224 224 / 85%);
+    color: var(--color-text-secondary);
     white-space: nowrap;
     transition: color 0.2s ease;
   }
@@ -284,7 +284,7 @@ const nativeLabel = `Site player: ${artistName}`;
   }
 
   .bc-player__facade:hover .bc-player__cta {
-    color: #00d4ff;
+    color: var(--color-accent);
   }
 
   /* The embed: transparent, fades in over the facade once loaded */
@@ -345,9 +345,9 @@ const nativeLabel = `Site player: ${artistName}`;
     justify-content: center;
     flex-shrink: 0;
     padding: 0;
-    color: #e0e0e0;
-    background: rgb(0 212 255 / 15%);
-    border: 1px solid rgb(0 212 255 / 25%);
+    color: var(--color-text-primary);
+    background: var(--color-interactive-bg);
+    border: 1px solid rgb(var(--color-accent-rgb) / 25%);
     border-radius: 50%;
     cursor: pointer;
     transition:
@@ -381,8 +381,8 @@ const nativeLabel = `Site player: ${artistName}`;
 
   .bc-player__play:hover,
   .bc-player__skip:hover {
-    background: rgb(0 212 255 / 25%);
-    box-shadow: 0 0 20px rgb(0 212 255 / 30%);
+    background: var(--color-interactive-bg-hover);
+    box-shadow: 0 0 20px rgb(var(--color-accent-rgb) / 30%);
     transform: scale(1.05);
   }
 
@@ -435,7 +435,7 @@ const nativeLabel = `Site player: ${artistName}`;
     min-width: 2.5rem;
     font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
-    color: rgb(224 224 224 / 60%);
+    color: var(--color-text-muted);
   }
 
   .bc-player__time:last-child {
@@ -449,8 +449,8 @@ const nativeLabel = `Site player: ${artistName}`;
     appearance: none;
     background: linear-gradient(
       to right,
-      #00d4ff 0%,
-      #00d4ff var(--bc-progress, 0%),
+      var(--color-accent) 0%,
+      var(--color-accent) var(--bc-progress, 0%),
       rgb(255 255 255 / 15%) var(--bc-progress, 0%),
       rgb(255 255 255 / 15%) 100%
     );
@@ -465,7 +465,7 @@ const nativeLabel = `Site player: ${artistName}`;
     background: #fff;
     border: 0;
     border-radius: 50%;
-    box-shadow: 0 0 8px rgb(0 212 255 / 60%);
+    box-shadow: 0 0 8px rgb(var(--color-accent-rgb) / 60%);
   }
 
   .bc-player__range::-moz-range-thumb {
@@ -474,7 +474,7 @@ const nativeLabel = `Site player: ${artistName}`;
     background: #fff;
     border: 0;
     border-radius: 50%;
-    box-shadow: 0 0 8px rgb(0 212 255 / 60%);
+    box-shadow: 0 0 8px rgb(var(--color-accent-rgb) / 60%);
   }
 
   .bc-player__native-actions {
@@ -496,14 +496,14 @@ const nativeLabel = `Site player: ${artistName}`;
     font-size: 0.8125rem;
     font-weight: 500;
     line-height: 1.2;
-    color: rgb(224 224 224 / 85%);
+    color: var(--color-text-secondary);
     white-space: nowrap;
     text-decoration: none;
     transition: color 0.2s ease;
   }
 
   .bc-player__buy:hover {
-    color: #00d4ff;
+    color: var(--color-accent);
   }
 
   @media (width >= 480px) {
@@ -589,7 +589,7 @@ const nativeLabel = `Site player: ${artistName}`;
 
   @supports not (backdrop-filter: blur(12px)) {
     .bc-player {
-      background: rgb(10 10 15 / 95%);
+      background: rgb(var(--color-bg-rgb) / 95%);
     }
   }
 </style>

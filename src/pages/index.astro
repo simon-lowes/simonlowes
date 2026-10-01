@@ -4,7 +4,6 @@ import { ClientRouter } from "astro:transitions";
 import SpaceBackground from "../components/SpaceBackground.astro";
 import BandcampPlayer from "../components/BandcampPlayer.astro";
 import SocialLinks from "../components/SocialLinks.astro";
-import "../styles/glass-effects.css";
 
 const posts = (await getCollection("blog"))
   .filter((p) => !p.data.draft)
@@ -93,15 +92,15 @@ const posts = (await getCollection("blog"))
         gap: 0.75rem;
         max-width: 22rem;
         padding: 0.875rem 1rem;
-        background: rgb(15 15 15 / 55%);
-        border: 1px solid rgb(0 212 255 / 12%);
+        background: rgb(var(--color-surface-rgb) / 55%);
+        border: 1px solid rgb(var(--color-accent-rgb) / 12%);
         border-radius: 12px;
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         box-shadow:
           0 8px 32px rgb(0 0 0 / 40%),
           inset 0 1px 0 rgb(255 255 255 / 5%);
-        color: #e0e0e0;
+        color: var(--color-text-primary);
         font-family: "freight-sans-pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
         font-size: 0.8125rem;
         line-height: 1.45;
@@ -128,9 +127,9 @@ const posts = (await getCollection("blog"))
         flex-shrink: 0;
         width: 32px;
         height: 32px;
-        color: #00d4ff;
-        background: rgb(0 212 255 / 12%);
-        border: 1px solid rgb(0 212 255 / 20%);
+        color: var(--color-accent);
+        background: rgb(var(--color-accent-rgb) / 12%);
+        border: 1px solid rgb(var(--color-accent-rgb) / 20%);
         border-radius: 50%;
       }
       #cookie-message .cookie-mark svg {
@@ -152,7 +151,7 @@ const posts = (await getCollection("blog"))
       }
       #cookie-message p {
         margin: 0;
-        color: rgb(224 224 224 / 75%);
+        color: rgb(var(--color-text-rgb) / 75%);
       }
       #cookie-message .cookie-actions {
         display: flex;
@@ -164,8 +163,8 @@ const posts = (await getCollection("blog"))
         font: inherit;
         font-size: 0.8125rem;
         font-weight: 500;
-        color: #0a0a0f;
-        background: #00d4ff;
+        color: var(--color-bg-primary);
+        background: var(--color-accent);
         border: 0;
         border-radius: 999px;
         cursor: pointer;
@@ -175,7 +174,7 @@ const posts = (await getCollection("blog"))
       }
       #cookie-message button.cookie-dismiss:hover {
         background: #5ce3ff;
-        box-shadow: 0 0 16px rgb(0 212 255 / 40%);
+        box-shadow: 0 0 16px rgb(var(--color-accent-rgb) / 40%);
       }
       #cookie-message button.cookie-dismiss:focus-visible,
       #cookie-message:focus-visible {
@@ -195,7 +194,7 @@ const posts = (await getCollection("blog"))
       }
       @supports not (backdrop-filter: blur(16px)) {
         #cookie-message {
-          background: rgb(10 10 15 / 95%);
+          background: rgb(var(--color-bg-rgb) / 95%);
         }
       }
       /* Content wrapper with glass panel styling */
@@ -237,7 +236,7 @@ const posts = (await getCollection("blog"))
           0 16px 48px rgba(0, 0, 0, 0.5),
           0 0 60px rgba(0, 212, 255, 0.03),
           inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        color: #e0e0e0;
+        color: var(--color-text-primary);
         overflow-y: auto;
       }
       .blog-panel__header {
@@ -248,7 +247,7 @@ const posts = (await getCollection("blog"))
         font-size: 1.25rem;
         font-weight: 650;
         letter-spacing: 0.01em;
-        color: #e0e0e0;
+        color: var(--color-text-primary);
         text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
       }
       .blog-panel__subtitle {
@@ -269,7 +268,7 @@ const posts = (await getCollection("blog"))
           text-shadow 0.2s ease;
       }
       .blog-panel a:hover {
-        color: #00d4ff;
+        color: var(--color-accent);
         text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
       }
       .blog-panel__list {

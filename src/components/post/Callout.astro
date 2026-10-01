@@ -19,11 +19,11 @@ const { title, tone = "cyan" } = Astro.props;
 
 <style>
   .post-callout {
-    --accent: #00d4ff;
+    --accent: var(--color-accent);
 
     margin: 1.75rem 0;
     padding: 1rem 1.25rem;
-    background: rgb(15 15 15 / 35%);
+    background: rgb(var(--color-surface-rgb) / 35%);
     border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
     border-left: 3px solid var(--accent);
     border-radius: 12px;
@@ -35,7 +35,7 @@ const { title, tone = "cyan" } = Astro.props;
   }
 
   .post-callout--magenta {
-    --accent: #ff3fb4;
+    --accent: var(--color-magenta);
   }
 
   .post-callout__title {
