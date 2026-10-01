@@ -71,16 +71,34 @@ jobs:
           # "checkedAt"). ok:false only means Bandcamp's bot protection is
           # challenging the relay right now; the site then uses its own player,
           # and that is not a failed deploy.
+          #
+          # Cloudflare's own bot protection on the simonlowes.com zone may
+          # answer this runner with its "Just a moment..." challenge page
+          # instead of letting the request reach the Worker. The hostname only
+          # exists once wrangler has created the custom domain, so a challenge
+          # still shows the deploy landed; it is reported as a warning after a
+          # few tries, not a failure.
+          challenged=0
           for attempt in $(seq 1 18); do
             body=$(curl -sS --max-time 20 https://player.simonlowes.com/health || true)
-            echo "attempt $attempt: ${body:-no response}"
             case "$body" in
               *'"ok":true'*)
+                echo "attempt $attempt: ${body}"
                 echo "Relay is up and Bandcamp is answering it."
                 exit 0 ;;
               *'"checkedAt"'*)
+                echo "attempt $attempt: ${body}"
                 echo "::warning::The relay is deployed, but Bandcamp is not answering it with a real player right now (${body}). The site falls back to its own player until /health reports ok."
                 exit 0 ;;
+              *'Just a moment...'*|*'cf-chl'*|*'__cf_chl'*)
+                echo "attempt $attempt: Cloudflare challenge page"
+                challenged=$((challenged + 1))
+                if [ "$challenged" -ge 3 ]; then
+                  echo "::warning::Cloudflare's bot protection is challenging this runner at https://player.simonlowes.com/health, so the Worker could not be reached from GitHub Actions. The custom domain is live, which means the deploy landed; check /health from a browser. To let this check reach the Worker, add a WAF custom rule on the simonlowes.com zone that skips Bot Fight Mode and managed challenges for hostname player.simonlowes.com."
+                  exit 0
+                fi ;;
+              *)
+                echo "attempt $attempt: ${body:-no response}" ;;
             esac
             sleep 10
           done
