@@ -114,7 +114,7 @@ public/
 
 `public/css/style.css` is the one source of truth for colour. Its `:root` defines the cosmic palette and every component's `<style>` uses those tokens, never literals: `--color-bg-primary` (#0a0a0f), `--color-bg-nebula`, `--color-text-primary` (#e0e0e0) with `-secondary` and `-muted` tints, `--color-accent` (#00d4ff, the site cyan), `--color-magenta`, `--color-border`, `--color-interactive-bg` and `-hover`. Each base colour also has an `--color-*-rgb` channel triple (`--color-accent-rgb: 0 212 255`, plus `--color-surface-rgb` for the neutral glass-panel grey), so a tint or glow with its own alpha is written `rgb(var(--color-accent-rgb) / 20%)`. Adding a colour means adding a token here first.
 
-The earlier second token set (`src/styles/space-theme.css`, never loaded) and the unused `src/styles/glass-effects.css` utility classes were removed in October 2026. The same cyan is repeated as a number where CSS cannot reach: the Three.js palettes in `src/scripts/`, the Bandcamp embed colours in `src/data/bandcamp.ts`, and the `theme-color` metas in the layouts.
+The earlier second token set (`src/styles/space-theme.css`, never loaded) and the unused `src/styles/glass-effects.css` utility classes were removed in October 2026. The same values are repeated as numbers where CSS cannot reach: the Three.js palettes in `src/scripts/`, the Bandcamp embed colours in `src/data/bandcamp.ts`, and the `theme-color` metas (#0a0a0f) in the layouts and homepage.
 
 ## Bandcamp Player
 
