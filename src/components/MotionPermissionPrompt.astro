@@ -38,7 +38,7 @@
     background: rgb(10 10 20 / 85%);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgb(0 212 255 / 20%);
+    border: 1px solid rgb(var(--color-accent-rgb) / 20%);
     border-radius: 16px;
     padding: 12px 16px;
     display: none;
@@ -51,7 +51,7 @@
       transform 0.3s ease;
     box-shadow:
       0 8px 32px rgb(0 0 0 / 40%),
-      0 0 20px rgb(0 212 255 / 8%),
+      0 0 20px rgb(var(--color-accent-rgb) / 8%),
       inset 0 1px 0 rgb(255 255 255 / 5%);
     max-width: calc(100vw - 32px);
   }
@@ -115,14 +115,14 @@
   }
 
   .motion-btn-primary {
-    background: rgb(0 212 255 / 20%);
-    color: #00d4ff;
+    background: rgb(var(--color-accent-rgb) / 20%);
+    color: var(--color-accent);
     padding: 8px 16px;
-    border: 1px solid rgb(0 212 255 / 30%);
+    border: 1px solid rgb(var(--color-accent-rgb) / 30%);
   }
 
   .motion-btn-primary:hover {
-    background: rgb(0 212 255 / 30%);
+    background: rgb(var(--color-accent-rgb) / 30%);
   }
 
   .motion-btn-primary:active {

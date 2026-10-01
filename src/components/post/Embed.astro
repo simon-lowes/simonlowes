@@ -44,8 +44,8 @@ const posterUrl =
     margin: 1.75rem 0;
     border-radius: 12px;
     overflow: hidden;
-    background: rgb(15 15 15 / 35%);
-    border: 1px solid rgb(0 212 255 / 15%);
+    background: rgb(var(--color-surface-rgb) / 35%);
+    border: 1px solid rgb(var(--color-accent-rgb) / 15%);
   }
 
   .post-embed--youtube {
@@ -66,7 +66,7 @@ const posterUrl =
     gap: 0.75rem;
     width: 100%;
     padding: 1rem;
-    color: #e0e0e0;
+    color: var(--color-text-primary);
     background: transparent;
     border: 0;
     cursor: pointer;
@@ -90,8 +90,8 @@ const posterUrl =
     width: 56px;
     height: 56px;
     color: #fff;
-    background: rgb(0 212 255 / 20%);
-    border: 1px solid rgb(0 212 255 / 40%);
+    background: rgb(var(--color-accent-rgb) / 20%);
+    border: 1px solid rgb(var(--color-accent-rgb) / 40%);
     border-radius: 50%;
     backdrop-filter: blur(8px);
     transition:
@@ -107,7 +107,7 @@ const posterUrl =
   .post-embed__facade:hover .post-embed__play,
   .post-embed__facade:focus-visible .post-embed__play {
     transform: scale(1.06);
-    box-shadow: 0 0 24px rgb(0 212 255 / 40%);
+    box-shadow: 0 0 24px rgb(var(--color-accent-rgb) / 40%);
   }
 
   .post-embed__facade:focus-visible {

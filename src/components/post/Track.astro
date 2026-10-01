@@ -30,8 +30,8 @@ const { src, title, note, mimeType = "audio/mpeg" } = Astro.props;
     gap: 0.625rem;
     margin: 1.75rem 0;
     padding: 1rem 1.25rem;
-    background: rgb(15 15 15 / 35%);
-    border: 1px solid rgb(0 212 255 / 15%);
+    background: rgb(var(--color-surface-rgb) / 35%);
+    border: 1px solid rgb(var(--color-accent-rgb) / 15%);
     border-radius: 12px;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -49,7 +49,7 @@ const { src, title, note, mimeType = "audio/mpeg" } = Astro.props;
 
   .post-track__note {
     font-size: 0.875rem;
-    color: rgb(224 224 224 / 60%);
+    color: var(--color-text-muted);
   }
 
   .post-track__audio {

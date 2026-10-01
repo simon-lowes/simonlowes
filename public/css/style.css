@@ -9,16 +9,24 @@
   /* Unified width system: content multiplier (decimal) and horizontal inset */
   --content-w: 1;
   --h-inset: 2rem;
-  /* Color scheme - Cosmic theme */
+  /* Colour scheme - Cosmic theme. The single source of truth for colour:
+     components use these tokens, never literals. The *-rgb triples feed
+     rgb(var(--x-rgb) / N%) wherever a tint or glow needs its own alpha. */
+  --color-bg-rgb: 10 10 15;
   --color-bg-primary: #0a0a0f;
-  --color-bg-secondary: rgb(10 10 15 / 70%);
+  --color-bg-secondary: rgb(var(--color-bg-rgb) / 70%);
+  --color-bg-nebula: #1a0a2e;
+  --color-surface-rgb: 15 15 15; /* glass panels: a neutral grey, tinted per use */
+  --color-text-rgb: 224 224 224;
   --color-text-primary: #e0e0e0;
-  --color-text-secondary: rgb(224 224 224 / 85%);
-  --color-text-muted: rgb(224 224 224 / 60%);
-  --color-border: rgb(0 212 255 / 10%);
-  --color-interactive-bg: rgb(0 212 255 / 15%);
-  --color-interactive-bg-hover: rgb(0 212 255 / 25%);
+  --color-text-secondary: rgb(var(--color-text-rgb) / 85%);
+  --color-text-muted: rgb(var(--color-text-rgb) / 60%);
+  --color-accent-rgb: 0 212 255;
   --color-accent: #00d4ff;
+  --color-magenta: #ff3fb4;
+  --color-border: rgb(var(--color-accent-rgb) / 10%);
+  --color-interactive-bg: rgb(var(--color-accent-rgb) / 15%);
+  --color-interactive-bg-hover: rgb(var(--color-accent-rgb) / 25%);
 }
 
 /* =============================================
@@ -86,8 +94,8 @@ canvas {
   clip-path: none;
   white-space: normal;
   z-index: 10000;
-  background: rgb(0 212 255 / 95%);
-  color: #0a0a0f;
+  background: rgb(var(--color-accent-rgb) / 95%);
+  color: var(--color-bg-primary);
   border-radius: 999px;
   font-weight: 600;
   text-decoration: none;
@@ -204,12 +212,12 @@ footer nav ul li a:focus-visible {
 /* Brand colours on hover: each link carries its own --brand (set inline) */
 footer nav ul li a:hover,
 footer nav ul li a:focus-visible {
-  color: var(--brand, #00d4ff);
+  color: var(--brand, var(--color-accent));
 }
 
 footer nav ul li a:hover .social-icon,
 footer nav ul li a:focus-visible .social-icon {
-  filter: drop-shadow(0 0 8px var(--brand, #00d4ff));
+  filter: drop-shadow(0 0 8px var(--brand, var(--color-accent)));
 }
 
 /* Icon sizing */
