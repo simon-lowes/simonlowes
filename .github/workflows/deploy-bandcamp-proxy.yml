@@ -91,6 +91,9 @@ jobs:
               *'"checkedAt"'*)
                 echo "::warning::The relay is deployed, but Bandcamp is not answering it with a real player right now (${body}). The site falls back to its own player until /health reports ok."
                 exit 0 ;;
+              *'Just a moment'*|*'cf-chl'*|*'challenge-platform'*)
+                echo "::warning::The relay is deployed and Cloudflare is answering on player.simonlowes.com, but the zone's bot protection challenged this runner instead of passing the request to the Worker. Browsers are not affected; open https://player.simonlowes.com/health in one to read the real status."
+                exit 0 ;;
             esac
             sleep 10
           done
