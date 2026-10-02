@@ -63,6 +63,14 @@ const fullCanonicalUrl = canonicalUrl || new URL(Astro.url.pathname, siteUrl).hr
     <ClientRouter />
 
     <!-- Styles -->
+    <!-- Display font: only the roman latin file is preloaded; italic and latin-ext load on demand -->
+    <link
+      rel="preload"
+      href="/fonts/source-sans-3/SourceSans3-Roman-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="stylesheet" type="text/css" href="/css/style.css" />
 
     <slot name="head" />
