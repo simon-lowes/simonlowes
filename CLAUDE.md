@@ -97,7 +97,7 @@ src/
   data/             # Site data (bandcamp.ts: the release and relay; tracks.ts: self-hosted fallback)
   content/          # Content collections (blog posts in Markdown or MDX)
   content.config.ts # Content collection schemas
-  layouts/          # Page layouts (BaseLayout, BlogLayout)
+  layouts/          # Page layouts (BlogLayout)
   pages/            # Route pages (index, blog, 404)
   scripts/          # Client-side TypeScript (starfield, deepsky, galaxy, encounters, quality, parallax, layout)
 tests/
@@ -130,14 +130,14 @@ The CSP reference in `public/_headers` allows the frame and the probes. The live
 
 ## Typography
 
-The site face is **Source Sans 3** (Adobe's open humanist sans, SIL OFL), self-hosted from `public/fonts/source-sans-3/` as two variable WOFF2 files (roman and italic, weight 200–900) split into latin and latin-ext subsets, so weights like 650 render exactly. `public/css/style.css` declares the `@font-face` rules, a metric-matched `"Source Sans 3 Fallback"` (Arial with `size-adjust`/`ascent-override`) so text does not shift when the font arrives, and the `--font-sans` token that `body`, `.prose`, the player bar, the cookie notice and the 404 page use. The three real document heads (`src/pages/index.astro`, `src/pages/404.astro` and `src/layouts/BlogLayout.astro`) each preload only the roman latin file; `src/layouts/BaseLayout.astro` is not imported by any page, so a head change there does nothing. The font was chosen in October 2026 over FreightSans Pro (declared since the original design but never loaded, which left most of the site in the browser's default serif) because it needs no Adobe subscription or third-party request. To change the face, replace the files, the `@font-face` rules and the preload together.
+The site face is **Source Sans 3** (Adobe's open humanist sans, SIL OFL), self-hosted from `public/fonts/source-sans-3/` as two variable WOFF2 files (roman and italic, weight 200–900) split into latin and latin-ext subsets, so weights like 650 render exactly. `public/css/style.css` declares the `@font-face` rules, a metric-matched `"Source Sans 3 Fallback"` (Arial with `size-adjust`/`ascent-override`) so text does not shift when the font arrives, and the `--font-sans` token that `body`, `.prose`, the player bar, the cookie notice and the 404 page use. The three document heads (`src/pages/index.astro`, `src/pages/404.astro` and `src/layouts/BlogLayout.astro`) each preload only the roman latin file. There is no shared base layout: a head change goes in all three. The font was chosen in October 2026 over FreightSans Pro (declared since the original design but never loaded, which left most of the site in the browser's default serif) because it needs no Adobe subscription or third-party request. To change the face, replace the files, the `@font-face` rules and the preload together.
 
 ## Blog posts
 
 There is no CMS. Posts are files in `src/content/blog/` (front matter schema in `src/content.config.ts`), written with Claude and shipped through a PR; the `/new-post` skill (`.claude/skills/new-post/SKILL.md`) holds the full recipe.
 
 - **Plain posts** are `.md`. **Designed posts** are `.mdx` and compose the kit in `src/components/post/`: `Lead`, `Callout`, `Reveal` (scroll-in, reduced-motion aware), `Figure`, `Track` (self-hosted audio) and `Embed` (click-to-load YouTube or Bandcamp, nothing third-party fetched on page view). `src/content/blog/post-kit.mdx` is a permanent draft that exercises every component; drafts render in `npm run dev` only and are excluded from the build and the listing.
-- **Images** go in `public/images/blog/<slug>/`, web-sized. Large audio and video stay on Cloudflare R2 (`media.simonlowes.com`) and are referenced by URL. The old `workers/media-api` upload worker authenticated with TinaCMS tokens and is no longer used by the site.
+- **Images** go in `public/images/blog/<slug>/`, web-sized. Large audio and video stay on Cloudflare R2 (`media.simonlowes.com`) and are referenced by URL. The old `workers/media-api` upload worker (TinaCMS-authenticated, at `media-api.simonlowes.com`) was removed from the repo in October 2026; if it is still deployed, delete the `simonlowes-media-api` Worker in Cloudflare.
 
 TinaCMS was removed in September 2026 (its build step broke every deploy since March). Sveltia CMS replaced it briefly the same month and was removed the same day, before its OAuth worker was ever deployed: a form editor cannot produce designed posts, and writing them here can. The `TINA_CLIENT_ID` and `TINA_TOKEN` variables in Dokploy and the GitHub secrets of the same names can be deleted.
 
