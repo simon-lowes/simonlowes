@@ -91,6 +91,7 @@
     "js-yaml@4": "^4.3.1",
     "@vite-pwa/astro": {
       "astro": "$astro"
-    }
+    },
+    "vite@7": "^7.3.7"
   }
 }
