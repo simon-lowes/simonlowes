@@ -67,3 +67,11 @@ updates:
       prefix: "chore(ci):"
     labels:
       - "ci"
+
+  # Egress helper base image (node)
+  - package-ecosystem: "docker"
+    directory: "/workers/bandcamp-proxy/egress"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
