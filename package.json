@@ -51,7 +51,7 @@
     "prettier-plugin-astro": "^1.1.1",
     "simple-icons": "^16.35.0",
     "slate": "^0.138.2",
-    "slate-dom": "^0.136.0",
+    "slate-dom": "^0.140.0",
     "stylelint": "^17.15.0",
     "stylelint-config-standard": "^40.0.0",
     "vitest": "^5.0.0",
