@@ -1,7 +1,7 @@
 # Egress helper for the Bandcamp relay: a Node process with no dependencies.
 # Dokploy: build type Dockerfile, path workers/bandcamp-proxy/egress/Dockerfile,
 # context workers/bandcamp-proxy/egress, container port 8787.
-FROM node:26.12.0-alpine
+FROM node:26.12.1-alpine
 WORKDIR /app
 COPY relay.mjs server.mjs ./
 ENV PORT=8787
