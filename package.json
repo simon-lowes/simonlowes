@@ -49,7 +49,7 @@
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.2",
-    "simple-icons": "^16.35.0",
+    "simple-icons": "^16.36.0",
     "slate": "^0.146.0",
     "slate-dom": "^0.147.3",
     "stylelint": "^17.15.0",
