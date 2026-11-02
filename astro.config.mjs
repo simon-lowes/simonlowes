@@ -1,7 +1,7 @@
 import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
-import AstroPWA from "@vite-pwa/astro";
+import { AstroPWAIntegration as AstroPWA } from "@vite-pwa/astro";
 
 export default defineConfig({
   site: "https://simonlowes.com",
@@ -30,7 +30,7 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
+      generateSW: {
         navigateFallback: "/404",
         globPatterns: ["**/*.{css,js,html,svg,png,webp,ico,woff2}"],
         // Audio is streamed on demand, never precached
