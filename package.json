@@ -61,7 +61,7 @@
     "@astrojs/rss": "^4.0.19",
     "@vite-pwa/astro": "^2.0.0",
     "gsap": "^3.15.0",
-    "postprocessing": "^6.39.5",
+    "postprocessing": "^6.39.6",
     "three": "^0.186.1"
   },
   "lint-staged": {
