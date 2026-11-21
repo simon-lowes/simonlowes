@@ -1,0 +1,67 @@
+name: Visual Uptime
+
+# Daily production check of the live sites (scripts/uptime). Plain-code checks
+# always run; the Jev visual backstop runs only when the TYPESAFE_API_KEY secret
+# is set. Alerts only if a failure repeats on a rerun 10 minutes later, then
+# opens or updates one issue. Silent otherwise. Sites: scripts/uptime/sites.json
+# or the UPTIME_SITES repo variable (JSON array of {name,url,expected}).
+
+on:
+  schedule:
+    - cron: "41 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  uptime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+      JEV_MODEL: ${{ vars.JEV_MODEL }}
+      UPTIME_SITES: ${{ vars.UPTIME_SITES }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - name: First run
+        run: node scripts/uptime/check.mjs
+      - name: Rerun after 10 minutes if anything failed (avoids flapping)
+        id: confirm
+        run: |
+          if [ "$(jq length uptime-report.json)" -gt 0 ]; then
+            sleep 600
+            node scripts/uptime/check.mjs
+          fi
+          echo "count=$(jq length uptime-report.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uptime-shots
+          path: uptime-shots/
+          retention-days: 14
+      - name: Open or update issue
+        if: steps.confirm.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          {
+            echo "Visual uptime check found problems on two consecutive runs. Screenshots: $RUN_URL"
+            echo
+            jq -r '.[] | "### \(.site) \(.viewport)\n\(.url)\n\n" + (.problems | map("- " + .) | join("\n")) + "\n"' uptime-report.json
+          } > body.md
+          num=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"Visual uptime alert\"" --json number --jq '.[0].number // empty')
+          if [ -n "$num" ]; then
+            gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body-file body.md
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "Visual uptime alert" --body-file body.md
+          fi
