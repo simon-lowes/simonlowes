@@ -34,7 +34,7 @@
   "devDependencies": {
     "@astrojs/mdx": "^7.0.8",
     "@astrojs/sitemap": "^3.7.4",
-    "@playwright/test": "^1.65.0",
+    "@playwright/test": "^1.65.1",
     "@types/three": "^0.187.0",
     "@typescript-eslint/parser": "^8.72.1",
     "@vitest/ui": "^5.1.0",
