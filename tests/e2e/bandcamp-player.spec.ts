@@ -106,6 +106,17 @@ test.describe("Bandcamp player", () => {
     await page.route("https://*.bcbits.com/**", (route) =>
       route.fulfill({ status: 200, body: "" })
     );
+    // Pin the relay as unavailable so this test covers the "never ready" path
+    // and not the live relay's health: once the relay is answering, the player
+    // rightly moves to it after the grace period (covered by the relay test).
+    await page.route("https://player.simonlowes.com/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ ok: false, reason: "challenge" }),
+      })
+    );
     await page.goto("/");
     const player = page.locator("#bandcamp-player");
     test.skip((await player.getAttribute("data-has-embed")) !== "true", "No release ID set");
@@ -230,6 +241,15 @@ test.describe("Bandcamp player", () => {
     );
     await page.route("https://*.bcbits.com/**", (route) =>
       route.fulfill({ status: 200, body: "" })
+    );
+    // Relay unavailable, so the grace period hands over to the site player
+    await page.route("https://player.simonlowes.com/**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ ok: false, reason: "challenge" }),
+      })
     );
     await page.goto("/");
     const player = page.locator("#bandcamp-player");
